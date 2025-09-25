@@ -14,7 +14,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.jotadev.aiapaec.navigation.AppNavigation
 import com.jotadev.aiapaec.ui.screens.main.MainScreen
 import com.jotadev.aiapaec.ui.theme.AIAPAECTheme
-import com.jotadev.aiapaec.ui.theme.Crimson100
+import com.jotadev.aiapaec.ui.theme.Crimson60
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,8 +24,8 @@ class MainActivity : ComponentActivity() {
 
         // ✅ Establecer color de barra de estado sin usar statusBarColor directamente
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            window.navigationBarColor = Crimson100.toArgb() // si también quieres nav bar
-            window.statusBarColor = Crimson100.toArgb() // aún necesario para fondo
+            window.navigationBarColor = Crimson60.toArgb() // si también quieres nav bar
+            window.statusBarColor = Crimson60.toArgb() // aún necesario para fondo
         }
         // ✅ Controlar íconos (blancos o negros)
         WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false // false = íconos blancos
@@ -43,8 +43,8 @@ class MainActivity : ComponentActivity() {
                     )
 
                 }
-//                AppNavigation()
-                MainScreen()
+                AppNavigation()
+//                MainScreen()
             }
         }
     }

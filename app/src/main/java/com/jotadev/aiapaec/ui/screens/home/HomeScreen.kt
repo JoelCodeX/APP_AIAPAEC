@@ -33,7 +33,7 @@ fun HomeScreen(
             .fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.onPrimary,
         topBar = {
-            WelcomeTopAppBar(userName = uiState.userName, actions = {
+            WelcomeTopAppBar( actions = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End,
@@ -82,7 +82,6 @@ fun HomeScreen(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
-
                 items(uiState.quickActions) { action ->
                     QuickActionCard(
                         title = action.title,
@@ -100,7 +99,6 @@ fun HomeScreen(
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                     )
                 }
-
                 items(uiState.recentActivities) { activity ->
                     Card(
                         modifier = Modifier.fillMaxWidth()

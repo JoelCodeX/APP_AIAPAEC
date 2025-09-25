@@ -32,7 +32,7 @@ fun MainScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.tertiary,
         bottomBar = {
             if (currentRoute !in routesWithoutBottomBar) {
                 BottomNavigationBar(

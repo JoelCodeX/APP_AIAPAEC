@@ -17,7 +17,7 @@ fun CustomTopAppBar(
     title: String,
     subtitle: String? = null,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Crimson100,
+    backgroundColor: Color = MaterialTheme.colorScheme.tertiary,
     contentColor: Color = Color.White,
     actions: @Composable RowScope.() -> Unit = {} // ✅ soporte para contenido adicional
 ) {
@@ -54,15 +54,14 @@ fun CustomTopAppBar(
 
 @Composable
 fun WelcomeTopAppBar(
-    userName: String,
     subtitle: String = "Sistema de gestión de exámenes AIAPAEC",
-    backgroundColor: Color = Crimson100,
-    contentColor: Color = Color.White,
+    backgroundColor:Color = MaterialTheme.colorScheme.tertiary,
+    contentColor: Color = MaterialTheme.colorScheme.onTertiary,
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {} // ✅ se define aquí también
 ) {
     CustomTopAppBar(
-        title = "¡Bienvenido, $userName!",
+        title = "Bienvenido",
         subtitle = subtitle,
         backgroundColor = backgroundColor,
         contentColor = contentColor,
@@ -75,8 +74,8 @@ fun WelcomeTopAppBar(
 fun ScreenTopAppBar(
     screenTitle: String,
     subtitle: String? = null,
-    backgroundColor: Color = Crimson100,
-    contentColor: Color = Color.White,
+    backgroundColor: Color= MaterialTheme.colorScheme.tertiary,
+    contentColor: Color = MaterialTheme.colorScheme.onTertiary,
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {} // ✅ opcional para otras pantallas también
 ) {

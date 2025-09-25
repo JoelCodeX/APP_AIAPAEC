@@ -14,7 +14,7 @@ import com.jotadev.aiapaec.ui.components.ScreenTopAppBar
 fun ExamsScreen(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.primary,
+        containerColor = MaterialTheme.colorScheme.onPrimary,
         topBar = {
             ScreenTopAppBar(
                 screenTitle = "Exámenes",
