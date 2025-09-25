@@ -13,6 +13,8 @@ import com.jotadev.aiapaec.ui.components.ScreenTopAppBar
 @Composable
 fun SettingsScreen(navController: NavController) {
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.primary,
         topBar = {
             ScreenTopAppBar(
                 screenTitle = "Configuración",

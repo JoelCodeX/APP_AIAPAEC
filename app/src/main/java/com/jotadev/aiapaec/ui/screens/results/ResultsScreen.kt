@@ -13,6 +13,8 @@ import com.jotadev.aiapaec.ui.components.ScreenTopAppBar
 @Composable
 fun ResultsScreen(navController: NavController) {
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.primary,
         topBar = {
             ScreenTopAppBar(
                 screenTitle = "Resultados",

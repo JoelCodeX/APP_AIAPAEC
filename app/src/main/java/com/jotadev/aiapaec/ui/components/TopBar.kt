@@ -9,7 +9,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.wear.compose.material3.ColorScheme
 import com.jotadev.aiapaec.ui.theme.Crimson100
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -20,8 +19,10 @@ fun CustomTopAppBar(
     modifier: Modifier = Modifier,
     backgroundColor: Color = Crimson100,
     contentColor: Color = Color.White,
+    actions: @Composable RowScope.() -> Unit = {} // ✅ soporte para contenido adicional
 ) {
     TopAppBar(
+        modifier= modifier,
         title = {
             Column {
                 Text(
@@ -43,11 +44,11 @@ fun CustomTopAppBar(
                 }
             }
         },
+        actions = actions, // ✅ se usa aquí
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = backgroundColor,
             titleContentColor = contentColor
         ),
-        modifier = modifier
     )
 }
 
@@ -57,14 +58,16 @@ fun WelcomeTopAppBar(
     subtitle: String = "Sistema de gestión de exámenes AIAPAEC",
     backgroundColor: Color = Crimson100,
     contentColor: Color = Color.White,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {} // ✅ se define aquí también
 ) {
     CustomTopAppBar(
         title = "¡Bienvenido, $userName!",
         subtitle = subtitle,
         backgroundColor = backgroundColor,
         contentColor = contentColor,
-        modifier = modifier
+        modifier = modifier,
+        actions = actions // ✅ se pasa correctamente
     )
 }
 
@@ -74,13 +77,15 @@ fun ScreenTopAppBar(
     subtitle: String? = null,
     backgroundColor: Color = Crimson100,
     contentColor: Color = Color.White,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {} // ✅ opcional para otras pantallas también
 ) {
     CustomTopAppBar(
         title = screenTitle,
         subtitle = subtitle,
         backgroundColor = backgroundColor,
         contentColor = contentColor,
-        modifier = modifier
+        modifier = modifier,
+        actions = actions
     )
 }

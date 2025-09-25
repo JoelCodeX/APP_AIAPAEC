@@ -1,4 +1,5 @@
 [versions]
+accompanistSystemuicontroller = "0.36.0"
 agp = "8.13.0"
 kotlin = "2.2.20"
 coreKtx = "1.17.0"
@@ -14,8 +15,10 @@ material3 = "1.4.0"
 uiGraphics = "1.9.2"
 navigationCompose = "2.9.5"
 composeMaterial3 = "1.5.2"
+runtime = "1.9.2"
 
 [libraries]
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-compose-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +39,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3",
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "composeMaterial3" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

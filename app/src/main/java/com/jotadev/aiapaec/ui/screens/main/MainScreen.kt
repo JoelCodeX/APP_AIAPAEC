@@ -1,6 +1,8 @@
 package com.jotadev.aiapaec.ui.screens.main
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +31,8 @@ fun MainScreen(
     )
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.primary,
         bottomBar = {
             if (currentRoute !in routesWithoutBottomBar) {
                 BottomNavigationBar(

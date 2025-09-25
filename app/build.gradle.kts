@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.compose.material3)
+    implementation(libs.androidx.compose.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,5 +64,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     //UI UX
     implementation(libs.androidx.compose.ui.text.google.fonts)
+    implementation(libs.accompanist.systemuicontroller)
 
 }
