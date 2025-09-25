@@ -12,14 +12,13 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-
 // TEMA CLARO AIAPAEC - Optimizado
 private val AiapaecLightColorScheme = lightColorScheme(
-    primary = Gold100,           // Color principal
-    onPrimary = Black,           // Texto sobre primary
+    primary = Crimson40,       // Color secundario
+    onPrimary = White,    // Texto sobre secondary
 
-    secondary = Crimson40,       // Color secundario
-    onSecondary = White,         // Texto sobre secondary
+    secondary = Gold100,           // Color principal
+    onSecondary = Black,           // Texto sobre primary
 
     tertiary = Crimson60,        // Color terciario
     onTertiary = White,          // Texto sobre tertiary
@@ -39,11 +38,11 @@ private val AiapaecLightColorScheme = lightColorScheme(
 
 // TEMA OSCURO AIAPAEC - Optimizado
 private val AiapaecDarkColorScheme = darkColorScheme(
-    primary = Gold80,
-    onPrimary = Black,
+    primary = Crimson60,
+    onPrimary = White,
 
-    secondary = Crimson60,
-    onSecondary = White,
+    secondary = Gold80,
+    onSecondary = Black,
 
     tertiary = Crimson40,
     onTertiary = White,

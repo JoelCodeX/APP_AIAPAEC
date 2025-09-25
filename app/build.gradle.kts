@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.jotadev.aiapaec"
-        minSdk = 24
+        minSdk = 25
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -50,6 +50,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.compose.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -59,4 +63,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     //UI UX
     implementation(libs.androidx.compose.ui.text.google.fonts)
+
 }
