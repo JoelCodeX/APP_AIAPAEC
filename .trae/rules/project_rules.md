@@ -1,0 +1,11 @@
+-Genera codigo en Kotlin claro y conciso
+-Usa las buenas practicas de programación
+-No uses Previews
+-Separa las funciones para que sea entendible
+-El codigo tiene que ser profesional y escalable
+-Comenta solo en una linea
+-No uses comentarios de bloque
+-Usa Jetpack Compose para la interfaz de usuario
+-No modifiques versiones de Java a menos que sea necesario, pero tienes que hacermelo saber
+-Usa las dependencias necesarias para el proyecto pero que sean la version mas reciente
+
