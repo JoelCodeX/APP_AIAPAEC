@@ -26,7 +26,7 @@ private val AiapaecLightColorScheme = lightColorScheme(
     background = Color(0xFFFFFBFE), // Fondo de la app
     onBackground = Gray900,      // Texto sobre fondo
 
-    surface = Color(0xFFFFFBFE), // Superficies (cards, sheets)
+    surface = White, // Superficies (cards, sheets)
     onSurface = Gray900,         // Texto sobre superficie
 
     surfaceVariant = Gold60,     // Variante de superficie
@@ -50,7 +50,7 @@ private val AiapaecDarkColorScheme = darkColorScheme(
     background = Gray900,
     onBackground = White,
 
-    surface = Gray800,
+    surface = White,
     onSurface = White,
 
     surfaceVariant = Crimson100,
