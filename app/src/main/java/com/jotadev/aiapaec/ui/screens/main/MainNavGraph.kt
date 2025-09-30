@@ -6,10 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jotadev.aiapaec.navigation.NavigationRoutes
-import com.jotadev.aiapaec.ui.screens.home.HomeScreen
+import com.jotadev.aiapaec.ui.screens.classes.ClassesScreen
 import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
+import com.jotadev.aiapaec.ui.screens.home.HomeScreen
 import com.jotadev.aiapaec.ui.screens.results.ResultsScreen
 import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
+import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
 
 @Composable
 fun MainNavGraph(
@@ -24,23 +26,22 @@ fun MainNavGraph(
         composable(NavigationRoutes.HOME) {
             HomeScreen(navController = navController)
         }
-        
         composable(NavigationRoutes.EXAMS) {
             ExamsScreen(navController = navController)
         }
-        
+        composable(NavigationRoutes.CLASSES) {
+            ClassesScreen(navController = navController)
+        }
+        composable(NavigationRoutes.STUDENTS) {
+            StudentsScreen(navController = navController)
+        }
         composable(NavigationRoutes.RESULTS) {
             ResultsScreen(navController = navController)
         }
-        
         composable(NavigationRoutes.SETTINGS) {
             SettingsScreen(navController = navController)
         }
-        
-        // Pantallas secundarias
-        composable(NavigationRoutes.CLASSES) {
-            // ClassesScreen(navController = navController)
-        }
+
         
         composable(NavigationRoutes.GROUP_CLASSES) {
             // GroupClassesScreen(navController = navController)

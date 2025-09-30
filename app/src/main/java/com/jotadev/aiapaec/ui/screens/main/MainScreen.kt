@@ -1,15 +1,18 @@
 package com.jotadev.aiapaec.ui.screens.main
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import com.jotadev.aiapaec.navigation.BottomNavItem
 import com.jotadev.aiapaec.navigation.BottomNavigationBar
 import com.jotadev.aiapaec.navigation.NavigationRoutes
@@ -22,7 +25,6 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Rutas donde no se debe mostrar la barra de navegación inferior
     val routesWithoutBottomBar = listOf(
         NavigationRoutes.GROUP_CLASSES,
         NavigationRoutes.EXAM_DETAIL,
@@ -30,21 +32,22 @@ fun MainScreen(
         NavigationRoutes.SCAN_CARD
     )
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.tertiary,
-        bottomBar = {
-            if (currentRoute !in routesWithoutBottomBar) {
-                BottomNavigationBar(
-                    navController = navController,
-                    items = bottomNavItems
-                )
-            }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars)
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // CONTENIDO PRINCIPAL QUE OCUPA TODA LA PANTALLA
+        MainNavGraph(navController = navController)
+
+        // BARRA DE NAVEGACIÓN FLOTANTE
+        if (currentRoute !in routesWithoutBottomBar) {
+            BottomNavigationBar(
+                navController = navController,
+                items = bottomNavItems,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
-    ) { innerPadding ->
-        MainNavGraph(
-            navController = navController,
-            modifier = Modifier.padding(innerPadding)
-        )
     }
 }

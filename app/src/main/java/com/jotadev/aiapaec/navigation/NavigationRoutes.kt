@@ -7,11 +7,13 @@ object NavigationRoutes {
     // Bottom Navigation Routes
     const val HOME = "home"
     const val EXAMS = "exams"
+    const val CLASSES = "classes"
+    const val STUDENTS = "students"
     const val RESULTS = "results"
     const val SETTINGS = "settings"
+
     
     // Secondary Screens
-    const val CLASSES = "classes"
     const val EXAM_DETAIL = "exam_detail/{examId}"
     const val CREATE_EXAM = "create_exam"
     const val SCAN_CARD = "scan_card"

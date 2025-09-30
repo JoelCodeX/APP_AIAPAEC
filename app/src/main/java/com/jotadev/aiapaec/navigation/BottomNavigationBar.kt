@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,22 +19,26 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
-    items: List<BottomNavItem>
+    items: List<BottomNavItem>,
+    modifier: Modifier = Modifier
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     Surface(
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        tonalElevation = 0.dp, // sin sombra
-        shadowElevation = 0.dp,
-        color = MaterialTheme.colorScheme.tertiary,
-        modifier = Modifier
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 8.dp,
+        shadowElevation = 12.dp,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = modifier
             .fillMaxWidth()
-            .height(72.dp)
+            .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -43,7 +48,7 @@ fun BottomNavigationBar(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 4.dp)
                         .clickable(
                             indication = null, // ❌ sin ripple ni efecto visual
                             interactionSource = MutableInteractionSource()
@@ -65,31 +70,22 @@ fun BottomNavigationBar(
                         verticalArrangement = Arrangement.Center
                     ) {
                         if (selected) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.secondary,
-                                tonalElevation = 0.dp,
-                                shadowElevation = 0.dp,
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = item.icon,
-                                        contentDescription = item.label,
-                                        tint = MaterialTheme.colorScheme.onSecondary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
+                            Icon(
+                                imageVector = item.iconFilled,
+                                contentDescription = item.label,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(28.dp)
+                            )
                             Text(
                                 text = item.label,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.secondary,
+                                maxLines = 1
                             )
                         } else {
                             Icon(
-                                imageVector = item.icon,
+                                imageVector = item.iconOutlined,
                                 contentDescription = item.label,
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(24.dp)
