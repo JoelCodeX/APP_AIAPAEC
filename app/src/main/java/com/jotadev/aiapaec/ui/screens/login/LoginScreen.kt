@@ -1,5 +1,9 @@
 package com.jotadev.aiapaec.ui.screens.login
 
+import android.R.attr.contentDescription
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,11 +28,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.Shader
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -36,6 +43,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jotadev.aiapaec.R
 
 @Composable
 fun LoginScreen(
@@ -43,7 +51,7 @@ fun LoginScreen(
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+
     // MANEJAR NAVEGACIÓN CUANDO LOGIN ES EXITOSO
     LaunchedEffect(uiState.isLoginSuccessful) {
         if (uiState.isLoginSuccessful) {
@@ -85,7 +93,7 @@ fun LoginScreen(
             // Logo principal
             LogoAiapaec()
             Spacer(modifier = Modifier.height(28.dp))
-            
+
             // Card contenedora de los campos y botón
             Card(
                 modifier = Modifier
@@ -174,7 +182,7 @@ fun LoginScreen(
                             }
                         )
                     }
-                    
+
                     // MOSTRAR MENSAJE DE ERROR SI EXISTE
                     uiState.errorMessage?.let { error ->
                         Spacer(modifier = Modifier.height(8.dp))
@@ -193,11 +201,11 @@ fun LoginScreen(
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(24.dp))
                     // Botón Ingresar
                     BotonIngresar(
-                        onClick = { 
+                        onClick = {
                             viewModel.clearError()
                             viewModel.login()
                         },
@@ -205,17 +213,23 @@ fun LoginScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // BOTONES DE REDES SOCIALES
             SocialMediaButtons()
         }
     }
 }
-
+fun openUrl(context: Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    context.startActivity(intent)
+}
 @Composable
-private fun SocialMediaButtons() {
+fun SocialMediaButtons() {
+    val context = LocalContext.current
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
@@ -227,158 +241,121 @@ private fun SocialMediaButtons() {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // FACEBOOK
             SocialMediaButton(
-                backgroundColor = Color(0xFF1877F2),
-                contentColor = Color.White,
-                onClick = { /* TODO: Abrir Facebook */ }
-            ) {
-                Text(
-                    text = "f",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color.White
-                )
-            }
-            
-            // TWITTER
+                iconResId = R.drawable.facebook, // Asegúrate de tener este recurso
+                contentDescription = "Facebook",
+                onClick = { openUrl(context, "https://www.facebook.com/colegios.aiapaec?locale=es_LA") }
+            )
             SocialMediaButton(
-                backgroundColor = Color(0xFF1DA1F2),
-                contentColor = Color.White,
-                onClick = { /* TODO: Abrir Twitter */ }
-            ) {
-                Text(
-                    text = "𝕏",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color.White
-                )
-            }
-            
-            // LINKEDIN
+                iconResId = R.drawable.instagram, // Asegúrate de tener este recurso
+                contentDescription = "Instagram",
+                onClick = { openUrl(context, "https://www.instagram.com/colegios.aiapaec/") }
+            )
+
             SocialMediaButton(
-                backgroundColor = Color(0xFF0A66C2),
-                contentColor = Color.White,
-                onClick = { /* TODO: Abrir LinkedIn */ }
-            ) {
-                Text(
-                    text = "in",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color.White
-                )
-            }
-            
-            // YOUTUBE
+                iconResId = R.drawable.tiktok,
+                contentDescription = "TikTok",
+                onClick = { openUrl(context, "https://www.tiktok.com/@colegios.aiapaec") }
+            )
+
             SocialMediaButton(
-                backgroundColor = Color(0xFFFF0000),
-                contentColor = Color.White,
-                onClick = { /* TODO: Abrir YouTube */ }
-            ) {
-                Text(
-                    text = "▶",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color.White
-                )
-            }
+                iconResId = R.drawable.youtube,
+                contentDescription = "YouTube",
+                onClick = { openUrl(context, "https://www.youtube.com/@colegiosaiapaec") }
+            )
         }
     }
 }
-
-@Composable
-private fun SocialMediaButton(
-    backgroundColor: Color,
-    contentColor: Color,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(backgroundColor)
-            .clickable { onClick() }
-            .border(
-                width = 1.dp,
-                color = backgroundColor.copy(alpha = 0.3f),
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center
+    @Composable
+    fun SocialMediaButton(
+        onClick: () -> Unit,
+        iconResId: Int,
+        contentDescription: String
     ) {
-        content()
-    }
-}
-
-@Composable
-private fun LogoAiapaec() {
-    Box(
-        modifier = Modifier
-            .size(200.dp)
-            .background(Color.Transparent)
-    ) {
-        Image(
-            painter = androidx.compose.ui.res.painterResource(id = com.jotadev.aiapaec.R.drawable.logo),
-            contentDescription = "Logo AIAPAEC",
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .size(48.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = iconResId),
+                contentDescription = contentDescription,
+                modifier = Modifier.size(48.dp),
+//                colorFilter = ColorFilter.tint(Color.White)
+            )
+
+        }
+    }
+
+    @Composable
+    private fun LogoAiapaec() {
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .background(Color.Transparent)
+        ) {
+            Image(
+                painter = androidx.compose.ui.res.painterResource(id = com.jotadev.aiapaec.R.drawable.logo),
+                contentDescription = "Logo AIAPAEC",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            )
+        }
+    }
+
+    @Composable
+    private fun CampoTextoUsuario(
+        valor: String,
+        onValorCambiado: (String) -> Unit,
+    ) {
+        OutlinedTextField(
+            value = valor,
+            onValueChange = onValorCambiado,
+            label = { Text("Email") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Email,
+                    contentDescription = "Icono de email",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = Color.Gray
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
     }
-}
-@Composable
-private fun CampoTextoUsuario(
-    valor: String,
-    onValorCambiado: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value = valor,
-        onValueChange = onValorCambiado,
-        label = { Text("Email") },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Email,
-                contentDescription = "Icono de email",
-                tint = MaterialTheme.colorScheme.primary
-            )
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-            unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = Color.Gray,
-            focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = Color.Gray
-        ),
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-    )
-}
-@Composable
-private fun CampoTextoContrasena(
-    valor: String,
-    onValorCambiado: (String) -> Unit,
-    mostrarContrasena: Boolean,
-    onToggleVisibilidad: () -> Unit
-) {
-    OutlinedTextField(
-        value = valor,
-        onValueChange = onValorCambiado,
-        label = { Text("Contraseña") },
+
+    @Composable
+    private fun CampoTextoContrasena(
+        valor: String,
+        onValorCambiado: (String) -> Unit,
+        mostrarContrasena: Boolean,
+        onToggleVisibilidad: () -> Unit
+    ) {
+        OutlinedTextField(
+            value = valor,
+            onValueChange = onValorCambiado,
+            label = { Text("Contraseña") },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Lock,
@@ -386,65 +363,66 @@ private fun CampoTextoContrasena(
                     tint = MaterialTheme.colorScheme.primary
                 )
             },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-            unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = Color.Gray,
-            focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = Color.Gray
-        ),
-        visualTransformation = if (mostrarContrasena) VisualTransformation.None else PasswordVisualTransformation(),
-        trailingIcon = {
-            IconButton(onClick = onToggleVisibilidad) {
-                Icon(
-                    imageVector = if (mostrarContrasena) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (mostrarContrasena) "Ocultar contraseña" else "Mostrar contraseña",
-                    tint = MaterialTheme.colorScheme.primary
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = Color.Gray
+            ),
+            visualTransformation = if (mostrarContrasena) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = onToggleVisibilidad) {
+                    Icon(
+                        imageVector = if (mostrarContrasena) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (mostrarContrasena) "Ocultar contraseña" else "Mostrar contraseña",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        )
+    }
+
+    @Composable
+    private fun BotonIngresar(
+        onClick: () -> Unit,
+        isLoading: Boolean = false
+    ) {
+        Button(
+            onClick = onClick,
+            enabled = !isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+            )
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = "Ingresar",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSecondary
                 )
             }
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-    )
-}
-@Composable
-private fun BotonIngresar(
-    onClick: () -> Unit,
-    isLoading: Boolean = false
-) {
-    Button(
-        onClick = onClick,
-        enabled = !isLoading,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.secondary,
-            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
-        )
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = MaterialTheme.colorScheme.onSecondary,
-                strokeWidth = 2.dp
-            )
-        } else {
-            Text(
-                text = "Ingresar",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = MaterialTheme.colorScheme.onSecondary
-            )
         }
     }
-}
 

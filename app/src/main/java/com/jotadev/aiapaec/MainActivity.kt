@@ -15,7 +15,9 @@ import com.jotadev.aiapaec.navigation.AppNavigation
 import com.jotadev.aiapaec.ui.screens.main.MainScreen
 import com.jotadev.aiapaec.ui.theme.AIAPAECTheme
 import com.jotadev.aiapaec.ui.theme.Crimson60
+// import dagger.hilt.android.AndroidEntryPoint
 
+// @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

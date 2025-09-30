@@ -2,11 +2,15 @@ package com.jotadev.aiapaec.ui.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jotadev.aiapaec.data.repository.AuthRepository
+import com.jotadev.aiapaec.domain.models.Result
+import com.jotadev.aiapaec.domain.usecases.LoginUseCase
+import com.jotadev.aiapaec.data.repository.AuthRepositoryImpl
+// import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+// import javax.inject.Inject
 
 data class LoginUiState(
     val usuario: String = "",
@@ -19,11 +23,12 @@ data class LoginUiState(
     val userToken: String? = null
 )
 
-class LoginViewModel : ViewModel() {
+// @HiltViewModel
+class LoginViewModel(
+    private val loginUseCase: LoginUseCase = LoginUseCase(AuthRepositoryImpl())
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
-    
-    private val authRepository = AuthRepository()
 
     fun updateUsuario(usuario: String) {
         _uiState.value = _uiState.value.copy(usuario = usuario)
@@ -48,49 +53,32 @@ class LoginViewModel : ViewModel() {
     fun login() {
         val currentState = _uiState.value
         
-        // VALIDACIONES BÁSICAS
-        if (currentState.usuario.isBlank()) {
-            _uiState.value = currentState.copy(errorMessage = "EL EMAIL NO PUEDE ESTAR VACÍO")
-            return
-        }
-        
-        if (!isValidEmail(currentState.usuario)) {
-            _uiState.value = currentState.copy(errorMessage = "FORMATO DE EMAIL INVÁLIDO")
-            return
-        }
-        
-        if (currentState.contrasena.isBlank()) {
-            _uiState.value = currentState.copy(errorMessage = "LA CONTRASEÑA NO PUEDE ESTAR VACÍA")
-            return
-        }
-        
-        if (currentState.contrasena.length < 6) {
-            _uiState.value = currentState.copy(errorMessage = "LA CONTRASEÑA DEBE TENER AL MENOS 6 CARACTERES")
-            return
-        }
-        
         _uiState.value = currentState.copy(isLoading = true, errorMessage = null)
         
         viewModelScope.launch {
-            authRepository.login(currentState.usuario, currentState.contrasena)
-                .onSuccess { loginResponse ->
+            when (val result = loginUseCase(currentState.usuario, currentState.contrasena)) {
+                is Result.Success -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoginSuccessful = true,
-                        userToken = loginResponse.token,
+                        userToken = result.data.token,
                         errorMessage = null,
                         usuario = "",
                         contrasena = "",
                         mostrarContrasena = false
                     )
                 }
-                .onFailure { exception ->
+                is Result.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isLoginSuccessful = false,
-                        errorMessage = exception.message ?: "ERROR DESCONOCIDO"
+                        errorMessage = result.message
                     )
                 }
+                is Result.Loading -> {
+                    // YA ESTÁ EN LOADING
+                }
+            }
         }
     }
     
