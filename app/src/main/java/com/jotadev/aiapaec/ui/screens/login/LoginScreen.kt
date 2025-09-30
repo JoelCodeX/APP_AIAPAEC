@@ -1,6 +1,8 @@
 package com.jotadev.aiapaec.ui.screens.login
 
 import androidx.compose.foundation.Canvas
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,12 +39,17 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    viewModel: LoginViewModel = viewModel()
 ) {
-    var usuario by remember { mutableStateOf("") }
-    var contrasena by remember { mutableStateOf("") }
-    var mostrarContrasena by remember { mutableStateOf(false) }
-    var recordarUsuario by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // MANEJAR NAVEGACIÓN CUANDO LOGIN ES EXITOSO
+    LaunchedEffect(uiState.isLoginSuccessful) {
+        if (uiState.isLoginSuccessful) {
+            onLoginSuccess()
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -118,16 +126,16 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     // Campo Usuario
                     CampoTextoUsuario(
-                        valor = usuario,
-                        onValorCambiado = { usuario = it }
+                        valor = uiState.usuario,
+                        onValorCambiado = viewModel::updateUsuario
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     // Campo Contraseña
                     CampoTextoContrasena(
-                        valor = contrasena,
-                        onValorCambiado = { contrasena = it },
-                        mostrarContrasena = mostrarContrasena,
-                        onToggleVisibilidad = { mostrarContrasena = !mostrarContrasena }
+                        valor = uiState.contrasena,
+                        onValorCambiado = viewModel::updateContrasena,
+                        mostrarContrasena = uiState.mostrarContrasena,
+                        onToggleVisibilidad = viewModel::toggleMostrarContrasena
                     )
 //                    Spacer(modifier = Modifier.height(12.dp))
                     // Checkbox Recordar
@@ -142,8 +150,8 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Checkbox(
-                                checked = recordarUsuario,
-                                onCheckedChange = { recordarUsuario = it },
+                                checked = false, // TEMPORALMENTE DESHABILITADO
+                                onCheckedChange = { },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = MaterialTheme.colorScheme.secondary,
                                     uncheckedColor = MaterialTheme.colorScheme.secondary
@@ -166,21 +174,152 @@ fun LoginScreen(
                             }
                         )
                     }
+                    
+                    // MOSTRAR MENSAJE DE ERROR SI EXISTE
+                    uiState.errorMessage?.let { error ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Text(
+                                text = error,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(12.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    
                     Spacer(modifier = Modifier.height(24.dp))
                     // Botón Ingresar
                     BotonIngresar(
                         onClick = { 
-                            // Validación básica
-                            if (usuario.isNotBlank() && contrasena.isNotBlank()) {
-                                onLoginSuccess()
-                            }
-                        }
+                            viewModel.clearError()
+                            viewModel.login()
+                        },
+                        isLoading = uiState.isLoading
                     )
                 }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // BOTONES DE REDES SOCIALES
+            SocialMediaButtons()
+        }
+    }
+}
+
+@Composable
+private fun SocialMediaButtons() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = "Síguenos en nuestras redes sociales",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // FACEBOOK
+            SocialMediaButton(
+                backgroundColor = Color(0xFF1877F2),
+                contentColor = Color.White,
+                onClick = { /* TODO: Abrir Facebook */ }
+            ) {
+                Text(
+                    text = "f",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
+            }
+            
+            // TWITTER
+            SocialMediaButton(
+                backgroundColor = Color(0xFF1DA1F2),
+                contentColor = Color.White,
+                onClick = { /* TODO: Abrir Twitter */ }
+            ) {
+                Text(
+                    text = "𝕏",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
+            }
+            
+            // LINKEDIN
+            SocialMediaButton(
+                backgroundColor = Color(0xFF0A66C2),
+                contentColor = Color.White,
+                onClick = { /* TODO: Abrir LinkedIn */ }
+            ) {
+                Text(
+                    text = "in",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
+            }
+            
+            // YOUTUBE
+            SocialMediaButton(
+                backgroundColor = Color(0xFFFF0000),
+                contentColor = Color.White,
+                onClick = { /* TODO: Abrir YouTube */ }
+            ) {
+                Text(
+                    text = "▶",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
             }
         }
     }
 }
+
+@Composable
+private fun SocialMediaButton(
+    backgroundColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(backgroundColor)
+            .clickable { onClick() }
+            .border(
+                width = 1.dp,
+                color = backgroundColor.copy(alpha = 0.3f),
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
+    }
+}
+
 @Composable
 private fun LogoAiapaec() {
     Box(
@@ -274,25 +413,38 @@ private fun CampoTextoContrasena(
     )
 }
 @Composable
-private fun BotonIngresar(onClick: () -> Unit) {
+private fun BotonIngresar(
+    onClick: () -> Unit,
+    isLoading: Boolean = false
+) {
     Button(
         onClick = onClick,
+        enabled = !isLoading,
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.secondary
+            containerColor = MaterialTheme.colorScheme.secondary,
+            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
         )
     ) {
-        Text(
-            text = "Ingresar",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            ),
-            color = MaterialTheme.colorScheme.onSecondary
-        )
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = MaterialTheme.colorScheme.onSecondary,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(
+                text = "Ingresar",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                color = MaterialTheme.colorScheme.onSecondary
+            )
+        }
     }
 }
 
