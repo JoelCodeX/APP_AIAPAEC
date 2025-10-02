@@ -9,13 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-data class Student(
-    val id: String,
-    val firstName: String,
-    val lastName: String,
-    val className: String
-)
+import com.jotadev.aiapaec.domain.models.Student
 
 @Composable
 fun StudentCard(
@@ -71,7 +65,7 @@ fun StudentCard(
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = student.className,
+                    text = student.className ?: "—",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold

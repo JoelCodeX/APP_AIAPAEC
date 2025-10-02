@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.jotadev.aiapaec.ui.screens.login.LoginScreen
-import com.jotadev.aiapaec.ui.screens.main.MainScreen
+import com.jotadev.aiapaec.navigation.AppNavigation
 import com.jotadev.aiapaec.ui.theme.AIAPAECTheme
 
+@Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,8 +35,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.tertiary
                 ) {
-                    MainScreen()
-//                    LoginScreen()
+                    AppNavigation()
                 }
             }
         }

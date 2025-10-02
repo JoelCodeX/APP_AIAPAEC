@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2025-09-30T16:37:59.776144Z">
+        <DropdownSelection timestamp="2025-10-02T21:48:23.649772500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CX106MXNH" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\joelr\.android\avd\Pixel_9_Pro_XL_API_35.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,23 +15,17 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\joelr\.android\avd\Medium_Phone_API_35.avd" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CX106MXNH" />
+              </handle>
+            </Target>
+            <Target type="DEFAULT_BOOT">
+              <handle>
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\joelr\.android\avd\Pixel_9_Pro_XL_API_35.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
                 <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\joelr\.android\avd\Pixel_8_Pro.avd" />
-              </handle>
-            </Target>
-            <Target type="BOOT_WITH_SNAPSHOT">
-              <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\joelr\.android\avd\Pixel_9_Pro_XL_API_35.avd" />
-              </handle>
-              <Snapshot name="snap_2025-06-05_03-07-20" path="C:\Users\joelr\.android\avd\Pixel_9_Pro_XL_API_35.avd\snapshots\snap_2025-06-05_03-07-20" />
-            </Target>
-            <Target type="DEFAULT_BOOT">
-              <handle>
-                <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CX106MXNH" />
               </handle>
             </Target>
           </targets>

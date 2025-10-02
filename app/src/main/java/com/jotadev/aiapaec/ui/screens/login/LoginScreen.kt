@@ -1,39 +1,52 @@
 package com.jotadev.aiapaec.ui.screens.login
 
-import android.R.attr.contentDescription
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.Canvas
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.RenderEffect
-import androidx.compose.ui.graphics.Shader
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +56,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jotadev.aiapaec.R
 
 @Composable
@@ -51,8 +67,6 @@ fun LoginScreen(
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    // MANEJAR NAVEGACIÓN CUANDO LOGIN ES EXITOSO
     LaunchedEffect(uiState.isLoginSuccessful) {
         if (uiState.isLoginSuccessful) {
             onLoginSuccess()
@@ -63,7 +77,6 @@ fun LoginScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
     ) {
-        // Fondo superior con forma curva
         Canvas(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -79,22 +92,21 @@ fun LoginScreen(
             }
             drawPath(
                 path = path,
-                color = androidx.compose.ui.graphics.Color(0xFFAB2524)
+                color = Color(0xFFAB2524)
             )
         }
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
             Spacer(modifier = Modifier.height(60.dp))
-            // Logo principal
             LogoAiapaec()
             Spacer(modifier = Modifier.height(28.dp))
-
-            // Card contenedora de los campos y botón
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,7 +129,7 @@ fun LoginScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Bievenido",
+                        text = "Bienvenido",
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
@@ -132,34 +144,28 @@ fun LoginScreen(
                         modifier = Modifier.padding(top = 4.dp)
                     )
                     Spacer(modifier = Modifier.height(24.dp))
-                    // Campo Usuario
                     CampoTextoUsuario(
                         valor = uiState.usuario,
                         onValorCambiado = viewModel::updateUsuario
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    // Campo Contraseña
                     CampoTextoContrasena(
                         valor = uiState.contrasena,
                         onValorCambiado = viewModel::updateContrasena,
                         mostrarContrasena = uiState.mostrarContrasena,
                         onToggleVisibilidad = viewModel::toggleMostrarContrasena
                     )
-//                    Spacer(modifier = Modifier.height(12.dp))
-                    // Checkbox Recordar
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Row(
-//                            modifier = Modifier.fillMaxWidth(),
-//                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Checkbox(
-                                checked = false, // TEMPORALMENTE DESHABILITADO
-                                onCheckedChange = { },
+                                checked = false,
+                                onCheckedChange = {},
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = MaterialTheme.colorScheme.secondary,
                                     uncheckedColor = MaterialTheme.colorScheme.secondary
@@ -182,8 +188,6 @@ fun LoginScreen(
                             }
                         )
                     }
-
-                    // MOSTRAR MENSAJE DE ERROR SI EXISTE
                     uiState.errorMessage?.let { error ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Card(
@@ -201,9 +205,7 @@ fun LoginScreen(
                             )
                         }
                     }
-
                     Spacer(modifier = Modifier.height(24.dp))
-                    // Botón Ingresar
                     BotonIngresar(
                         onClick = {
                             viewModel.clearError()
@@ -213,19 +215,18 @@ fun LoginScreen(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.height(32.dp))
-
-            // BOTONES DE REDES SOCIALES
             SocialMediaButtons()
         }
     }
 }
+
 fun openUrl(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     context.startActivity(intent)
 }
+
 @Composable
 fun SocialMediaButtons() {
     val context = LocalContext.current
@@ -250,7 +251,12 @@ fun SocialMediaButtons() {
             SocialMediaButton(
                 iconResId = R.drawable.facebook, // Asegúrate de tener este recurso
                 contentDescription = "Facebook",
-                onClick = { openUrl(context, "https://www.facebook.com/colegios.aiapaec?locale=es_LA") }
+                onClick = {
+                    openUrl(
+                        context,
+                        "https://www.facebook.com/colegios.aiapaec?locale=es_LA"
+                    )
+                }
             )
             SocialMediaButton(
                 iconResId = R.drawable.instagram, // Asegúrate de tener este recurso
@@ -272,157 +278,154 @@ fun SocialMediaButtons() {
         }
     }
 }
-    @Composable
-    fun SocialMediaButton(
-        onClick: () -> Unit,
-        iconResId: Int,
-        contentDescription: String
+
+@Composable
+fun SocialMediaButton(
+    onClick: () -> Unit,
+    iconResId: Int,
+    contentDescription: String
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { onClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = iconResId),
-                contentDescription = contentDescription,
-                modifier = Modifier.size(48.dp),
-//                colorFilter = ColorFilter.tint(Color.White)
-            )
-
-        }
-    }
-
-    @Composable
-    private fun LogoAiapaec() {
-        Box(
-            modifier = Modifier
-                .size(200.dp)
-                .background(Color.Transparent)
-        ) {
-            Image(
-                painter = androidx.compose.ui.res.painterResource(id = com.jotadev.aiapaec.R.drawable.logo),
-                contentDescription = "Logo AIAPAEC",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            )
-        }
-    }
-
-    @Composable
-    private fun CampoTextoUsuario(
-        valor: String,
-        onValorCambiado: (String) -> Unit,
-    ) {
-        OutlinedTextField(
-            value = valor,
-            onValueChange = onValorCambiado,
-            label = { Text("Email") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Email,
-                    contentDescription = "Icono de email",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = Color.Gray
-            ),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        Image(
+            painter = painterResource(id = iconResId),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(48.dp),
         )
     }
+}
 
-    @Composable
-    private fun CampoTextoContrasena(
-        valor: String,
-        onValorCambiado: (String) -> Unit,
-        mostrarContrasena: Boolean,
-        onToggleVisibilidad: () -> Unit
+@Composable
+private fun LogoAiapaec() {
+    Box(
+        modifier = Modifier
+            .size(200.dp)
+            .background(Color.Transparent)
     ) {
-        OutlinedTextField(
-            value = valor,
-            onValueChange = onValorCambiado,
-            label = { Text("Contraseña") },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = "Icono de contraseña",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "Logo AIAPAEC",
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = Color.Gray,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = Color.Gray
-            ),
-            visualTransformation = if (mostrarContrasena) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = onToggleVisibilidad) {
-                    Icon(
-                        imageVector = if (mostrarContrasena) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (mostrarContrasena) "Ocultar contraseña" else "Mostrar contraseña",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                .fillMaxSize()
+                .padding(16.dp)
         )
     }
+}
 
-    @Composable
-    private fun BotonIngresar(
-        onClick: () -> Unit,
-        isLoading: Boolean = false
-    ) {
-        Button(
-            onClick = onClick,
-            enabled = !isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-                disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+@Composable
+private fun CampoTextoUsuario(
+    valor: String,
+    onValorCambiado: (String) -> Unit,
+) {
+    OutlinedTextField(
+        value = valor,
+        onValueChange = onValorCambiado,
+        label = { Text("Email") },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Email,
+                contentDescription = "Icono de email",
+                tint = MaterialTheme.colorScheme.primary
             )
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(
-                    text = "Ingresar",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSecondary
+        },
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+            unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = Color.Gray,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = Color.Gray
+        ),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+    )
+}
+
+@Composable
+private fun CampoTextoContrasena(
+    valor: String,
+    onValorCambiado: (String) -> Unit,
+    mostrarContrasena: Boolean,
+    onToggleVisibilidad: () -> Unit
+) {
+    OutlinedTextField(
+        value = valor,
+        onValueChange = onValorCambiado,
+        label = { Text("Contraseña") },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = "Icono de contraseña",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+            unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = Color.Gray,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = Color.Gray
+        ),
+        visualTransformation = if (mostrarContrasena) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = onToggleVisibilidad) {
+                Icon(
+                    imageVector = if (mostrarContrasena) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (mostrarContrasena) "Ocultar contraseña" else "Mostrar contraseña",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
+        },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+    )
+}
+
+@Composable
+private fun BotonIngresar(
+    onClick: () -> Unit,
+    isLoading: Boolean = false
+) {
+    Button(
+        onClick = onClick,
+        enabled = !isLoading,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+        )
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = MaterialTheme.colorScheme.onSecondary,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(
+                text = "Ingresar",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                color = MaterialTheme.colorScheme.onSecondary
+            )
         }
     }
+}
 

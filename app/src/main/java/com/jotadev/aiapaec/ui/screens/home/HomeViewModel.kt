@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val isLoading: Boolean = false,
-    val userName: String = "Usuario",
+//    val userName: String = "Usuario",
     val recentActivities: List<String> = emptyList(),
     val quickActions: List<QuickAction> = emptyList()
 )

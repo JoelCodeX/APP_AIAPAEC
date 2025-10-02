@@ -2,6 +2,8 @@ package com.jotadev.aiapaec.data.api
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Query
 import retrofit2.http.POST
 
 data class LoginRequest(
@@ -31,4 +33,42 @@ data class UserData(
 interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    // STUDENTS LISTING (branch is enforced by backend via JWT user)
+    @GET("students")
+    suspend fun getStudents(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+        @Query("q") query: String? = null
+    ): Response<StudentsResponse>
 }
+
+// Generic API wrapper format: { success, message, data }
+data class StudentsResponse(
+    val success: Boolean,
+    val message: String,
+    val data: StudentsPageDto?
+)
+
+data class StudentsPageDto(
+    val items: List<StudentDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
+data class StudentDto(
+    val id: Int,
+    val branch_id: Int,
+    val first_name: String,
+    val last_name: String,
+    val email: String?,
+    val phone: String?,
+    val date_of_birth: String?,
+    val gender: String?,
+    val address: String?,
+    val guardian_name: String?,
+    val enrollment_date: String?,
+    val class_name: String?
+)

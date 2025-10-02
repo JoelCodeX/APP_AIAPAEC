@@ -5,6 +5,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import com.jotadev.aiapaec.data.storage.TokenStorage
+import okhttp3.Interceptor
 
 object RetrofitClient {
     private const val BASE_URL = "http://192.168.18.224:5000/api/"
@@ -13,8 +15,19 @@ object RetrofitClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
     
+    private val authInterceptor = Interceptor { chain ->
+        val original = chain.request()
+        val token = TokenStorage.getToken()
+        val requestBuilder = original.newBuilder()
+        if (!token.isNullOrBlank()) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
+        }
+        chain.proceed(requestBuilder.build())
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
+        .addInterceptor(authInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)

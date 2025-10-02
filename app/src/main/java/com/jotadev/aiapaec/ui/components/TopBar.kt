@@ -1,15 +1,16 @@
 package com.jotadev.aiapaec.ui.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jotadev.aiapaec.ui.theme.Crimson100
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,10 +20,11 @@ fun CustomTopAppBar(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.tertiary,
     contentColor: Color = Color.White,
-    actions: @Composable RowScope.() -> Unit = {} // ✅ soporte para contenido adicional
+    navigationIcon: @Composable (() -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
-        modifier= modifier,
+        modifier = modifier,
         title = {
             Column {
                 Text(
@@ -44,7 +46,8 @@ fun CustomTopAppBar(
                 }
             }
         },
-        actions = actions, // ✅ se usa aquí
+        navigationIcon = navigationIcon ?: {},
+        actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = backgroundColor,
             titleContentColor = contentColor
@@ -55,10 +58,10 @@ fun CustomTopAppBar(
 @Composable
 fun WelcomeTopAppBar(
     subtitle: String = "Sistema de gestión de exámenes AIAPAEC",
-    backgroundColor:Color = MaterialTheme.colorScheme.tertiary,
+    backgroundColor: Color = MaterialTheme.colorScheme.tertiary,
     contentColor: Color = MaterialTheme.colorScheme.onTertiary,
     modifier: Modifier = Modifier,
-    actions: @Composable RowScope.() -> Unit = {} // ✅ se define aquí también
+    onNavigationClick: () -> Unit = {}
 ) {
     CustomTopAppBar(
         title = "Bienvenido",
@@ -66,18 +69,28 @@ fun WelcomeTopAppBar(
         backgroundColor = backgroundColor,
         contentColor = contentColor,
         modifier = modifier,
-        actions = actions // ✅ se pasa correctamente
+        navigationIcon = {
+            IconButton(onClick = onNavigationClick) {
+                Icon(
+                    imageVector = Icons.Default.Menu, // o Icons.Default.Menu
+                    contentDescription = "Menú",
+                    tint = contentColor
+                )
+            }
+        }
     )
 }
+
+
 
 @Composable
 fun ScreenTopAppBar(
     screenTitle: String,
     subtitle: String? = null,
-    backgroundColor: Color= MaterialTheme.colorScheme.tertiary,
+    backgroundColor: Color = MaterialTheme.colorScheme.tertiary,
     contentColor: Color = MaterialTheme.colorScheme.onTertiary,
     modifier: Modifier = Modifier,
-    actions: @Composable RowScope.() -> Unit = {} // ✅ opcional para otras pantallas también
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     CustomTopAppBar(
         title = screenTitle,
@@ -85,6 +98,7 @@ fun ScreenTopAppBar(
         backgroundColor = backgroundColor,
         contentColor = contentColor,
         modifier = modifier,
+        navigationIcon = null,
         actions = actions
     )
 }

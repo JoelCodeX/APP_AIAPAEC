@@ -9,13 +9,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Leaderboard
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.School
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomNavItem(
@@ -54,14 +52,7 @@ sealed class BottomNavItem(
         iconOutlined = Icons.Outlined.Leaderboard,
         label = "Resultados"
     )
-    data object Settings : BottomNavItem(
-        route = NavigationRoutes.SETTINGS,
-        iconFilled = Icons.Default.Settings,
-        iconOutlined = Icons.Outlined.Settings,
-        label = "Configuración"
-    )
-    
     companion object {
-        fun getAllItems() = listOf(Home, Exams, Classes, Students, Results, Settings)
+        fun getAllItems() = listOf(Home, Exams, Classes, Students, Results)
     }
 }

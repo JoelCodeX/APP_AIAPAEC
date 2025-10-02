@@ -7,50 +7,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.ui.components.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentsScreen(navController: NavController) {
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedClass by remember { mutableStateOf("Todas las clases") }
-    
-    // DATOS SIMULADOS DE ESTUDIANTES
-    val allStudents = remember {
-        listOf(
-            Student("EST001", "Juan Carlos", "Pérez García", "1° Primaria"),
-            Student("EST002", "María Elena", "López Martínez", "1° Primaria"),
-            Student("EST003", "Carlos Alberto", "Rodríguez Silva", "2° Primaria"),
-            Student("EST004", "Ana Sofía", "González Herrera", "2° Primaria"),
-            Student("EST005", "Luis Fernando", "Sánchez Torres", "3° Primaria"),
-            Student("EST006", "Isabella", "Ramírez Castro", "3° Primaria"),
-            Student("EST007", "Diego Alejandro", "Morales Vega", "4° Primaria"),
-            Student("EST008", "Valentina", "Jiménez Ruiz", "4° Primaria"),
-            Student("EST009", "Santiago", "Vargas Mendoza", "5° Primaria"),
-            Student("EST010", "Camila Andrea", "Cruz Delgado", "5° Primaria"),
-            Student("EST011", "Sebastián", "Ortega Flores", "6° Primaria"),
-            Student("EST012", "Sofía Alejandra", "Restrepo Gómez", "6° Primaria"),
-            Student("EST013", "Andrés Felipe", "Muñoz Cardenas", "1° Secundaria"),
-            Student("EST014", "Gabriela", "Pineda Rojas", "1° Secundaria"),
-            Student("EST015", "Nicolás", "Aguilar Moreno", "2° Secundaria")
-        )
-    }
-    
-    // LOGICA DE FILTRADO
-    val filteredStudents = remember(searchQuery, selectedClass, allStudents) {
-        allStudents.filter { student ->
-            val matchesSearch = if (searchQuery.isBlank()) {
-                true
-            } else {
-                student.firstName.contains(searchQuery, ignoreCase = true) ||
-                student.lastName.contains(searchQuery, ignoreCase = true) ||
-                student.id.contains(searchQuery, ignoreCase = true)
-            }
-            
-            val matchesClass = selectedClass == "Todas las clases" || student.className == selectedClass
-            
-            matchesSearch && matchesClass
-        }
-    }
+    val vm: StudentsViewModel = viewModel()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -69,17 +34,30 @@ fun StudentsScreen(navController: NavController) {
         ) {
             // BARRA DE BUSQUEDA Y FILTROS
             StudentsSearchAndFilterBar(
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                selectedClass = selectedClass,
-                onClassChange = { selectedClass = it }
+                searchQuery = state.query,
+                onSearchQueryChange = {
+                    vm.onQueryChange(it)
+                    vm.fetchStudents(page = 1)
+                },
+                selectedClass = "Todas las clases",
+                onClassChange = { /* TODO: conectar filtro por clase cuando API lo soporte */ }
             )
             
             // LISTA DE ESTUDIANTES
             StudentsList(
-                students = filteredStudents,
+                students = state.students,
                 modifier = Modifier.weight(1f)
             )
+            if (state.isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+            if (state.errorMessage != null) {
+                Text(
+                    text = state.errorMessage ?: "",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 }

@@ -12,8 +12,6 @@ class AuthRepository {
             val response = apiService.login(LoginRequest(email, password))
             if (response.isSuccessful) {
                 response.body()?.let { loginResponse ->
-                    // EL BACKEND DEVUELVE "Login successful" EN EL CAMPO MESSAGE CUANDO ES EXITOSO
-                    // Y SIEMPRE INCLUYE UN TOKEN CUANDO ES EXITOSO
                     if (loginResponse.token != null && loginResponse.message.contains("successful", ignoreCase = true)) {
                         Result.success(loginResponse)
                     } else {

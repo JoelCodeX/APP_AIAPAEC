@@ -7,6 +7,7 @@ import com.jotadev.aiapaec.domain.models.LoginData
 import com.jotadev.aiapaec.domain.models.LoginResult
 import com.jotadev.aiapaec.domain.models.Result
 import com.jotadev.aiapaec.domain.repository.AuthRepository
+import com.jotadev.aiapaec.data.storage.TokenStorage
 
 class AuthRepositoryImpl : AuthRepository {
     private val apiService = RetrofitClient.apiService
@@ -18,6 +19,8 @@ class AuthRepositoryImpl : AuthRepository {
                 response.body()?.let { loginResponse ->
                     // EL BACKEND DEVUELVE "Login successful" EN EL CAMPO MESSAGE CUANDO ES EXITOSO
                     if (loginResponse.token != null && loginResponse.message.contains("successful", ignoreCase = true)) {
+                        // Guardar token para futuras llamadas autenticadas
+                        TokenStorage.saveToken(loginResponse.token)
                         Result.Success(loginResponse.toLoginResult())
                     } else {
                         Result.Error(loginResponse.message)
@@ -66,15 +69,14 @@ class AuthRepositoryImpl : AuthRepository {
     }
     
     override suspend fun getStoredToken(): String? {
-        // IMPLEMENTAR LÓGICA PARA OBTENER EL TOKEN GUARDADO
-        // POR EJEMPLO, DESDE SHARED PREFERENCES O DATASTORE
-        return null // TODO: IMPLEMENTAR ALMACENAMIENTO DE TOKEN
+        // Obtener token desde almacenamiento local
+        return TokenStorage.getToken()
     }
     
     override suspend fun clearUserSession(): Result<Unit> {
         return try {
-            // IMPLEMENTAR LÓGICA PARA LIMPIAR LA SESIÓN
-            // POR EJEMPLO, ELIMINAR TOKEN DE SHARED PREFERENCES
+            // Limpiar token almacenado
+            TokenStorage.clear()
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Error("ERROR AL LIMPIAR SESIÓN: ${e.message}")

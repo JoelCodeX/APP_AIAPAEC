@@ -39,7 +39,7 @@ fun MainNavGraph(
             ResultsScreen(navController = navController)
         }
         composable(NavigationRoutes.SETTINGS) {
-            SettingsScreen(navController = navController)
+            SettingsScreen(navController = navController, onClose = { navController.popBackStack() })
         }
 
         
