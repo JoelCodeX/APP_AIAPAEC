@@ -1,42 +1,37 @@
-// Theme.kt (versión optimizada)
 package com.jotadev.aiapaec.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-// TEMA CLARO AIAPAEC - Optimizado
+
+// TEMA CLARO AIAPAEC
 private val AiapaecLightColorScheme = lightColorScheme(
-    primary = Crimson40,       // Color secundario
-    onPrimary = White,    // Texto sobre secondary
+    primary = Crimson40,
+    onPrimary = White,
 
-    secondary = Gold100,           // Color principal
-    onSecondary = Black,           // Texto sobre primary
+    secondary = Gold100,
+    onSecondary = Black,
 
-    tertiary = Crimson60,        // Color terciario
-    onTertiary = White,          // Texto sobre tertiary
+    tertiary = Crimson60,
+    onTertiary = White,
 
-    background = Color(0xFFFFFBFE), // Fondo de la app
-    onBackground = Gray900,      // Texto sobre fondo
+    background = Gray100,
+    onBackground = Gray900,
 
-    surface = White, // Superficies (cards, sheets)
-    onSurface = Gray900,         // Texto sobre superficie
+    surface = White,
+    onSurface = Gray900,
 
-    surfaceVariant = Gold60,     // Variante de superficie
-    onSurfaceVariant = Black,    // Texto sobre surfaceVariant
+    surfaceVariant = Gold60,
+    onSurfaceVariant = Black,
 
-    error = Color(0xFFBA1A1A),   // Color para errores
-    onError = White              // Texto sobre error
+    error = Color(0xFFBA1A1A),
+    onError = White
 )
 
-// TEMA OSCURO AIAPAEC - Optimizado
+// TEMA OSCURO AIAPAEC
 private val AiapaecDarkColorScheme = darkColorScheme(
     primary = Crimson40,
     onPrimary = White,
@@ -44,35 +39,33 @@ private val AiapaecDarkColorScheme = darkColorScheme(
     secondary = Gold100,
     onSecondary = Black,
 
-    tertiary = Crimson40,
+    tertiary = Crimson60,
     onTertiary = White,
 
-    background = Gray900,
-    onBackground = White,
+    background = Gray100,
+    onBackground = Gray900,
 
     surface = White,
-    onSurface = White,
+    onSurface = Gray900,
 
-    surfaceVariant = Crimson100,
-    onSurfaceVariant = White,
+    surfaceVariant = Gold60,
+    onSurfaceVariant = Black,
 
-    error = Color(0xFFFFB4AB),
-    onError = Black
+    error = Color(0xFFBA1A1A),
+    onError = White
 )
 
 @Composable
 fun AIAPAECTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Cambiado a false para usar siempre colores corporativos
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // Siempre usar los colores corporativos AIAPAEC, ignorando colores dinámicos
     val colorScheme = if (darkTheme) {
         AiapaecDarkColorScheme
     } else {
         AiapaecLightColorScheme
     }
-
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,

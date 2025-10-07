@@ -15,45 +15,63 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jotadev.aiapaec.presentation.BimestersViewModel
+import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
+import com.jotadev.aiapaec.ui.components.Exam as UiExam
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExamsScreen(navController: NavController) {
+    // ViewModel for dynamic bimesters
+    val bimestersVm: BimestersViewModel = viewModel()
+    val bimestersState by bimestersVm.uiState.collectAsStateWithLifecycle()
+    // ViewModel for dynamic classes
+    val classesVm: ClassesViewModel = viewModel()
+    val classesState by classesVm.uiState.collectAsStateWithLifecycle()
+
     // ESTADOS PARA FILTROS Y BUSQUEDA
     var searchText by remember { mutableStateOf("") }
     var selectedBimester by remember { mutableStateOf("Todos") }
     var selectedClass by remember { mutableStateOf("Todas") }
     var showCreateDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
+    val bimesterOptions = remember(bimestersState.bimesters) {
+        listOf("Todos") + bimestersState.bimesters.map { it.name }
+    }
+    val classOptions = remember(classesState.classes) {
+        listOf("Todas") + classesState.classes.map { it.name }
+    }
     
     // LISTA DE EXAMENES (SIMULADA)
     var examsList by remember { 
         mutableStateOf(
             listOf(
-                Exam(
+                UiExam(
                     id = "1",
                     name = "Examen de Álgebra Básica",
                     className = "Matemáticas",
                     bimester = "I Bimestre",
-                    type = "20 preguntas",
+                    type = "Sin asignar",
                     date = "2024-09-15",
                     isApplied = false
                 ),
-                Exam(
+                UiExam(
                     id = "2",
                     name = "Evaluación de Comprensión Lectora",
                     className = "Comunicación",
                     bimester = "I Bimestre",
-                    type = "50 preguntas",
+                    type = "Sin asignar",
                     date = "2024-09-15",
                     isApplied = true
                 ),
-                Exam(
+                UiExam(
                     id = "3",
                     name = "Examen de Ciencias Naturales",
                     className = "Ciencias",
                     bimester = "II Bimestre",
-                    type = "20 preguntas",
+                    type = "Sin asignar",
                     date = "2024-09-15",
                     isApplied = false
                 )
@@ -85,7 +103,7 @@ fun ExamsScreen(navController: NavController) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.onPrimary,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ScreenTopAppBar(
                 screenTitle = "Exámenes",
@@ -139,7 +157,9 @@ fun ExamsScreen(navController: NavController) {
                     selectedBimester = selectedBimester,
                     onBimesterChange = { selectedBimester = it },
                     selectedClass = selectedClass,
-                    onClassChange = { selectedClass = it }
+                    onClassChange = { selectedClass = it },
+                    bimesters = bimesterOptions,
+                    classes = classOptions
                 )
 
                 // LISTA DE EXAMENES
@@ -160,18 +180,20 @@ fun ExamsScreen(navController: NavController) {
         CreateExamDialog(
             isVisible = showCreateDialog,
             onDismiss = { showCreateDialog = false },
-            onCreateExam = { name, className, bimester, type ->
-                val newExam = Exam(
+            onCreateExam = { name, className, bimester ->
+                val newExam = UiExam(
                     id = UUID.randomUUID().toString(),
                     name = name,
                     className = className,
                     bimester = bimester,
-                    type = type,
+                    type = "Sin asignar",
                     date = "2024-09-15",
                     isApplied = false
                 )
                 examsList = examsList + newExam
-            }
+            },
+            bimesters = bimestersState.bimesters.map { it.name },
+            classes = classesState.classes.map { it.name }
         )
     }
 }

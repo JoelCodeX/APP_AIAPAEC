@@ -148,7 +148,8 @@ fun FilterDropdown(
     label: String,
     selectedValue: String,
     options: List<String>,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    placeholder: String? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -162,6 +163,7 @@ fun FilterDropdown(
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
+            placeholder = placeholder?.let { { Text(it) } },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()

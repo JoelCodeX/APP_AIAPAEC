@@ -57,7 +57,7 @@ fun HomeScreen(
         Scaffold(
             modifier = Modifier
                 .fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.onPrimary,
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 WelcomeTopAppBar(onNavigationClick = { showSettings = true })
             }
@@ -68,7 +68,6 @@ fun HomeScreen(
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
-                // Cabecera con saludo y acciones rápidas
                 Text(
                     text = "Hola, $userName",
                     style = MaterialTheme.typography.titleLarge,
@@ -148,7 +147,7 @@ fun HomeScreen(
                                 .background(Color.Black.copy(alpha = 0.35f))
                                 .pointerInput(Unit) {
                                     // Consumir toques para bloquear interacción sin cerrar
-                                    detectTapGestures(onTap = { /* no-op */ })
+                                    detectTapGestures(onTap = {showSettings = false })
                                 }
                         )
                     }

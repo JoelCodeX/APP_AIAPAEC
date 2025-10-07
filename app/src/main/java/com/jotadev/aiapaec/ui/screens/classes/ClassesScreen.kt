@@ -24,7 +24,7 @@ fun ClassesScreen(navController: NavController) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.onPrimary,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ScreenTopAppBar(
                 screenTitle = "Clases",

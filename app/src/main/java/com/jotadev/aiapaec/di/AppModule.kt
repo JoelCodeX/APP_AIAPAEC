@@ -4,18 +4,23 @@ import com.jotadev.aiapaec.data.repository.AuthRepositoryImpl
 import com.jotadev.aiapaec.data.repository.UserRepositoryImpl
 import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
 import com.jotadev.aiapaec.data.repository.ClassesRepositoryImpl
+import com.jotadev.aiapaec.data.repository.BimestersRepositoryImpl
+import com.jotadev.aiapaec.data.api.RetrofitClient
 import com.jotadev.aiapaec.domain.repository.AuthRepository
 import com.jotadev.aiapaec.domain.repository.UserRepository
 import com.jotadev.aiapaec.domain.repository.StudentRepository
 import com.jotadev.aiapaec.domain.repository.ClassesRepository
+import com.jotadev.aiapaec.domain.repository.BimestersRepository
 import com.jotadev.aiapaec.domain.usecases.CheckAuthStatusUseCase
 import com.jotadev.aiapaec.domain.usecases.GetCurrentUserUseCase
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
 import com.jotadev.aiapaec.domain.usecases.GetClassesUseCase
+import com.jotadev.aiapaec.domain.usecases.GetBimestersUseCase
 import com.jotadev.aiapaec.domain.usecases.LoginUseCase
 import com.jotadev.aiapaec.domain.usecases.LogoutUseCase
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
 import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
+import com.jotadev.aiapaec.presentation.BimestersViewModel
 // import dagger.Module
 // import dagger.Provides
 // import dagger.hilt.InstallIn
@@ -48,6 +53,12 @@ object AppModule {
     // @Singleton
     fun provideClassesRepository(): ClassesRepository {
         return ClassesRepositoryImpl()
+    }
+    
+    // @Provides
+    // @Singleton
+    fun provideBimestersRepository(): BimestersRepository {
+        return BimestersRepositoryImpl(RetrofitClient.apiService)
     }
     
     // @Provides
@@ -84,6 +95,11 @@ object AppModule {
     }
     
     // @Provides
+    fun provideGetBimestersUseCase(bimestersRepository: BimestersRepository): GetBimestersUseCase {
+        return GetBimestersUseCase(bimestersRepository)
+    }
+    
+    // @Provides
     fun provideStudentsViewModel(getStudentsUseCase: GetStudentsUseCase): StudentsViewModel {
         return StudentsViewModel(getStudentsUseCase)
     }
@@ -91,5 +107,10 @@ object AppModule {
     // @Provides
     fun provideClassesViewModel(getClassesUseCase: GetClassesUseCase): ClassesViewModel {
         return ClassesViewModel(getClassesUseCase)
+    }
+    
+    // @Provides
+    fun provideBimestersViewModel(): BimestersViewModel {
+        return BimestersViewModel()
     }
 }

@@ -38,7 +38,7 @@ fun ExamCard(
             .padding(horizontal = 16.dp, vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.onPrimary
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -126,7 +126,7 @@ fun ExamCard(
             ) {
                 ExamInfoChip(
                     label = "Tipo",
-                    value = exam.type,
+                    value = "Sin asignar",
                     modifier = Modifier.weight(1f)
                 )
 

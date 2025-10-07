@@ -10,7 +10,7 @@ import com.jotadev.aiapaec.data.storage.TokenStorage
 import okhttp3.Interceptor
 
 object RetrofitClient {
-    // Base URL dinámica: emulador usa 10.0.2.2, dispositivo usa IP local
+    // URL DINÁMICA SEGÚN SI ES EMULADOR O DISPOSITIVO REAL
     private fun isEmulator(): Boolean {
         val fingerprint = Build.FINGERPRINT.lowercase()
         val model = Build.MODEL
@@ -27,10 +27,11 @@ object RetrofitClient {
     }
 
     private val BASE_URL: String = if (isEmulator()) {
+        // IP EMULADOR ANDROID STUDIO
         "http://10.0.2.2:5000/api/"
     } else {
-        // Ajustar si tu IP local cambia
-        "http://192.168.1.8:5000/api/"
+        // IP LOCAL RED WIFI (CAMBIAR SEGÚN LA RED)
+        "http://192.168.18.224:5000/api/"
     }
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

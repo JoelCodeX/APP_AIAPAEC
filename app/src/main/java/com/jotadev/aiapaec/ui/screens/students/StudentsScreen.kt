@@ -23,7 +23,7 @@ fun StudentsScreen(navController: NavController) {
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.onPrimary,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ScreenTopAppBar(
                 screenTitle = "Estudiantes",

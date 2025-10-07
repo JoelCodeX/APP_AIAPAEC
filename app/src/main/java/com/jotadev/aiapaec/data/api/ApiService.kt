@@ -51,6 +51,15 @@ interface ApiService {
         @Query("q") query: String? = null,
         @Query("level") level: String? = null
     ): Response<ClassesResponse>
+
+    // BIMESTERS LISTING
+    @GET("bimesters")
+    suspend fun getBimesters(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+        @Query("q") query: String? = null,
+        @Query("year") year: Int? = null
+    ): Response<BimestersResponse>
 }
 
 // Generic API wrapper format: { success, message, data }
@@ -66,6 +75,12 @@ data class ClassesResponse(
     val data: ClassesPageDto?
 )
 
+data class BimestersResponse(
+    val success: Boolean,
+    val message: String,
+    val data: BimestersPageDto?
+)
+
 data class StudentsPageDto(
     val items: List<StudentDto>,
     val page: Int,
@@ -76,6 +91,14 @@ data class StudentsPageDto(
 
 data class ClassesPageDto(
     val items: List<ClassDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
+data class BimestersPageDto(
+    val items: List<BimesterDto>,
     val page: Int,
     val per_page: Int,
     val total: Int,
@@ -103,4 +126,12 @@ data class ClassDto(
     val name: String,
     val level: String,
     @SerializedName("student_count") val studentCount: Int
+)
+
+data class BimesterDto(
+    val id: Int,
+    val name: String,
+    @SerializedName("start_date") val start_date: String,
+    @SerializedName("end_date") val end_date: String,
+    @SerializedName("academic_year") val academic_year: Int
 )
