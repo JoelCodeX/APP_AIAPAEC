@@ -5,6 +5,9 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.DELETE
+import retrofit2.http.Path
 import com.google.gson.annotations.SerializedName
 
 data class LoginRequest(
@@ -60,6 +63,37 @@ interface ApiService {
         @Query("q") query: String? = null,
         @Query("year") year: Int? = null
     ): Response<BimestersResponse>
+
+    // QUIZZES
+    @GET("quizzes")
+    suspend fun getQuizzes(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+        @Query("q") query: String? = null,
+        @Query("class_id") classId: Int? = null,
+        @Query("bimester_id") bimesterId: Int? = null
+    ): Response<QuizzesListResponse>
+
+    @GET("quizzes/{id}")
+    suspend fun getQuiz(
+        @Path("id") id: Int
+    ): Response<QuizItemResponse>
+
+    @POST("quizzes")
+    suspend fun createQuiz(
+        @Body request: CreateQuizRequest
+    ): Response<QuizItemResponse>
+
+    @PUT("quizzes/{id}")
+    suspend fun updateQuiz(
+        @Path("id") id: Int,
+        @Body request: UpdateQuizRequest
+    ): Response<QuizItemResponse>
+
+    @DELETE("quizzes/{id}")
+    suspend fun deleteQuiz(
+        @Path("id") id: Int
+    ): Response<ApiResponseNoData>
 }
 
 // Generic API wrapper format: { success, message, data }
@@ -81,6 +115,23 @@ data class BimestersResponse(
     val data: BimestersPageDto?
 )
 
+data class QuizzesListResponse(
+    val success: Boolean,
+    val message: String,
+    val data: QuizzesPageDto?
+)
+
+data class QuizItemResponse(
+    val success: Boolean,
+    val message: String,
+    val data: QuizDto?
+)
+
+data class ApiResponseNoData(
+    val success: Boolean,
+    val message: String
+)
+
 data class StudentsPageDto(
     val items: List<StudentDto>,
     val page: Int,
@@ -99,6 +150,14 @@ data class ClassesPageDto(
 
 data class BimestersPageDto(
     val items: List<BimesterDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
+data class QuizzesPageDto(
+    val items: List<QuizDto>,
     val page: Int,
     val per_page: Int,
     val total: Int,
@@ -134,4 +193,45 @@ data class BimesterDto(
     @SerializedName("start_date") val start_date: String,
     @SerializedName("end_date") val end_date: String,
     @SerializedName("academic_year") val academic_year: Int
+)
+
+data class QuizDto(
+    val id: Int,
+    val title: String,
+    val description: String?,
+    @SerializedName("class_id") val class_id: Int,
+    @SerializedName("bimester_id") val bimester_id: Int,
+    @SerializedName("total_points") val total_points: Double?,
+    @SerializedName("num_questions") val num_questions: Int?,
+    @SerializedName("points_per_question") val points_per_question: Double?,
+    @SerializedName("answer_key_file") val answer_key_file: String?,
+    @SerializedName("key_version") val key_version: String?,
+    @SerializedName("created_at") val created_at: String?,
+    @SerializedName("updated_at") val updated_at: String?,
+    @SerializedName("class_name") val class_name: String?,
+    @SerializedName("bimester_name") val bimester_name: String?
+)
+
+data class CreateQuizRequest(
+    val title: String,
+    val description: String?,
+    val class_id: Int,
+    val bimester_id: Int,
+    val total_points: Double?,
+    val num_questions: Int?,
+    val points_per_question: Double?,
+    val answer_key_file: String?,
+    val key_version: String?
+)
+
+data class UpdateQuizRequest(
+    val title: String?,
+    val description: String?,
+    val class_id: Int?,
+    val bimester_id: Int?,
+    val total_points: Double?,
+    val num_questions: Int?,
+    val points_per_question: Double?,
+    val answer_key_file: String?,
+    val key_version: String?
 )

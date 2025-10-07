@@ -30,12 +30,16 @@ fun ExamsScreen(navController: NavController) {
     // ViewModel for dynamic classes
     val classesVm: ClassesViewModel = viewModel()
     val classesState by classesVm.uiState.collectAsStateWithLifecycle()
+    // ViewModel for quizzes-backed exams
+    val examsVm: ExamsViewModel = viewModel()
+    val examsState by examsVm.uiState.collectAsStateWithLifecycle()
 
     // ESTADOS PARA FILTROS Y BUSQUEDA
     var searchText by remember { mutableStateOf("") }
     var selectedBimester by remember { mutableStateOf("Todos") }
     var selectedClass by remember { mutableStateOf("Todas") }
-    var showCreateDialog by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var editingExam by remember { mutableStateOf<UiExam?>(null) }
     var isRefreshing by remember { mutableStateOf(false) }
     val bimesterOptions = remember(bimestersState.bimesters) {
         listOf("Todos") + bimestersState.bimesters.map { it.name }
@@ -43,61 +47,15 @@ fun ExamsScreen(navController: NavController) {
     val classOptions = remember(classesState.classes) {
         listOf("Todas") + classesState.classes.map { it.name }
     }
-    
-    // LISTA DE EXAMENES (SIMULADA)
-    var examsList by remember { 
-        mutableStateOf(
-            listOf(
-                UiExam(
-                    id = "1",
-                    name = "Examen de Álgebra Básica",
-                    className = "Matemáticas",
-                    bimester = "I Bimestre",
-                    type = "Sin asignar",
-                    date = "2024-09-15",
-                    isApplied = false
-                ),
-                UiExam(
-                    id = "2",
-                    name = "Evaluación de Comprensión Lectora",
-                    className = "Comunicación",
-                    bimester = "I Bimestre",
-                    type = "Sin asignar",
-                    date = "2024-09-15",
-                    isApplied = true
-                ),
-                UiExam(
-                    id = "3",
-                    name = "Examen de Ciencias Naturales",
-                    className = "Ciencias",
-                    bimester = "II Bimestre",
-                    type = "Sin asignar",
-                    date = "2024-09-15",
-                    isApplied = false
-                )
-            )
-        )
-    }
-
-    // FILTRAR EXAMENES SEGUN CRITERIOS
-    val filteredExams = examsList.filter { exam ->
-        val matchesSearch = exam.name.contains(searchText, ignoreCase = true) ||
-                           exam.className.contains(searchText, ignoreCase = true)
-        val matchesBimester = selectedBimester == "Todos" || exam.bimester == selectedBimester
-        val matchesClass = selectedClass == "Todas" || exam.className == selectedClass
-        
-        matchesSearch && matchesBimester && matchesClass
-    }
+    // LISTA DE EXÁMENES DESDE EL VIEWMODEL (filtrado en backend)
+    val filteredExams = examsState.exams
 
     // Auto-refresco cada 30s (simulado)
     LaunchedEffect(Unit) {
         while (isActive) {
             delay(30_000)
-            // Aquí podrías conectar a un ViewModel cuando haya API
-            isRefreshing = true
-            // Simular tarea de actualización rápida
-            delay(500)
-            isRefreshing = false
+            examsVm.refreshExams()
+            isRefreshing = examsState.isLoading
         }
     }
 
@@ -112,7 +70,10 @@ fun ExamsScreen(navController: NavController) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showCreateDialog = true },
+                onClick = {
+                    editingExam = null
+                    showDialog = true
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.padding(bottom = 80.dp)
@@ -128,10 +89,8 @@ fun ExamsScreen(navController: NavController) {
         SwipeRefresh(
             state = swipeState,
             onRefresh = {
-                // Aquí podrías conectar a un ViewModel cuando haya API
-                isRefreshing = true
-                // Simular tarea de actualización rápida
-                isRefreshing = false
+                examsVm.refreshExams()
+                isRefreshing = examsState.isLoading
             },
             indicator = { s, trigger ->
                 SwipeRefreshIndicator(
@@ -153,11 +112,26 @@ fun ExamsScreen(navController: NavController) {
                 // BARRA DE BUSQUEDA Y FILTROS
                 SearchAndFilterBar(
                     searchText = searchText,
-                    onSearchTextChange = { searchText = it },
+                    onSearchTextChange = {
+                        searchText = it
+                        val classId = classesState.classes.firstOrNull { c -> c.name == selectedClass }?.id
+                        val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
+                        examsVm.loadExams(query = searchText.ifBlank { null }, classId = classId, bimesterId = bimesterId)
+                    },
                     selectedBimester = selectedBimester,
-                    onBimesterChange = { selectedBimester = it },
+                    onBimesterChange = {
+                        selectedBimester = it
+                        val classId = classesState.classes.firstOrNull { c -> c.name == selectedClass }?.id
+                        val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
+                        examsVm.loadExams(query = if (searchText.isBlank()) null else searchText, classId = classId, bimesterId = bimesterId)
+                    },
                     selectedClass = selectedClass,
-                    onClassChange = { selectedClass = it },
+                    onClassChange = {
+                        selectedClass = it
+                        val classId = classesState.classes.firstOrNull { c -> c.name == selectedClass }?.id
+                        val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
+                        examsVm.loadExams(query = if (searchText.isBlank()) null else searchText, classId = classId, bimesterId = bimesterId)
+                    },
                     bimesters = bimesterOptions,
                     classes = classOptions
                 )
@@ -166,34 +140,39 @@ fun ExamsScreen(navController: NavController) {
                 ExamsList(
                     exams = filteredExams,
                     onEditExam = { exam ->
-                        // LOGICA PARA EDITAR EXAMEN
+                        editingExam = exam
+                        showDialog = true
                     },
                     onDeleteExam = { exam ->
-                        examsList = examsList.filter { it.id != exam.id }
+                        examsVm.deleteExam(exam.id)
                     },
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        // DIALOGO PARA CREAR EXAMEN
+        // DIALOGO PARA CREAR / EDITAR EXAMEN
         CreateExamDialog(
-            isVisible = showCreateDialog,
-            onDismiss = { showCreateDialog = false },
-            onCreateExam = { name, className, bimester ->
-                val newExam = UiExam(
-                    id = UUID.randomUUID().toString(),
-                    name = name,
-                    className = className,
-                    bimester = bimester,
-                    type = "Sin asignar",
-                    date = "2024-09-15",
-                    isApplied = false
-                )
-                examsList = examsList + newExam
+            isVisible = showDialog,
+            onDismiss = { showDialog = false },
+            onSaveExam = { name, className, bimester ->
+                val classId = classesState.classes.firstOrNull { it.name == className }?.id
+                val bimesterId = bimestersState.bimesters.firstOrNull { it.name == bimester }?.id
+                if (classId != null && bimesterId != null) {
+                    val editingIdInt = editingExam?.id?.toIntOrNull()
+                    if (editingExam == null) {
+                        examsVm.createExam(name, classId, bimesterId)
+                    } else if (editingIdInt != null) {
+                        examsVm.updateExam(id = editingIdInt, title = name, classId = classId, bimesterId = bimesterId)
+                    }
+                }
             },
             bimesters = bimestersState.bimesters.map { it.name },
-            classes = classesState.classes.map { it.name }
+            classes = classesState.classes.map { it.name },
+            initialName = editingExam?.name ?: "",
+            initialClass = editingExam?.className ?: "",
+            initialBimester = editingExam?.bimester ?: "",
+            title = if (editingExam == null) "Crear Nuevo Examen" else "Editar Examen"
         )
     }
 }

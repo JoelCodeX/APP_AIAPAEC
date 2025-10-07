@@ -16,14 +16,18 @@ import androidx.compose.ui.window.Dialog
 fun CreateExamDialog(
     isVisible: Boolean,
     onDismiss: () -> Unit,
-    onCreateExam: (String, String, String) -> Unit,
+    onSaveExam: (String, String, String) -> Unit,
     classes: List<String> = listOf("Matemáticas", "Comunicación", "Ciencias", "Personal Social"),
     bimesters: List<String> = emptyList(),
+    initialName: String = "",
+    initialClass: String = "",
+    initialBimester: String = "",
+    title: String = "Crear Nuevo Examen"
 ) {
     if (isVisible) {
-        var examName by remember { mutableStateOf("") }
-        var selectedClass by remember { mutableStateOf("") }
-        var selectedBimester by remember { mutableStateOf("") }
+        var examName by remember { mutableStateOf(initialName) }
+        var selectedClass by remember { mutableStateOf(initialClass) }
+        var selectedBimester by remember { mutableStateOf(initialBimester) }
         var nameError by remember { mutableStateOf(false) }
 
         Dialog(onDismissRequest = onDismiss) {
@@ -44,7 +48,7 @@ fun CreateExamDialog(
                 ) {
                     // TITULO
                     Text(
-                        text = "Crear Nuevo Examen",
+                        text = title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -114,7 +118,7 @@ fun CreateExamDialog(
                                 if (examName.isBlank()) {
                                     nameError = true
                                 } else {
-                                    onCreateExam(examName, selectedClass, selectedBimester)
+                                    onSaveExam(examName, selectedClass, selectedBimester)
                                     onDismiss()
                                 }
                             },

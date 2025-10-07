@@ -5,17 +5,23 @@ import com.jotadev.aiapaec.data.repository.UserRepositoryImpl
 import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
 import com.jotadev.aiapaec.data.repository.ClassesRepositoryImpl
 import com.jotadev.aiapaec.data.repository.BimestersRepositoryImpl
+import com.jotadev.aiapaec.data.repository.QuizzesRepositoryImpl
 import com.jotadev.aiapaec.data.api.RetrofitClient
 import com.jotadev.aiapaec.domain.repository.AuthRepository
 import com.jotadev.aiapaec.domain.repository.UserRepository
 import com.jotadev.aiapaec.domain.repository.StudentRepository
 import com.jotadev.aiapaec.domain.repository.ClassesRepository
 import com.jotadev.aiapaec.domain.repository.BimestersRepository
+import com.jotadev.aiapaec.domain.repository.QuizzesRepository
 import com.jotadev.aiapaec.domain.usecases.CheckAuthStatusUseCase
 import com.jotadev.aiapaec.domain.usecases.GetCurrentUserUseCase
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
 import com.jotadev.aiapaec.domain.usecases.GetClassesUseCase
 import com.jotadev.aiapaec.domain.usecases.GetBimestersUseCase
+import com.jotadev.aiapaec.domain.usecases.GetQuizzesUseCase
+import com.jotadev.aiapaec.domain.usecases.CreateQuizUseCase
+import com.jotadev.aiapaec.domain.usecases.UpdateQuizUseCase
+import com.jotadev.aiapaec.domain.usecases.DeleteQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.LoginUseCase
 import com.jotadev.aiapaec.domain.usecases.LogoutUseCase
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
@@ -60,6 +66,11 @@ object AppModule {
     fun provideBimestersRepository(): BimestersRepository {
         return BimestersRepositoryImpl(RetrofitClient.apiService)
     }
+
+    // Quizzes
+    fun provideQuizzesRepository(): QuizzesRepository {
+        return QuizzesRepositoryImpl()
+    }
     
     // @Provides
     fun provideLoginUseCase(authRepository: AuthRepository): LoginUseCase {
@@ -97,6 +108,22 @@ object AppModule {
     // @Provides
     fun provideGetBimestersUseCase(bimestersRepository: BimestersRepository): GetBimestersUseCase {
         return GetBimestersUseCase(bimestersRepository)
+    }
+
+    fun provideGetQuizzesUseCase(quizzesRepository: QuizzesRepository): GetQuizzesUseCase {
+        return GetQuizzesUseCase(quizzesRepository)
+    }
+
+    fun provideCreateQuizUseCase(quizzesRepository: QuizzesRepository): CreateQuizUseCase {
+        return CreateQuizUseCase(quizzesRepository)
+    }
+
+    fun provideUpdateQuizUseCase(quizzesRepository: QuizzesRepository): UpdateQuizUseCase {
+        return UpdateQuizUseCase(quizzesRepository)
+    }
+
+    fun provideDeleteQuizUseCase(quizzesRepository: QuizzesRepository): DeleteQuizUseCase {
+        return DeleteQuizUseCase(quizzesRepository)
     }
     
     // @Provides
