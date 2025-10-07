@@ -1,5 +1,6 @@
 [versions]
 accompanistSystemuicontroller = "0.36.0"
+accompanistSwiperefresh = "0.36.0"
 agp = "8.13.0"
 kotlin = "2.2.20"
 coreKtx = "1.17.0"
@@ -27,6 +28,7 @@ ui = "1.9.2"
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
+accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-compose-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

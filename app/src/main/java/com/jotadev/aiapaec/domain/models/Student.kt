@@ -3,6 +3,7 @@ package com.jotadev.aiapaec.domain.models
 data class Student(
     val id: Int,
     val branchId: Int,
+    val classId: Int?,
     val firstName: String,
     val lastName: String,
     val email: String?,
@@ -12,5 +13,6 @@ data class Student(
     val address: String?,
     val guardianName: String?,
     val enrollmentDate: String?,
-    val className: String?
+    val className: String?,
+
 )

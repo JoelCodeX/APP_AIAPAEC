@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.delay
 
 data class StudentsUiState(
     val students: List<Student> = emptyList(),
@@ -30,6 +32,13 @@ class StudentsViewModel(
 
     init {
         fetchStudents()
+        // Auto-actualización periódica cada 30 segundos
+        viewModelScope.launch {
+            while (isActive) {
+                delay(30_000)
+                fetchStudents(page = 1)
+            }
+        }
     }
 
     fun onQueryChange(value: String) {
@@ -63,5 +72,10 @@ class StudentsViewModel(
                 }
             }
         }
+    }
+
+    // Refresco manual desde la UI
+    fun refresh() {
+        fetchStudents(page = 1)
     }
 }

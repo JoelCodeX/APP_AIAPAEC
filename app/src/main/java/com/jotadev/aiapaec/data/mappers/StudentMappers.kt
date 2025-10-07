@@ -18,7 +18,8 @@ fun StudentDto.toDomain(): Student {
         address = this.address,
         guardianName = this.guardian_name,
         enrollmentDate = this.enrollment_date,
-        className = this.class_name
+        className = this.class_name,
+        classId = this.class_id
     )
 }
 

@@ -1,5 +1,6 @@
 package com.jotadev.aiapaec.data.api
 
+import android.os.Build
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -9,7 +10,28 @@ import com.jotadev.aiapaec.data.storage.TokenStorage
 import okhttp3.Interceptor
 
 object RetrofitClient {
-    private const val BASE_URL = "http://192.168.18.224:5000/api/"
+    // Base URL dinámica: emulador usa 10.0.2.2, dispositivo usa IP local
+    private fun isEmulator(): Boolean {
+        val fingerprint = Build.FINGERPRINT.lowercase()
+        val model = Build.MODEL
+        val manufacturer = Build.MANUFACTURER
+        val brand = Build.BRAND
+        val device = Build.DEVICE
+        val product = Build.PRODUCT
+        return fingerprint.startsWith("generic") || fingerprint.contains("emulator") ||
+                model.contains("Emulator", ignoreCase = true) || model.contains("Android SDK built for", ignoreCase = true) ||
+                (brand.startsWith("generic", ignoreCase = true) && device.startsWith("generic", ignoreCase = true)) ||
+                product.equals("google_sdk", ignoreCase = true) || product.equals("sdk", ignoreCase = true) || product.equals("sdk_gphone", ignoreCase = true) ||
+                manufacturer.contains("Genymotion", ignoreCase = true) || manufacturer.contains("unknown", ignoreCase = true) ||
+                device.contains("ranchu", ignoreCase = true) || device.contains("goldfish", ignoreCase = true)
+    }
+
+    private val BASE_URL: String = if (isEmulator()) {
+        "http://10.0.2.2:5000/api/"
+    } else {
+        // Ajustar si tu IP local cambia
+        "http://192.168.1.8:5000/api/"
+    }
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

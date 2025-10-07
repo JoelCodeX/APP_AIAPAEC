@@ -38,10 +38,10 @@ private val AiapaecLightColorScheme = lightColorScheme(
 
 // TEMA OSCURO AIAPAEC - Optimizado
 private val AiapaecDarkColorScheme = darkColorScheme(
-    primary = Crimson60,
+    primary = Crimson40,
     onPrimary = White,
 
-    secondary = Gold80,
+    secondary = Gold100,
     onSecondary = Black,
 
     tertiary = Crimson40,

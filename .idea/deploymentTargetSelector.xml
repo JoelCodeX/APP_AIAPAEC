@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-10-02T22:32:46.453590400Z">
+        <DropdownSelection timestamp="2025-10-06T23:26:37.425884600Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CX106MXNH" />
@@ -16,11 +16,6 @@
             <Target type="DEFAULT_BOOT">
               <handle>
                 <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CX106MXNH" />
-              </handle>
-            </Target>
-            <Target type="DEFAULT_BOOT">
-              <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\joelr\.android\avd\Pixel_9_Pro_XL_API_35.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">

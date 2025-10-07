@@ -65,7 +65,7 @@ fun StudentCard(
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = student.className ?: "—",
+                    text = student.className ?: "Sin Clase",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold

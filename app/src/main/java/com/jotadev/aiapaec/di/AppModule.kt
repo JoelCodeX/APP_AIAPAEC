@@ -3,15 +3,19 @@ package com.jotadev.aiapaec.di
 import com.jotadev.aiapaec.data.repository.AuthRepositoryImpl
 import com.jotadev.aiapaec.data.repository.UserRepositoryImpl
 import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
+import com.jotadev.aiapaec.data.repository.ClassesRepositoryImpl
 import com.jotadev.aiapaec.domain.repository.AuthRepository
 import com.jotadev.aiapaec.domain.repository.UserRepository
 import com.jotadev.aiapaec.domain.repository.StudentRepository
+import com.jotadev.aiapaec.domain.repository.ClassesRepository
 import com.jotadev.aiapaec.domain.usecases.CheckAuthStatusUseCase
 import com.jotadev.aiapaec.domain.usecases.GetCurrentUserUseCase
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
+import com.jotadev.aiapaec.domain.usecases.GetClassesUseCase
 import com.jotadev.aiapaec.domain.usecases.LoginUseCase
 import com.jotadev.aiapaec.domain.usecases.LogoutUseCase
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
+import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
 // import dagger.Module
 // import dagger.Provides
 // import dagger.hilt.InstallIn
@@ -38,6 +42,12 @@ object AppModule {
     // @Singleton
     fun provideStudentRepository(): StudentRepository {
         return StudentRepositoryImpl()
+    }
+    
+    // @Provides
+    // @Singleton
+    fun provideClassesRepository(): ClassesRepository {
+        return ClassesRepositoryImpl()
     }
     
     // @Provides
@@ -69,7 +79,17 @@ object AppModule {
     }
     
     // @Provides
+    fun provideGetClassesUseCase(classesRepository: ClassesRepository): GetClassesUseCase {
+        return GetClassesUseCase(classesRepository)
+    }
+    
+    // @Provides
     fun provideStudentsViewModel(getStudentsUseCase: GetStudentsUseCase): StudentsViewModel {
         return StudentsViewModel(getStudentsUseCase)
+    }
+    
+    // @Provides
+    fun provideClassesViewModel(getClassesUseCase: GetClassesUseCase): ClassesViewModel {
+        return ClassesViewModel(getClassesUseCase)
     }
 }

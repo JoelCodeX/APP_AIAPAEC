@@ -5,6 +5,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.POST
+import com.google.gson.annotations.SerializedName
 
 data class LoginRequest(
     val email: String,
@@ -41,6 +42,15 @@ interface ApiService {
         @Query("per_page") perPage: Int = 20,
         @Query("q") query: String? = null
     ): Response<StudentsResponse>
+
+    // CLASSES LISTING
+    @GET("classes")
+    suspend fun getClasses(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+        @Query("q") query: String? = null,
+        @Query("level") level: String? = null
+    ): Response<ClassesResponse>
 }
 
 // Generic API wrapper format: { success, message, data }
@@ -48,6 +58,12 @@ data class StudentsResponse(
     val success: Boolean,
     val message: String,
     val data: StudentsPageDto?
+)
+
+data class ClassesResponse(
+    val success: Boolean,
+    val message: String,
+    val data: ClassesPageDto?
 )
 
 data class StudentsPageDto(
@@ -58,9 +74,18 @@ data class StudentsPageDto(
     val pages: Int
 )
 
+data class ClassesPageDto(
+    val items: List<ClassDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
 data class StudentDto(
     val id: Int,
     val branch_id: Int,
+    @SerializedName("class_id") val class_id: Int?,
     val first_name: String,
     val last_name: String,
     val email: String?,
@@ -71,4 +96,11 @@ data class StudentDto(
     val guardian_name: String?,
     val enrollment_date: String?,
     val class_name: String?
+)
+
+data class ClassDto(
+    val id: Int,
+    val name: String,
+    val level: String,
+    @SerializedName("student_count") val studentCount: Int
 )

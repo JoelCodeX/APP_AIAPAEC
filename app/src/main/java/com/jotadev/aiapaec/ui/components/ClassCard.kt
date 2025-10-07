@@ -12,17 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-data class ClassInfo(
-    val id: String,
-    val name: String,
-    val level: String, // "Primaria" o "Secundaria"
-    val studentCount: Int
-)
+import com.jotadev.aiapaec.domain.models.SchoolClass
 
 @Composable
 fun ClassCard(
-    classInfo: ClassInfo,
+    classInfo: SchoolClass,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -54,19 +48,22 @@ fun ClassCard(
                     fontWeight = FontWeight.Bold
                 )
                 
+                val isPrimary = classInfo.level.equals("Primaria", ignoreCase = true) ||
+                    classInfo.level.equals("Primary", ignoreCase = true)
+                val displayLevel = when {
+                    classInfo.level.equals("Primary", ignoreCase = true) -> "Primaria"
+                    classInfo.level.equals("Secondary", ignoreCase = true) -> "Secundaria"
+                    else -> classInfo.level
+                }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (classInfo.level == "Primaria") 
-                        MaterialTheme.colorScheme.primaryContainer 
-                    else MaterialTheme.colorScheme.secondaryContainer
+                    color = if (isPrimary) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Text(
-                        text = classInfo.level,
+                        text = displayLevel,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (classInfo.level == "Primaria") 
-                            MaterialTheme.colorScheme.onPrimaryContainer 
-                        else MaterialTheme.colorScheme.onSecondaryContainer,
+                        color = if (isPrimary) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -76,7 +73,7 @@ fun ClassCard(
             Text(
                 text = classInfo.name,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSecondary,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp
             )
@@ -92,10 +89,11 @@ fun ClassCard(
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
+                val countLabel = if (classInfo.studentCount == 1) "estudiante" else "estudiantes"
                 Text(
-                    text = "${classInfo.studentCount} estudiantes",
+                    text = "${classInfo.studentCount} $countLabel",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSecondary,
                     fontWeight = FontWeight.Medium
                 )
             }

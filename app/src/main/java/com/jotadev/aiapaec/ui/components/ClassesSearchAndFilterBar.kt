@@ -41,11 +41,13 @@ fun ClassesSearchAndFilterBar(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
                 modifier = Modifier.weight(1f), // <- AQUÍ USAMOS weight
-                placeholder = { Text("Buscar clases...") },
+                placeholder = { Text("Buscar clases...",
+                    color = MaterialTheme.colorScheme.primary) },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Buscar"
+                        contentDescription = "Buscar",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -65,7 +67,7 @@ fun ClassesSearchAndFilterBar(
                 Icon(
                     imageVector = Icons.Default.FilterList,
                     contentDescription = "Filtros",
-                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondary
                 )
             }
         }
@@ -114,16 +116,19 @@ private fun LevelFilterDropdown(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSecondary,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
             )
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.onPrimary)
         ) {
             levelOptions.forEach { level ->
                 DropdownMenuItem(
-                    text = { Text(level) },
+                    text = { Text(level, color = MaterialTheme.colorScheme.onSecondary) },
                     onClick = {
                         onLevelChange(level)
                         expanded = false

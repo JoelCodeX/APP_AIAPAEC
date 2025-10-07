@@ -35,7 +35,6 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -60,6 +59,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jotadev.aiapaec.R
+import androidx.compose.material3.MaterialTheme
+
+
 
 @Composable
 fun LoginScreen(
@@ -238,7 +240,7 @@ fun SocialMediaButtons() {
         Text(
             text = "Síguenos en nuestras redes sociales",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -342,7 +344,9 @@ private fun CampoTextoUsuario(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = Color.Gray,
             focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = Color.Gray
+            unfocusedLabelColor = Color.Gray,
+            focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
         ),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -376,7 +380,9 @@ private fun CampoTextoContrasena(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = Color.Gray,
             focusedLabelColor = MaterialTheme.colorScheme.primary,
-            unfocusedLabelColor = Color.Gray
+            unfocusedLabelColor = Color.Gray,
+            focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
         ),
         visualTransformation = if (mostrarContrasena) VisualTransformation.None else PasswordVisualTransformation(),
         trailingIcon = {

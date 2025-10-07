@@ -12,10 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jotadev.aiapaec.domain.models.SchoolClass
 
 @Composable
 fun ClassesList(
-    classes: List<ClassInfo>,
+    classes: List<SchoolClass>,
     modifier: Modifier = Modifier
 ) {
     if (classes.isEmpty()) {

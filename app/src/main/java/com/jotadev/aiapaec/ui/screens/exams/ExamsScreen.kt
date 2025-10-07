@@ -10,6 +10,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.ui.components.*
 import java.util.*
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,6 +24,7 @@ fun ExamsScreen(navController: NavController) {
     var selectedBimester by remember { mutableStateOf("Todos") }
     var selectedClass by remember { mutableStateOf("Todas") }
     var showCreateDialog by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
     
     // LISTA DE EXAMENES (SIMULADA)
     var examsList by remember { 
@@ -65,6 +71,18 @@ fun ExamsScreen(navController: NavController) {
         matchesSearch && matchesBimester && matchesClass
     }
 
+    // Auto-refresco cada 30s (simulado)
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            delay(30_000)
+            // Aquí podrías conectar a un ViewModel cuando haya API
+            isRefreshing = true
+            // Simular tarea de actualización rápida
+            delay(500)
+            isRefreshing = false
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.onPrimary,
@@ -88,32 +106,54 @@ fun ExamsScreen(navController: NavController) {
             }
         }
     ) { paddingValues ->
-        Column(
+        val swipeState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
+        SwipeRefresh(
+            state = swipeState,
+            onRefresh = {
+                // Aquí podrías conectar a un ViewModel cuando haya API
+                isRefreshing = true
+                // Simular tarea de actualización rápida
+                isRefreshing = false
+            },
+            indicator = { s, trigger ->
+                SwipeRefreshIndicator(
+                    state = s,
+                    refreshTriggerDistance = trigger,
+                    scale = true,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // BARRA DE BUSQUEDA Y FILTROS
-            SearchAndFilterBar(
-                searchText = searchText,
-                onSearchTextChange = { searchText = it },
-                selectedBimester = selectedBimester,
-                onBimesterChange = { selectedBimester = it },
-                selectedClass = selectedClass,
-                onClassChange = { selectedClass = it }
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                // BARRA DE BUSQUEDA Y FILTROS
+                SearchAndFilterBar(
+                    searchText = searchText,
+                    onSearchTextChange = { searchText = it },
+                    selectedBimester = selectedBimester,
+                    onBimesterChange = { selectedBimester = it },
+                    selectedClass = selectedClass,
+                    onClassChange = { selectedClass = it }
+                )
 
-            // LISTA DE EXAMENES
-            ExamsList(
-                exams = filteredExams,
-                onEditExam = { exam ->
-                    // LOGICA PARA EDITAR EXAMEN
-                },
-                onDeleteExam = { exam ->
-                    examsList = examsList.filter { it.id != exam.id }
-                },
-                modifier = Modifier.weight(1f)
-            )
+                // LISTA DE EXAMENES
+                ExamsList(
+                    exams = filteredExams,
+                    onEditExam = { exam ->
+                        // LOGICA PARA EDITAR EXAMEN
+                    },
+                    onDeleteExam = { exam ->
+                        examsList = examsList.filter { it.id != exam.id }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
 
         // DIALOGO PARA CREAR EXAMEN

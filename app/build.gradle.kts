@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.ui)
+    // Pull-to-refresh via Accompanist
+    implementation(libs.accompanist.swiperefresh)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
