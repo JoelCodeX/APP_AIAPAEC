@@ -7,11 +7,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.screens.classes.ClassesScreen
+import com.jotadev.aiapaec.ui.screens.classes.DetailsClasses
 import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
+import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
 import com.jotadev.aiapaec.ui.screens.home.HomeScreen
 import com.jotadev.aiapaec.ui.screens.results.ResultsScreen
 import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
 import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
+import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
 
 @Composable
 fun MainNavGraph(
@@ -58,6 +61,21 @@ fun MainNavGraph(
         composable(NavigationRoutes.EXAM_DETAIL) { backStackEntry ->
             val examId = backStackEntry.arguments?.getString("examId") ?: ""
             // ExamDetailScreen(examId = examId, navController = navController)
+        }
+
+        composable(NavigationRoutes.APPLY_EXAM) { backStackEntry ->
+            val examId = backStackEntry.arguments?.getString("examId") ?: ""
+            ApplyExam(navController = navController, examId = examId)
+        }
+
+        composable(NavigationRoutes.DETAILS_STUDENT) { backStackEntry ->
+            val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
+            DetailsStudent()
+        }
+
+        composable(NavigationRoutes.DETAILS_CLASS) { backStackEntry ->
+            val classId = backStackEntry.arguments?.getString("classId") ?: ""
+            DetailsClasses()
         }
     }
 }

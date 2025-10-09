@@ -13,6 +13,7 @@ import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import com.jotadev.aiapaec.navigation.NavigationRoutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +66,10 @@ fun StudentsScreen(navController: NavController) {
                 // LISTA DE ESTUDIANTES
                 StudentsList(
                     students = state.students,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onStudentClick = { student ->
+                        navController.navigate(NavigationRoutes.detailsStudent(student.id))
+                    }
                 )
                 if (state.isLoading) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

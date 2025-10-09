@@ -1,6 +1,7 @@
 package com.jotadev.aiapaec.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,14 +29,16 @@ data class Exam(
 fun ExamCard(
     exam: Exam,
     onEditClick: (Exam) -> Unit,
-    onDeleteClick: (Exam) -> Unit
+    onDeleteClick: (Exam) -> Unit,
+    onClick: (Exam) -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clickable { onClick(exam) },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.onPrimary

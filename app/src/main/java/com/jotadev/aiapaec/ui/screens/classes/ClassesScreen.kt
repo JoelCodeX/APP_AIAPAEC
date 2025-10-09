@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.jotadev.aiapaec.navigation.NavigationRoutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +67,10 @@ fun ClassesScreen(navController: NavController) {
                 // LISTA DE CLASES
                 ClassesList(
                     classes = state.classes,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClassClick = { clazz ->
+                        navController.navigate(NavigationRoutes.detailsClass(clazz.id))
+                    }
                 )
                 if (state.isLoading) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

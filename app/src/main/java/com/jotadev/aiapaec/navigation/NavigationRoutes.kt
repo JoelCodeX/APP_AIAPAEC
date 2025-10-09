@@ -12,13 +12,23 @@ object NavigationRoutes {
     const val RESULTS = "results"
     const val SETTINGS = "settings"
 
+    //Secondary Screens Details
+    const val APPLY_EXAM = "apply_exam/{examId}"
+    const val DETAILS_STUDENT = "student_detail/{studentId}"
+    const val DETAILS_CLASS = "class_detail/{classId}"
+
+
     
     // Secondary Screens
     const val EXAM_DETAIL = "exam_detail/{examId}"
     const val CREATE_EXAM = "create_exam"
     const val SCAN_CARD = "scan_card"
     const val GROUP_CLASSES = "group_classes"
+
     
     // Navigation with arguments
     fun examDetail(examId: String) = "exam_detail/$examId"
+    fun applyExam(examId: String) = "apply_exam/$examId"
+    fun detailsStudent(studentId: Int) = "student_detail/$studentId"
+    fun detailsClass(classId: Int) = "class_detail/$classId"
 }

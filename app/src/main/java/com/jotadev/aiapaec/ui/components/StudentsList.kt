@@ -14,7 +14,8 @@ import com.jotadev.aiapaec.domain.models.Student
 @Composable
 fun StudentsList(
     students: List<Student>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onStudentClick: (Student) -> Unit = {}
 ) {
     if (students.isEmpty()) {
         // ESTADO VACIO
@@ -48,7 +49,7 @@ fun StudentsList(
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(students) { student ->
-                StudentCard(student = student)
+                StudentCard(student = student, onClick = onStudentClick)
             }
         }
     }

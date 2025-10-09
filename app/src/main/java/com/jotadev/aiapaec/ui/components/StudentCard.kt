@@ -1,5 +1,6 @@
 package com.jotadev.aiapaec.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,10 +15,14 @@ import com.jotadev.aiapaec.domain.models.Student
 @Composable
 fun StudentCard(
     student: Student,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (Student) -> Unit = {}
 ) {
     Card(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = modifier
+            .clickable { onClick(student) }
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

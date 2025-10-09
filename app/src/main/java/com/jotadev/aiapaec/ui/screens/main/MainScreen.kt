@@ -29,7 +29,10 @@ fun MainScreen(
         NavigationRoutes.GROUP_CLASSES,
         NavigationRoutes.EXAM_DETAIL,
         NavigationRoutes.CREATE_EXAM,
-        NavigationRoutes.SCAN_CARD
+        NavigationRoutes.SCAN_CARD,
+        NavigationRoutes.APPLY_EXAM,
+        NavigationRoutes.DETAILS_STUDENT,
+        NavigationRoutes.DETAILS_CLASS
     )
 
     Box(

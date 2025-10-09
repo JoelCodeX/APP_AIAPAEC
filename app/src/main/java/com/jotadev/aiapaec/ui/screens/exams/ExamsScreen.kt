@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.*
 import java.util.*
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -145,6 +146,9 @@ fun ExamsScreen(navController: NavController) {
                     },
                     onDeleteExam = { exam ->
                         examsVm.deleteExam(exam.id)
+                    },
+                    onExamClick = { exam ->
+                        navController.navigate(NavigationRoutes.applyExam(exam.id))
                     },
                     modifier = Modifier.weight(1f)
                 )

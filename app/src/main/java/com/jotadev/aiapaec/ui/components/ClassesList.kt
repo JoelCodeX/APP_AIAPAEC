@@ -17,7 +17,8 @@ import com.jotadev.aiapaec.domain.models.SchoolClass
 @Composable
 fun ClassesList(
     classes: List<SchoolClass>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClassClick: (SchoolClass) -> Unit = {}
 ) {
     if (classes.isEmpty()) {
         // ESTADO VACIO
@@ -61,7 +62,7 @@ fun ClassesList(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(classes) { classInfo ->
-                ClassCard(classInfo = classInfo)
+                ClassCard(classInfo = classInfo, onClick = onClassClick)
             }
         }
     }

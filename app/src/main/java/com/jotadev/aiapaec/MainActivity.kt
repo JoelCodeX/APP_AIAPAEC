@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.jotadev.aiapaec.navigation.AppNavigation
+import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
 import com.jotadev.aiapaec.ui.theme.AIAPAECTheme
 
 @Suppress("DEPRECATION")
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.tertiary
                 ) {
                     AppNavigation()
+//                    ApplyExam( navController = androidx.navigation.compose.rememberNavController(), examId = "exam123" )
                 }
             }
         }

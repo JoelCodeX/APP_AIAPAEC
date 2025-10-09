@@ -18,6 +18,7 @@ fun ExamsList(
     exams: List<Exam>,
     onEditExam: (Exam) -> Unit,
     onDeleteExam: (Exam) -> Unit,
+    onExamClick: (Exam) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (exams.isEmpty()) {
@@ -63,7 +64,8 @@ fun ExamsList(
                 ExamCard(
                     exam = exam,
                     onEditClick = onEditExam,
-                    onDeleteClick = onDeleteExam
+                    onDeleteClick = onDeleteExam,
+                    onClick = onExamClick
                 )
             }
             
