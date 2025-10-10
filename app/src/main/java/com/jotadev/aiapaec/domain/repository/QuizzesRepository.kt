@@ -3,6 +3,9 @@ package com.jotadev.aiapaec.domain.repository
 import com.jotadev.aiapaec.domain.models.Result
 import com.jotadev.aiapaec.domain.models.Quiz
 import com.jotadev.aiapaec.domain.models.QuizzesPage
+import com.jotadev.aiapaec.domain.models.AnswerKey
+import com.jotadev.aiapaec.domain.models.AnswerKeysPage
+import com.jotadev.aiapaec.domain.models.QuizAnswersPage
 
 interface QuizzesRepository {
     suspend fun getQuizzes(page: Int, perPage: Int, query: String?, classId: Int?, bimesterId: Int?): Result<QuizzesPage>
@@ -31,4 +34,20 @@ interface QuizzesRepository {
         keyVersion: String?
     ): Result<Quiz>
     suspend fun deleteQuiz(id: Int): Result<Unit>
+
+    // Answer key operations
+    suspend fun uploadAnswerKey(
+        quizId: Int,
+        fileName: String,
+        mimeType: String,
+        fileBytes: ByteArray
+    ): Result<AnswerKey>
+
+    suspend fun listAnswerKeys(
+        quizId: Int,
+        page: Int = 1,
+        pageSize: Int = 20
+    ): Result<AnswerKeysPage>
+
+    suspend fun getQuizAnswers(id: Int): Result<QuizAnswersPage>
 }

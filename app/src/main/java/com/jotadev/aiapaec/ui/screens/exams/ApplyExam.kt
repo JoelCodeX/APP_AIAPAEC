@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Key
@@ -56,6 +55,10 @@ fun ApplyExam(navController: NavController, examId: String) {
                     android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
             } catch (_: Exception) { /* Ignorar si no aplica */ }
+            // Subir automáticamente el PDF seleccionado
+            if (state.quiz != null) {
+                vm.uploadAnswerKeyFromUri(state.quiz!!.id, uri, context.contentResolver)
+            }
         }
     }
 
@@ -117,7 +120,13 @@ fun ApplyExam(navController: NavController, examId: String) {
                     ElevatedButton(
                         onClick = {
                             // Abrir el explorador de archivos para seleccionar un PDF
-                            pdfPickerLauncher.launch(arrayOf("application/pdf"))
+                            if (state.quiz == null) return@ElevatedButton
+                            if (selectedPdfUri == null) {
+                                pdfPickerLauncher.launch(arrayOf("application/pdf"))
+                            } else {
+                                // Intentar subir el PDF ya seleccionado
+                                vm.uploadAnswerKeyFromUri(state.quiz!!.id, selectedPdfUri!!, context.contentResolver)
+                            }
                         },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
@@ -151,6 +160,24 @@ fun ApplyExam(navController: NavController, examId: String) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Escanear", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = { navController.navigate(NavigationRoutes.quizAnswers(examId)) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.onPrimary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Assignment,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Ver respuestas", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -295,7 +322,8 @@ private fun StudentStatusRow(student: Student, status: String) {
     }
 }
 
-// Formatea cadenas de fecha comunes a "dd/MM/yyyy"
+
+
 private fun formatDate(value: String?): String {
     if (value.isNullOrBlank()) return "—"
     // Tomar solo la parte de fecha si viene con hora

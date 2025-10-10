@@ -147,7 +147,8 @@ class ExamsViewModel : ViewModel() {
             bimester = this.bimesterName ?: "",
             type = "Sin asignar",
             date = this.createdAt ?: "",
-            isApplied = false
+            isApplied = false,
+            numQuestions = this.numQuestions
         )
     }
 }

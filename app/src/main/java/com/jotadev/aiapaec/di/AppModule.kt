@@ -24,6 +24,8 @@ import com.jotadev.aiapaec.domain.usecases.UpdateQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.DeleteQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.LoginUseCase
 import com.jotadev.aiapaec.domain.usecases.LogoutUseCase
+import com.jotadev.aiapaec.domain.usecases.UploadAnswerKeyUseCase
+import com.jotadev.aiapaec.domain.usecases.ListAnswerKeysUseCase
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
 import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
 import com.jotadev.aiapaec.presentation.BimestersViewModel
@@ -124,6 +126,14 @@ object AppModule {
 
     fun provideDeleteQuizUseCase(quizzesRepository: QuizzesRepository): DeleteQuizUseCase {
         return DeleteQuizUseCase(quizzesRepository)
+    }
+
+    fun provideUploadAnswerKeyUseCase(quizzesRepository: QuizzesRepository): UploadAnswerKeyUseCase {
+        return UploadAnswerKeyUseCase(quizzesRepository)
+    }
+
+    fun provideListAnswerKeysUseCase(quizzesRepository: QuizzesRepository): ListAnswerKeysUseCase {
+        return ListAnswerKeysUseCase(quizzesRepository)
     }
     
     // @Provides

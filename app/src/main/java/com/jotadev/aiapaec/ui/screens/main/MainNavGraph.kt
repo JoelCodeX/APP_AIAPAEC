@@ -10,6 +10,7 @@ import com.jotadev.aiapaec.ui.screens.classes.ClassesScreen
 import com.jotadev.aiapaec.ui.screens.classes.DetailsClasses
 import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
 import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
+import com.jotadev.aiapaec.ui.screens.exams.AnswersScreen
 import com.jotadev.aiapaec.ui.screens.home.HomeScreen
 import com.jotadev.aiapaec.ui.screens.results.ResultsScreen
 import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
@@ -66,6 +67,11 @@ fun MainNavGraph(
         composable(NavigationRoutes.APPLY_EXAM) { backStackEntry ->
             val examId = backStackEntry.arguments?.getString("examId") ?: ""
             ApplyExam(navController = navController, examId = examId)
+        }
+
+        composable(NavigationRoutes.QUIZ_ANSWERS) { backStackEntry ->
+            val examId = backStackEntry.arguments?.getString("examId") ?: ""
+            AnswersScreen(navController = navController, examId = examId)
         }
 
         composable(NavigationRoutes.DETAILS_STUDENT) { backStackEntry ->

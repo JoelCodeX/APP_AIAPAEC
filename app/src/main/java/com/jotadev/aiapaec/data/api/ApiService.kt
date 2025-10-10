@@ -9,6 +9,10 @@ import retrofit2.http.PUT
 import retrofit2.http.DELETE
 import retrofit2.http.Path
 import com.google.gson.annotations.SerializedName
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import retrofit2.http.Multipart
+import retrofit2.http.Part
 
 data class LoginRequest(
     val email: String,
@@ -94,6 +98,25 @@ interface ApiService {
     suspend fun deleteQuiz(
         @Path("id") id: Int
     ): Response<ApiResponseNoData>
+
+    // ANSWER KEYS
+    @Multipart
+    @POST("quizzes/{id}/answer_keys")
+    suspend fun uploadAnswerKey(
+        @Path("id") id: Int,
+        @Part file: MultipartBody.Part
+    ): Response<AnswerKeyItemResponse>
+
+    @GET("quizzes/{id}/answer_keys")
+    suspend fun listAnswerKeys(
+        @Path("id") id: Int
+    ): Response<AnswerKeysListResponse>
+
+    // QUIZ ANSWERS
+    @GET("quizzes/{id}/answers")
+    suspend fun getQuizAnswers(
+        @Path("id") id: Int
+    ): Response<QuizAnswersListResponse>
 }
 
 // Generic API wrapper format: { success, message, data }
@@ -132,6 +155,18 @@ data class ApiResponseNoData(
     val message: String
 )
 
+data class AnswerKeysListResponse(
+    val success: Boolean,
+    val message: String,
+    val data: AnswerKeysPageDto?
+)
+
+data class AnswerKeyItemResponse(
+    val success: Boolean,
+    val message: String,
+    val data: AnswerKeyDto?
+)
+
 data class StudentsPageDto(
     val items: List<StudentDto>,
     val page: Int,
@@ -162,6 +197,20 @@ data class QuizzesPageDto(
     val per_page: Int,
     val total: Int,
     val pages: Int
+)
+
+data class AnswerKeysPageDto(
+    val items: List<AnswerKeyDto>
+)
+
+data class QuizAnswersListResponse(
+    val success: Boolean,
+    val message: String,
+    val data: QuizAnswersPageDto?
+)
+
+data class QuizAnswersPageDto(
+    val items: List<QuizAnswerDto>
 )
 
 data class StudentDto(
@@ -234,4 +283,24 @@ data class UpdateQuizRequest(
     val points_per_question: Double?,
     val answer_key_file: String?,
     val key_version: String?
+)
+
+data class AnswerKeyDto(
+    val id: Int,
+    @SerializedName("quiz_id") val quiz_id: Int,
+    val version: Int,
+    @SerializedName("file_path") val file_path: String,
+    @SerializedName("parsed_keys") val parsed_keys: List<Map<String, Any>>?,
+    @SerializedName("created_at") val created_at: String?,
+    @SerializedName("updated_at") val updated_at: String?
+)
+
+data class QuizAnswerDto(
+    val id: Int,
+    @SerializedName("quiz_id") val quiz_id: Int,
+    @SerializedName("question_number") val question_number: Int,
+    @SerializedName("correct_option") val correct_option: String,
+    @SerializedName("points_value") val points_value: Double?,
+    @SerializedName("created_at") val created_at: String?,
+    @SerializedName("updated_at") val updated_at: String?
 )

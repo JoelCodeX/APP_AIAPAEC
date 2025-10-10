@@ -14,11 +14,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jotadev.aiapaec.domain.models.Quiz
+import com.jotadev.aiapaec.domain.models.QuizAnswer
 import com.jotadev.aiapaec.domain.models.Student
 import com.jotadev.aiapaec.domain.models.Result
 import com.jotadev.aiapaec.data.repository.QuizzesRepositoryImpl
 import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
+import com.jotadev.aiapaec.domain.usecases.UploadAnswerKeyUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -31,13 +33,15 @@ data class ApplyExamUiState(
     val students: List<Student> = emptyList(),
     val performanceBars: List<PerformanceBar> = emptyList(),
     val studentStatuses: Map<Int, String> = emptyMap(),
+    val answers: List<QuizAnswer> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
 class ApplyExamViewModel(
     private val quizzesRepository: QuizzesRepositoryImpl = QuizzesRepositoryImpl(),
-    private val getStudents: GetStudentsUseCase = GetStudentsUseCase(StudentRepositoryImpl())
+    private val getStudents: GetStudentsUseCase = GetStudentsUseCase(StudentRepositoryImpl()),
+    private val uploadAnswerKey: UploadAnswerKeyUseCase = UploadAnswerKeyUseCase(quizzesRepository)
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ApplyExamUiState())
     val uiState: StateFlow<ApplyExamUiState> = _uiState
@@ -54,6 +58,8 @@ class ApplyExamViewModel(
                 is Result.Success -> {
                     val quiz = result.data
                     _uiState.update { it.copy(quiz = quiz) }
+                    // Cargar respuestas del quiz si existen
+                    loadAnswers(quiz.id)
                     // Cargar estudiantes (filtrar por classId si existe)
                     val pageResult = getStudents(page = 1, perPage = 100, query = null)
                     when (pageResult) {
@@ -101,6 +107,53 @@ class ApplyExamViewModel(
             PerformanceBar(label = "Corregidos", value = corrected),
             PerformanceBar(label = "Por corregir", value = pending)
         )
+    }
+
+    fun uploadAnswerKeyFromUri(quizId: Int, uri: android.net.Uri, contentResolver: android.content.ContentResolver) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val name = "solucionario.pdf"
+                val mime = "application/pdf"
+                val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
+                when (val result = uploadAnswerKey(quizId, name, mime, bytes)) {
+                    is Result.Success -> {
+                        // Refresh quiz to reflect new answer key
+                        when (val q = quizzesRepository.getQuiz(quizId)) {
+                            is Result.Success -> _uiState.update { it.copy(quiz = q.data, isLoading = false) }
+                            is Result.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = q.message) }
+                            is Result.Loading -> _uiState.update { it.copy(isLoading = true) }
+                        }
+                        // Cargar respuestas extraídas
+                        loadAnswers(quizId)
+                    }
+                    is Result.Error -> {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                    }
+                    is Result.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
+            }
+        }
+    }
+
+    private fun loadAnswers(quizId: Int) {
+        viewModelScope.launch {
+            when (val result = quizzesRepository.getQuizAnswers(quizId)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(answers = result.data.items) }
+                }
+                is Result.Error -> {
+                    _uiState.update { it.copy(errorMessage = result.message) }
+                }
+                is Result.Loading -> {
+                    // no-op
+                }
+            }
+        }
     }
 }
 

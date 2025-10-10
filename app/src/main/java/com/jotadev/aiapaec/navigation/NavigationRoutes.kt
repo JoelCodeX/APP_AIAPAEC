@@ -16,6 +16,7 @@ object NavigationRoutes {
     const val APPLY_EXAM = "apply_exam/{examId}"
     const val DETAILS_STUDENT = "student_detail/{studentId}"
     const val DETAILS_CLASS = "class_detail/{classId}"
+    const val QUIZ_ANSWERS = "quiz_answers/{examId}"
 
 
     
@@ -29,6 +30,7 @@ object NavigationRoutes {
     // Navigation with arguments
     fun examDetail(examId: String) = "exam_detail/$examId"
     fun applyExam(examId: String) = "apply_exam/$examId"
+    fun quizAnswers(examId: String) = "quiz_answers/$examId"
     fun detailsStudent(studentId: Int) = "student_detail/$studentId"
     fun detailsClass(classId: Int) = "class_detail/$classId"
 }

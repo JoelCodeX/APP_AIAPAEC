@@ -21,7 +21,8 @@ data class Exam(
     val bimester: String,
     val type: String,
     val date: String,
-    val isApplied: Boolean = false
+    val isApplied: Boolean = false,
+    val numQuestions: Int? = null
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,7 +130,7 @@ fun ExamCard(
             ) {
                 ExamInfoChip(
                     label = "Tipo",
-                    value = "Sin asignar",
+                    value = if (exam.numQuestions != null) "Sin asignar (${exam.numQuestions} preguntas)" else "Sin asignar",
                     modifier = Modifier.weight(1f)
                 )
 
