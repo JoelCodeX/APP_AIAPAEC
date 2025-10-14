@@ -8,9 +8,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButtonDefaults.iconButtonColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -72,31 +75,46 @@ fun ExamCard(
                     if (!exam.isApplied) {
                         IconButton(
                             onClick = { onEditClick(exam) },
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp),
+                            colors = iconButtonColors(
+                                contentColor = Color.Blue,
+                                containerColor = Color.Blue.copy(alpha = 0.1f)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Editar examen",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                tint = Color.Blue,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
                     // BOTON ELIMINAR
                     IconButton(
                         onClick = { showDeleteDialog = true },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp),
+                        colors = iconButtonColors(
+                            contentColor = Color.Red,
+                            containerColor = Color.Red.copy(alpha = 0.1f)
+                        ),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Eliminar examen",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
+                            tint = Color.Red,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
             }
-
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(
+                modifier = Modifier.height(8.dp),
+                thickness = DividerDefaults.Thickness,
+                color = DividerDefaults.color
+            )
             Spacer(modifier = Modifier.height(8.dp))
 
             // INFORMACION DEL EXAMEN
@@ -130,8 +148,8 @@ fun ExamCard(
             ) {
                 ExamInfoChip(
                     label = "Tipo",
-                    value = if (exam.numQuestions != null) "Sin asignar (${exam.numQuestions} preguntas)" else "Sin asignar",
-                    modifier = Modifier.weight(1f)
+                    value = exam.numQuestions?.let { "$it preguntas" } ?: "Sin asignar",
+                    modifier = Modifier.weight(1f),
                 )
 
                 // ESTADO DEL EXAMEN
@@ -161,8 +179,11 @@ fun ExamCard(
     // DIALOGO DE CONFIRMACION PARA ELIMINAR
     if (showDeleteDialog) {
         AlertDialog(
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Confirmar eliminación") },
+            title = { Text("Confirmar eliminación", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
             text = { Text("¿Estás seguro de que deseas eliminar el examen \"${exam.name}\"?") },
             confirmButton = {
                 TextButton(
@@ -192,12 +213,12 @@ fun ExamInfoChip(
     Column(modifier = modifier) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Medium
         )
