@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 
 data class ClassStudentsUiState(
     val students: List<Student> = emptyList(),
+    val query: String = "",
     val page: Int = 1,
     val perPage: Int = 50,
     val isLoading: Boolean = false,
@@ -36,14 +37,29 @@ class ClassStudentsViewModel(
         fetchStudents(page = 1)
     }
 
+    fun onQueryChange(value: String) {
+        _uiState.update { it.copy(query = value) }
+    }
+
     private fun fetchStudents(page: Int = _uiState.value.page, perPage: Int = _uiState.value.perPage) {
         val classId = currentClassId ?: return
         _uiState.update { it.copy(isLoading = true, errorMessage = null, page = page, perPage = perPage) }
         viewModelScope.launch {
-            when (val result = getStudents(page = page, perPage = perPage, query = null)) {
+            val q = _uiState.value.query.ifBlank { null }
+            when (val result = getStudents(page = page, perPage = perPage, query = q)) {
                 is Result.Success -> {
-                    val filtered = result.data.items.filter { it.classId == classId }
-                    _uiState.update { it.copy(students = filtered, isLoading = false) }
+                    val filteredByClass = result.data.items.filter { it.classId == classId }
+                    val queryText = _uiState.value.query.trim()
+                    val finalList = if (queryText.isBlank()) {
+                        filteredByClass
+                    } else {
+                        filteredByClass.filter { s ->
+                            s.firstName.contains(queryText, ignoreCase = true) ||
+                            s.lastName.contains(queryText, ignoreCase = true) ||
+                            s.id.toString().contains(queryText)
+                        }
+                    }
+                    _uiState.update { it.copy(students = finalList, isLoading = false) }
                 }
                 is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message, isLoading = false) }

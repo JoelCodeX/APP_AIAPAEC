@@ -50,6 +50,12 @@ interface ApiService {
         @Query("q") query: String? = null
     ): Response<StudentsResponse>
 
+    // STUDENT DETAIL
+    @GET("students/{id}")
+    suspend fun getStudent(
+        @Path("id") id: Int
+    ): Response<StudentItemResponse>
+
     // CLASSES LISTING
     @GET("classes")
     suspend fun getClasses(
@@ -124,6 +130,12 @@ data class StudentsResponse(
     val success: Boolean,
     val message: String,
     val data: StudentsPageDto?
+)
+
+data class StudentItemResponse(
+    val success: Boolean,
+    val message: String,
+    val data: StudentDto?
 )
 
 data class ClassesResponse(
@@ -220,12 +232,13 @@ data class StudentDto(
     val first_name: String,
     val last_name: String,
     val email: String?,
-    val phone: String?,
+    @SerializedName("mobileno") val phone: String?,
     val date_of_birth: String?,
     val gender: String?,
+    val religion: String?,
     val address: String?,
     val guardian_name: String?,
-    val enrollment_date: String?,
+    @SerializedName("admission_date") val enrollment_date: String?,
     val class_name: String?
 )
 

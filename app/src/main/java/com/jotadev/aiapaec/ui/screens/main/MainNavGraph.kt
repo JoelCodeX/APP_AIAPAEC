@@ -76,7 +76,8 @@ fun MainNavGraph(
 
         composable(NavigationRoutes.DETAILS_STUDENT) { backStackEntry ->
             val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
-            DetailsStudent()
+            val idInt = studentId.toIntOrNull() ?: 0
+            DetailsStudent(navController = navController, studentId = idInt)
         }
 
         composable(NavigationRoutes.DETAILS_CLASS) { backStackEntry ->

@@ -15,6 +15,7 @@ fun StudentDto.toDomain(): Student {
         phone = this.phone,
         dateOfBirth = this.date_of_birth,
         gender = this.gender,
+        religion = this.religion,
         address = this.address,
         guardianName = this.guardian_name,
         enrollmentDate = this.enrollment_date,

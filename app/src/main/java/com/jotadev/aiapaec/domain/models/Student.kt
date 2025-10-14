@@ -10,6 +10,7 @@ data class Student(
     val phone: String?,
     val dateOfBirth: String?,
     val gender: String?,
+    val religion: String?,
     val address: String?,
     val guardianName: String?,
     val enrollmentDate: String?,
