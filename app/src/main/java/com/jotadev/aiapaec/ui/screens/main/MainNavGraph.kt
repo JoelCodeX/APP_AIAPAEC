@@ -81,7 +81,7 @@ fun MainNavGraph(
 
         composable(NavigationRoutes.DETAILS_CLASS) { backStackEntry ->
             val classId = backStackEntry.arguments?.getString("classId") ?: ""
-            DetailsClasses()
+            DetailsClasses(navController = navController, classId = classId)
         }
     }
 }

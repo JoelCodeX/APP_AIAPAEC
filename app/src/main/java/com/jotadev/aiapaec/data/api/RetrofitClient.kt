@@ -31,7 +31,7 @@ object RetrofitClient {
         "http://10.0.2.2:5000/api/"
     } else {
         // IP LOCAL RED WIFI (CAMBIAR SEGÚN LA RED)
-        "http://192.168.18.224:5000/api/"
+        "http://192.168.1.14:5000/api/"
     }
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
