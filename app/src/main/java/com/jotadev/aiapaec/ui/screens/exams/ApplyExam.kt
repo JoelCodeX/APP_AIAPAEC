@@ -10,9 +10,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIos
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -77,7 +80,7 @@ fun ApplyExam(navController: NavController, examId: String) {
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBackIos,
+                            imageVector = Icons.Default.ArrowBackIosNew,
                             contentDescription = "Regresar",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
@@ -143,25 +146,6 @@ fun ApplyExam(navController: NavController, examId: String) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Subir solucionario", fontWeight = FontWeight.SemiBold)
                     }
-
-                    OutlinedButton(
-                        onClick = { navController.navigate(NavigationRoutes.SCAN_CARD) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.elevatedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.onPrimary,
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Escanear", fontWeight = FontWeight.SemiBold)
-                    }
-
                     OutlinedButton(
                         onClick = { navController.navigate(NavigationRoutes.quizAnswers(examId)) },
                         modifier = Modifier.weight(1f),
@@ -189,7 +173,6 @@ fun ApplyExam(navController: NavController, examId: String) {
                     bars = state.performanceBars
                 )
             }
-
             // LISTADO DE ESTUDIANTES Y ESTADO DE CORRECCIÓN
             item {
                 Text(
@@ -317,12 +300,17 @@ private fun StudentStatusRow(student: Student, status: String) {
             val cls = student.className ?: "—"
             Text(text = cls, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
         }
-        val pillColor = if (status == "Corregido") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-        StatusPill(label = status, color = pillColor)
+        val isCorrected = status.equals("Corregido", ignoreCase = true)
+        val icon = if (isCorrected) Icons.Default.CheckCircle else Icons.Default.Cancel
+        val tint = if (isCorrected) Color(0xFF2E7D32) else Color(0xFFC62828)
+        Icon(
+            imageVector = icon,
+            contentDescription = if (isCorrected) "Corregido" else "Por corregir",
+            tint = tint,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
-
-
 
 private fun formatDate(value: String?): String {
     if (value.isNullOrBlank()) return "—"

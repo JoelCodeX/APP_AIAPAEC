@@ -124,7 +124,7 @@ fun ExamsScreen(navController: NavController) {
                         selectedBimester = it
                         val classId = classesState.classes.firstOrNull { c -> c.name == selectedClass }?.id
                         val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
-                        examsVm.loadExams(query = if (searchText.isBlank()) null else searchText, classId = classId, bimesterId = bimesterId)
+                        examsVm.loadExams(query = searchText.ifBlank { null }, classId = classId, bimesterId = bimesterId)
                     },
                     selectedClass = selectedClass,
                     onClassChange = {

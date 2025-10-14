@@ -66,7 +66,6 @@ fun DetailsStudent(navController: NavController, studentId: Int) {
         topBar = {
             CustomTopAppBar(
                 title = "Perfil del estudiante",
-//                subtitle = state.student?.let { "ID ${it.id}" } ?: null,
                 backgroundColor = MaterialTheme.colorScheme.tertiary,
                 contentColor = MaterialTheme.colorScheme.onTertiary,
                 navigationIcon = {
@@ -275,7 +274,7 @@ private fun StudentInfoCard(
     classId: Int?,
     studentId: Int,
 ) {
-    Text(modifier = Modifier.padding(bottom = 8.dp), text = "Clases asociadas", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+    Text(modifier = Modifier.padding(bottom = 4.dp), text = "Clases asociadas", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
     Card(shape = RoundedCornerShape(16.dp)) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
