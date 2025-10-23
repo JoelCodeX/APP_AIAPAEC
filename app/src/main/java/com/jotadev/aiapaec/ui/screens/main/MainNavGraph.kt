@@ -16,6 +16,7 @@ import com.jotadev.aiapaec.ui.screens.results.ResultsScreen
 import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
 import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
 import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
+import com.jotadev.aiapaec.ui.screens.scan.ScanScreen
 
 @Composable
 fun MainNavGraph(
@@ -56,7 +57,7 @@ fun MainNavGraph(
         }
         
         composable(NavigationRoutes.SCAN_CARD) {
-            // ScanCardScreen(navController = navController)
+            ScanScreen(navController = navController)
         }
         
         composable(NavigationRoutes.EXAM_DETAIL) { backStackEntry ->

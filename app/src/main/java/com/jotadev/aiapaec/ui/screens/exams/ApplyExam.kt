@@ -112,8 +112,6 @@ fun ApplyExam(navController: NavController, examId: String) {
                 )
             }
 
-            // PILDORAS DE INFORMACIÓN ahora están dentro de ExamInfoCard
-
             // BOTONES DE ACCIÓN
             item {
                 Row(
@@ -184,7 +182,8 @@ fun ApplyExam(navController: NavController, examId: String) {
             items(state.students) { student ->
                 StudentStatusRow(
                     student = student,
-                    status = state.studentStatuses[student.id] ?: "Por corregir"
+                    status = state.studentStatuses[student.id] ?: "Por corregir",
+                    onScanClick = { navController.navigate(NavigationRoutes.SCAN_CARD) }
                 )
             }
 
@@ -280,7 +279,7 @@ private fun StatusPill(label: String, color: Color) {
 }
 
 @Composable
-private fun StudentStatusRow(student: Student, status: String) {
+private fun StudentStatusRow(student: Student, status: String, onScanClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -303,12 +302,36 @@ private fun StudentStatusRow(student: Student, status: String) {
         val isCorrected = status.equals("Corregido", ignoreCase = true)
         val icon = if (isCorrected) Icons.Default.CheckCircle else Icons.Default.Cancel
         val tint = if (isCorrected) Color(0xFF2E7D32) else Color(0xFFC62828)
-        Icon(
-            imageVector = icon,
-            contentDescription = if (isCorrected) "Corregido" else "Por corregir",
-            tint = tint,
-            modifier = Modifier.size(20.dp)
-        )
+        // Zona derecha: estado + botón de escaneo si no está corregido
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = if (isCorrected) "Corregido" else "Por corregir",
+                tint = tint,
+                modifier = Modifier.size(20.dp)
+            )
+            if (!isCorrected) {
+                OutlinedButton(
+                    onClick = onScanClick,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = "Escanear",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Escanear")
+                }
+            }
+        }
     }
 }
 
