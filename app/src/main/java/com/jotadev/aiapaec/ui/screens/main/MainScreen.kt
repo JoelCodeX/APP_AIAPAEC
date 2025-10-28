@@ -33,7 +33,8 @@ fun MainScreen(
         NavigationRoutes.APPLY_EXAM,
         NavigationRoutes.QUIZ_ANSWERS,
         NavigationRoutes.DETAILS_STUDENT,
-        NavigationRoutes.DETAILS_CLASS
+        NavigationRoutes.DETAILS_CLASS,
+        NavigationRoutes.CROP_PREVIEW
     )
 
     Box(
@@ -46,7 +47,7 @@ fun MainScreen(
         MainNavGraph(navController = navController)
 
         // BARRA DE NAVEGACIÓN FLOTANTE
-        if (currentRoute !in routesWithoutBottomBar) {
+        if (routesWithoutBottomBar.none { currentRoute?.startsWith(it) == true }) {
             BottomNavigationBar(
                 navController = navController,
                 items = bottomNavItems,

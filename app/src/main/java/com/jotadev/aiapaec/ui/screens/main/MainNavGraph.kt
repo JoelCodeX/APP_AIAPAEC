@@ -17,6 +17,7 @@ import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
 import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
 import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
 import com.jotadev.aiapaec.ui.screens.scan.ScanScreen
+import com.jotadev.aiapaec.ui.screens.scan.CropPreviewScreen
 
 @Composable
 fun MainNavGraph(
@@ -58,6 +59,10 @@ fun MainNavGraph(
         
         composable(NavigationRoutes.SCAN_CARD) {
             ScanScreen(navController = navController)
+        }
+        composable("${NavigationRoutes.CROP_PREVIEW}?path={path}") { backStackEntry ->
+            val path = backStackEntry.arguments?.getString("path") ?: ""
+            CropPreviewScreen(navController = navController, filePath = path)
         }
         
         composable(NavigationRoutes.EXAM_DETAIL) { backStackEntry ->

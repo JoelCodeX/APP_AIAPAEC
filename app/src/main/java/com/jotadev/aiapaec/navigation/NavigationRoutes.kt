@@ -25,6 +25,7 @@ object NavigationRoutes {
     const val CREATE_EXAM = "create_exam"
     const val SCAN_CARD = "scan_card"
     const val GROUP_CLASSES = "group_classes"
+    const val CROP_PREVIEW = "crop_preview"
 
     
     // Navigation with arguments
@@ -33,4 +34,5 @@ object NavigationRoutes {
     fun quizAnswers(examId: String) = "quiz_answers/$examId"
     fun detailsStudent(studentId: Int) = "student_detail/$studentId"
     fun detailsClass(classId: Int) = "class_detail/$classId"
+    fun cropPreview(path: String) = "${CROP_PREVIEW}?path=$path"
 }
