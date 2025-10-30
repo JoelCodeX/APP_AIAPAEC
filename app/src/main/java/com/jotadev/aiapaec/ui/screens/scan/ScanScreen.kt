@@ -141,7 +141,7 @@ fun ScanScreen(navController: NavController) {
         val currentRotation = LocalView.current.display?.rotation ?: 0
         val imageCapture = remember(currentRotation) {
             ImageCapture.Builder()
-                .setTargetRotation(currentRotation)
+                .setTargetRotation(Surface.ROTATION_0)
                 .build()
         }
 
@@ -158,7 +158,7 @@ fun ScanScreen(navController: NavController) {
                     preview.setSurfaceProvider(previewView!!.surfaceProvider)
                     val selector = CameraSelector.DEFAULT_BACK_CAMERA
                     val analysis = ImageAnalysis.Builder()
-                        .setTargetRotation(currentRotation)
+                        .setTargetRotation(Surface.ROTATION_0)
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                         .build()
@@ -190,6 +190,7 @@ fun ScanScreen(navController: NavController) {
                                             )
                                         }
                                         cornersCount = res.count
+                                        markers = res.markers.toList()
                                     }
                                 }
                                 busy = false
@@ -231,9 +232,7 @@ fun ScanScreen(navController: NavController) {
                 frameW = frameW,
                 frameH = frameH,
                 onMarkersComputed = { inside ->
-                    val newMarkers = inside.toList()
-                    markers = newMarkers
-                    if (newMarkers.all { it }) {
+                    if (inside.all { it }) {
                         stableCount++
                         if (!capturing && stableCount >= 5) {
                             capturing = true
@@ -294,45 +293,7 @@ private fun ScanningOverlay(
         val cornerPadPx = with(density) { cornerPadding.toPx() }
         val cornerSizePx = with(density) { cornerSize.toPx() }
 
-        // Cuadros estáticos sin cambio de color
-        Box(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Transparent)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Transparent)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .offset(y = (-bottomOffset))
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Transparent)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(y = (-bottomOffset))
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Transparent)
-            )
-        }
-
-        // Rects de referencia en px
+        // GEOMETRÍA DE CUADROS DE ESQUINA Y ESCALA DE FRAME (NECESARIO PARA CÁLCULOS)
         val topLeft = android.graphics.RectF(
             cornerPadPx,
             0f,
@@ -358,13 +319,124 @@ private fun ScanningOverlay(
             boxHpx - bottomOffsetPx
         )
 
-        // Mapeo de esquinas normalizadas a px (PreviewView FILL_CENTER)
         val hasDims = frameW > 0 && frameH > 0
         val scale = if (hasDims) max(boxWpx / frameW.toFloat(), boxHpx / frameH.toFloat()) else 1f
         val scaledW = if (hasDims) frameW * scale else boxWpx
         val scaledH = if (hasDims) frameH * scale else boxHpx
         val offsetX = (boxWpx - scaledW) / 2f
         val offsetY = (boxHpx - scaledH) / 2f
+
+        // PINTADO EN TIEMPO REAL SOLO SI EL CUADRADO/ESQUINA ESTÁ DENTRO DE LOS RECUDAROS UI
+        val insideRealtime = BooleanArray(4) { false }
+        for (idx in 0 until 4) {
+            val b = boxesNorm.getOrNull(idx)
+            val containedByBox = if (b != null && b.size >= 4) {
+                val px = offsetX + b[0] * scaledW
+                val py = offsetY + b[1] * scaledH
+                val pw = b[2] * scaledW
+                val ph = b[3] * scaledH
+                val bx0 = px
+                val by0 = py
+                val bx1 = px + pw
+                val by1 = py + ph
+                when (idx) {
+                    0 -> (bx0 >= topLeft.left && by0 >= topLeft.top && bx1 <= topLeft.right && by1 <= topLeft.bottom)
+                    1 -> (bx0 >= topRight.left && by0 >= topRight.top && bx1 <= topRight.right && by1 <= topRight.bottom)
+                    2 -> (bx0 >= bottomRight.left && by0 >= bottomRight.top && bx1 <= bottomRight.right && by1 <= bottomRight.bottom)
+                    3 -> (bx0 >= bottomLeft.left && by0 >= bottomLeft.top && bx1 <= bottomLeft.right && by1 <= bottomLeft.bottom)
+                    else -> false
+                }
+            } else false
+            val p = cornersNorm.getOrNull(idx)
+            val containedByCorner = if (p != null) {
+                val cx = offsetX + p.first * scaledW
+                val cy = offsetY + p.second * scaledH
+                when (idx) {
+                    0 -> (cx >= topLeft.left && cy >= topLeft.top && cx <= topLeft.right && cy <= topLeft.bottom)
+                    1 -> (cx >= topRight.left && cy >= topRight.top && cx <= topRight.right && cy <= topRight.bottom)
+                    2 -> (cx >= bottomRight.left && cy >= bottomRight.top && cx <= bottomRight.right && cy <= bottomRight.bottom)
+                    3 -> (cx >= bottomLeft.left && cy >= bottomLeft.top && cx <= bottomLeft.right && cy <= bottomLeft.bottom)
+                    else -> false
+                }
+            } else false
+            insideRealtime[idx] = containedByBox || containedByCorner
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            val fillColor = Color(0x3300C853) // VERDE SEMITRANSPARENTE
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(cornerPadding)
+                    .size(cornerSize)
+                    .border(2.dp, baseColor, cornerShape)
+                    .background(Color.Black.copy(0.1f))
+            )
+            if (insideRealtime[0]) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(cornerPadding)
+                        .size(cornerSize)
+                        .background(fillColor, cornerShape)
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(cornerPadding)
+                    .size(cornerSize)
+                    .border(2.dp, baseColor, cornerShape)
+                    .background(Color.Black.copy(0.1f))
+            )
+            if (insideRealtime[1]) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(cornerPadding)
+                        .size(cornerSize)
+                        .background(fillColor, cornerShape)
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .offset(y = (-bottomOffset))
+                    .padding(cornerPadding)
+                    .size(cornerSize)
+                    .border(2.dp, baseColor, cornerShape)
+                    .background(Color.Black.copy(0.1f))
+            )
+            if (insideRealtime[3]) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .offset(y = (-bottomOffset))
+                        .padding(cornerPadding)
+                        .size(cornerSize)
+                        .background(fillColor, cornerShape)
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(y = (-bottomOffset))
+                    .padding(cornerPadding)
+                    .size(cornerSize)
+                    .border(2.dp, baseColor, cornerShape)
+                    .background(Color.Black.copy(0.1f))
+            )
+            if (insideRealtime[2]) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(y = (-bottomOffset))
+                        .padding(cornerPadding)
+                        .size(cornerSize)
+                        .background(fillColor, cornerShape)
+                )
+            }
+        }
 
         val inside = BooleanArray(4) { false }
         val insideBoxes = BooleanArray(4) { false }
@@ -401,8 +473,6 @@ private fun ScanningOverlay(
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f)
                 )
             }
-
-            // Dibuja puntos de esquina en tiempo real (verde si está contenido, rojo si no)
             cornersNorm.forEachIndexed { idx, p ->
                 val cx = offsetX + p.first * scaledW
                 val cy = offsetY + p.second * scaledH
@@ -434,8 +504,6 @@ private fun ScanningOverlay(
             }
             onMarkersComputed(inside)
         }
-
-        // Panel inferior con instrucciones y contador
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -477,9 +545,6 @@ private fun ScanningOverlay(
         }
     }
 }
-
-// -- Flujo de captura y envío al backend --
-
 private fun captureAndProcess(
     imageCapture: ImageCapture,
     context: android.content.Context,
@@ -495,12 +560,10 @@ private fun captureAndProcess(
             onDone()
         }
         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-            // Ejecutar red en hilo de fondo para evitar ANR
             Thread {
-                val rotatedFile = rotateJpegFileIfNeeded(output)
-                val detectCorners = detectCornersRemote(client, rotatedFile)
+                val detectCorners = detectCornersRemote(client, output)
                 if (detectCorners != null) {
-                    val outFile = cropRemote(client, gson, rotatedFile, detectCorners)
+                    val outFile = cropRemote(client, gson, output, detectCorners)
                     Handler(Looper.getMainLooper()).post {
                         onDone()
                         if (outFile != null) {
@@ -602,28 +665,7 @@ private fun yuv420ToJpeg(image: ImageProxy, quality: Int = 70): ByteArray {
     return out2.toByteArray()
 }
 
-// -- Rotación física de JPEG de captura según EXIF --
-private fun rotateJpegFileIfNeeded(file: File): File {
-    val exif = ExifInterface(file.absolutePath)
-    val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-    val rotation = when (orientation) {
-        ExifInterface.ORIENTATION_ROTATE_90 -> 90
-        ExifInterface.ORIENTATION_ROTATE_180 -> 180
-        ExifInterface.ORIENTATION_ROTATE_270 -> 270
-        else -> 0
-    }
-    if (rotation == 0) return file
-    val bmp = BitmapFactory.decodeFile(file.absolutePath)
-    val matrix = android.graphics.Matrix()
-    matrix.postRotate(rotation.toFloat())
-    val rotated = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
-    val out = File(file.parentFile, file.nameWithoutExtension + "_rot.jpg")
-    val fos = FileOutputStream(out)
-    rotated.compress(Bitmap.CompressFormat.JPEG, 90, fos)
-    fos.flush()
-    fos.close()
-    return out
-}
+// -- JPEG se envía tal cual; el backend normaliza EXIF --
 
 private data class DetectionResult(
     val markers: BooleanArray,
