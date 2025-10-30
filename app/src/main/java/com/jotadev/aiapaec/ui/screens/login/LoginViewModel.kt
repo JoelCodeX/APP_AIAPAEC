@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jotadev.aiapaec.domain.models.Result
 import com.jotadev.aiapaec.domain.usecases.LoginUseCase
 import com.jotadev.aiapaec.data.repository.AuthRepositoryImpl
+import com.jotadev.aiapaec.data.storage.UserStorage
 // import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,6 +67,15 @@ class LoginViewModel(
                         usuario = "",
                         contrasena = "",
                         mostrarContrasena = false
+                    )
+                    // GUARDAR PERFIL Y SEDE DEL USUARIO
+                    val u = result.data.user
+                    UserStorage.save(
+                        name = u?.fullName,
+                        email = u?.email,
+                        institution = "AIAPAEC",
+                        role = u?.role,
+                        branchId = u?.branchId
                     )
                 }
                 is Result.Error -> {

@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.jotadev.aiapaec.data.storage.UserStorage
 
 data class SettingsItem(
     val id: String,
@@ -50,11 +51,15 @@ class SettingsViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
+                val storedName = UserStorage.getName() ?: "Usuario AIAPAEC"
+                val storedEmail = UserStorage.getEmail() ?: "usuario@aiapaec.edu.pe"
+                val storedInstitution = UserStorage.getInstitution() ?: "AIAPAEC"
+                val storedRole = UserStorage.getRole() ?: "Docente"
                 val userProfile = UserProfile(
-                    name = "Usuario AIAPAEC",
-                    email = "usuario@aiapaec.edu.pe",
-                    institution = "AIAPAEC",
-                    role = "Docente"
+                    name = storedName,
+                    email = storedEmail,
+                    institution = storedInstitution,
+                    role = storedRole
                 )
                 
                 val generalSettings = listOf(

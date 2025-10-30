@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.androidx.ui)
     // Pull-to-refresh via Accompanist
     implementation(libs.accompanist.swiperefresh)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.tv.material)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

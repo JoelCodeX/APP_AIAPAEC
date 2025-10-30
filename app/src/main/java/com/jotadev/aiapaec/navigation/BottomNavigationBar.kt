@@ -29,7 +29,7 @@ fun BottomNavigationBar(
         shape = RoundedCornerShape(20.dp),
         tonalElevation = 8.dp,
         shadowElevation = 12.dp,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.primary.copy(0.95f),
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 16.dp)

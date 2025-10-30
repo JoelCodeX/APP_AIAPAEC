@@ -3,6 +3,7 @@ package com.jotadev.aiapaec.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.outlined.Assignment
+import androidx.compose.material.icons.automirrored.rounded.Assignment
 import androidx.compose.material.icons.filled.Backpack
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
@@ -14,6 +15,10 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Leaderboard
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Leaderboard
+import androidx.compose.material.icons.rounded.School
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomNavItem(
@@ -24,32 +29,32 @@ sealed class BottomNavItem(
 ) {
     data object Home : BottomNavItem(
         route = NavigationRoutes.HOME,
-        iconFilled = Icons.Default.Home,
-        iconOutlined = Icons.Outlined.Home,
+        iconFilled = Icons.Rounded.Home,
+        iconOutlined = Icons.Rounded.Home,
         label = "Inicio"
     )
     data object Exams : BottomNavItem(
         route = NavigationRoutes.EXAMS,
-        iconFilled = Icons.AutoMirrored.Filled.Assignment,
-        iconOutlined = Icons.AutoMirrored.Outlined.Assignment,
+        iconFilled = Icons.AutoMirrored.Rounded.Assignment,
+        iconOutlined = Icons.AutoMirrored.Rounded.Assignment,
         label = "Exámenes"
     )
     data object Classes : BottomNavItem(
         route = NavigationRoutes.CLASSES,
-        iconFilled = Icons.Filled.Groups,
-        iconOutlined = Icons.Outlined.Groups,
+        iconFilled = Icons.Rounded.Groups,
+        iconOutlined = Icons.Rounded.Groups,
         label = "Clases"
     )
     data object Students : BottomNavItem(
         route = NavigationRoutes.STUDENTS,
-        iconFilled = Icons.Filled.School,
-        iconOutlined = Icons.Outlined.School,
+        iconFilled = Icons.Rounded.School,
+        iconOutlined = Icons.Rounded.School,
         label = "Alumnos"
     )
     data object Results : BottomNavItem(
         route = NavigationRoutes.RESULTS,
-        iconFilled = Icons.Default.Leaderboard,
-        iconOutlined = Icons.Outlined.Leaderboard,
+        iconFilled = Icons.Rounded.Leaderboard,
+        iconOutlined = Icons.Rounded.Leaderboard,
         label = "Resultados"
     )
     companion object {

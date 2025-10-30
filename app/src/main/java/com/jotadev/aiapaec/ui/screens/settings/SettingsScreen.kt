@@ -37,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +46,9 @@ fun SettingsScreen(
     navController: NavController,
     onClose: () -> Unit = {}
 ) {
+    val settingsViewModel: SettingsViewModel = viewModel()
+    val uiState = settingsViewModel.uiState
+    val state = uiState.value
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,12 +84,12 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Usuario",
+                            text = state.userProfile?.name ?: "Usuario",
                             color = MaterialTheme.colorScheme.onTertiary,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Configuración",
+                            text = state.userProfile?.institution ?: "AIAPAEC",
                             color = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.9f)
                         )
                     }

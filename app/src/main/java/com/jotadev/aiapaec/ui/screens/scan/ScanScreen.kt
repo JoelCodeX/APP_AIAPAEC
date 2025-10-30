@@ -139,10 +139,13 @@ fun ScanScreen(navController: NavController) {
         var cornersCount by remember { mutableIntStateOf(0) }
         var frameW by remember { mutableIntStateOf(0) }
         var frameH by remember { mutableIntStateOf(0) }
+        var roiNorm by remember { mutableStateOf<List<Float>?>(null) }
         val currentRotation = LocalView.current.display?.rotation ?: 0
         val imageCapture = remember(currentRotation) {
             ImageCapture.Builder()
                 .setTargetRotation(Surface.ROTATION_0)
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                .setJpegQuality(75)
                 .build()
         }
 
@@ -167,11 +170,11 @@ fun ScanScreen(navController: NavController) {
                     var lastTs = 0L
                     analysis.setAnalyzer(mainExecutor) { image ->
                         val now = System.currentTimeMillis()
-                        if (!busy && now - lastTs > 180) {
+                        if (!busy && now - lastTs > 45) {
                             busy = true
                             lastTs = now
                             Thread {
-                                val res = detectMarkersRemote(client, image)
+                                val res = detectMarkersRemote(client, image, roiNorm)
                                 image.close()
                                 if (res != null) {
                                     androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
@@ -232,10 +235,11 @@ fun ScanScreen(navController: NavController) {
                 cornersCount = cornersCount,
                 frameW = frameW,
                 frameH = frameH,
+                onRoiComputed = { r -> roiNorm = r.toList() },
                 onMarkersComputed = { inside ->
                     if (inside.all { it }) {
                         stableCount++
-                        if (!capturing && stableCount >= 5) {
+                        if (!capturing && stableCount >= 1) {
                             capturing = true
                             stableCount = 0
                             captureAndProcess(imageCapture, context, client, gson, navController) {
@@ -278,6 +282,7 @@ private fun ScanningOverlay(
     cornersCount: Int = 0,
     frameW: Int = 0,
     frameH: Int = 0,
+    onRoiComputed: (FloatArray) -> Unit = {},
     onMarkersComputed: (BooleanArray) -> Unit = {}
 ) {
     val cornerSize = 90.dp
@@ -381,6 +386,25 @@ private fun ScanningOverlay(
         val scaledH = if (hasDims) frameH * scale else boxHpx
         val offsetX = (boxWpx - scaledW) / 2f
         val offsetY = (boxHpx - scaledH) / 2f
+
+        // ROI NORMALIZADA PARA BACKEND BASADA EN VISORES DE ESQUINA
+        if (hasDims) {
+            val minLeft = minOf(topLeft.left, topRight.left, bottomLeft.left, bottomRight.left)
+            val minTop = minOf(topLeft.top, topRight.top, bottomLeft.top, bottomRight.top)
+            val maxRight = maxOf(topLeft.right, topRight.right, bottomLeft.right, bottomRight.right)
+            val maxBottom = maxOf(topLeft.bottom, topRight.bottom, bottomLeft.bottom, bottomRight.bottom)
+            val rx = ((minLeft - offsetX) / scaledW).coerceIn(0f, 1f)
+            val ry = ((minTop - offsetY) / scaledH).coerceIn(0f, 1f)
+            val rw = ((maxRight - minLeft) / scaledW).coerceIn(0f, 1f)
+            val rh = ((maxBottom - minTop) / scaledH).coerceIn(0f, 1f)
+            // AMPLIAR ROI CON MARGEN PARA MAYOR SENSIBILIDAD
+            val pad = 0.10f
+            val rxPad = (rx - pad).coerceIn(0f, 1f)
+            val ryPad = (ry - pad).coerceIn(0f, 1f)
+            val rwPad = (rw + pad * 2f).coerceIn(0f, 1f)
+            val rhPad = (rh + pad * 2f).coerceIn(0f, 1f)
+            onRoiComputed(floatArrayOf(rxPad, ryPad, rwPad, rhPad))
+        }
 
         val inside = BooleanArray(4) { false }
         val insideBoxes = BooleanArray(4) { false }
@@ -612,12 +636,23 @@ private fun yuv420ToJpeg(image: ImageProxy, quality: Int = 70): ByteArray {
     val bytes = out.toByteArray()
     val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     val rotation = image.imageInfo.rotationDegrees
-    if (rotation == 0) return bytes
+    if (rotation == 0) {
+        // SIN ROTACIÓN: DEVOLVER JPEG DIRECTO PARA MAXIMIZAR VELOCIDAD
+        return bytes
+    }
     val matrix = android.graphics.Matrix()
     matrix.postRotate(rotation.toFloat())
     val rotated = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
+    val maxSide = max(rotated.width, rotated.height)
+    val targetMax = 960
+    val finalBitmap = if (maxSide > targetMax) {
+        val scale = targetMax.toFloat() / maxSide.toFloat()
+        val newW = (rotated.width * scale).toInt()
+        val newH = (rotated.height * scale).toInt()
+        Bitmap.createScaledBitmap(rotated, newW, newH, true)
+    } else rotated
     val out2 = java.io.ByteArrayOutputStream()
-    rotated.compress(Bitmap.CompressFormat.JPEG, quality, out2)
+    finalBitmap.compress(Bitmap.CompressFormat.JPEG, quality, out2)
     return out2.toByteArray()
 }
 
@@ -630,12 +665,16 @@ private data class DetectionResult(
     val h: Int
 )
 
-private fun detectMarkersRemote(client: OkHttpClient, image: ImageProxy): DetectionResult? {
+private fun detectMarkersRemote(client: OkHttpClient, image: ImageProxy, roiNorm: List<Float>?): DetectionResult? {
     val url = "http://192.168.18.224:5000/scan/detect-corners"
-    val jpeg = yuv420ToJpeg(image, 65)
-    val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+    val jpeg = yuv420ToJpeg(image, 70)
+    val bodyBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
         .addFormDataPart("file", "frame.jpg", jpeg.toRequestBody("image/jpeg".toMediaType()))
-        .build()
+    if (roiNorm != null && roiNorm.size == 4) {
+        val roiStr = "[${roiNorm[0]},${roiNorm[1]},${roiNorm[2]},${roiNorm[3]}]"
+        bodyBuilder.addFormDataPart("roi", roiStr)
+    }
+    val body = bodyBuilder.build()
     val req = Request.Builder().url(url).post(body).build()
     client.newCall(req).execute().use { resp ->
         if (!resp.isSuccessful) return null
