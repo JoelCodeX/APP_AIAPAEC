@@ -23,7 +23,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -56,7 +55,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -176,12 +177,13 @@ fun ScanScreen(navController: NavController) {
                                     androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
                                         frameW = res.w
                                         frameH = res.h
-                                        cornersNorm = res.corners.map { p ->
-                                            val x = p[0] / res.w.toFloat()
-                                            val y = p[1] / res.h.toFloat()
-                                            Pair(x, y)
+                                        val ordered = reorderCornersAndBoxes(res.corners, res.boxes)
+                                        val oc = ordered.first
+                                        val ob = ordered.second
+                                        cornersNorm = oc.map { p ->
+                                            Pair(p[0] / res.w.toFloat(), p[1] / res.h.toFloat())
                                         }
-                                        boxesNorm = res.boxes.map { b ->
+                                        boxesNorm = ob.map { b ->
                                             listOf(
                                                 b[0] / res.w.toFloat(),
                                                 b[1] / res.h.toFloat(),
@@ -205,7 +207,6 @@ fun ScanScreen(navController: NavController) {
             }
         }
 
-        // Contenedor principal con preview real de cámara
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -279,11 +280,9 @@ private fun ScanningOverlay(
     frameH: Int = 0,
     onMarkersComputed: (BooleanArray) -> Unit = {}
 ) {
-    val cornerSize = 86.dp
+    val cornerSize = 90.dp
     val cornerPadding = 0.dp
-    val baseColor = Color.White.copy(alpha = 0.12f)
-    val cornerShape = RoundedCornerShape(0.dp)
-    val bottomOffset = 280.dp
+    val bottomOffset = 290.dp
     val density = LocalDensity.current
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -293,30 +292,87 @@ private fun ScanningOverlay(
         val cornerPadPx = with(density) { cornerPadding.toPx() }
         val cornerSizePx = with(density) { cornerSize.toPx() }
 
+        // DEFINIR LAS ÁREAS DE LOS CUADRADOS (donde será TRANSPARENTE)
+        val transparentAreas = listOf(
+            androidx.compose.ui.geometry.Rect(
+                left = cornerPadPx,
+                top = 0f,
+                right = cornerPadPx + cornerSizePx,
+                bottom = cornerSizePx
+            ),
+            androidx.compose.ui.geometry.Rect(
+                left = boxWpx - cornerPadPx - cornerSizePx,
+                top = 0f,
+                right = boxWpx - cornerPadPx,
+                bottom = cornerSizePx
+            ),
+            androidx.compose.ui.geometry.Rect(
+                left = cornerPadPx,
+                top = boxHpx - bottomOffsetPx - cornerSizePx,
+                right = cornerPadPx + cornerSizePx,
+                bottom = boxHpx - bottomOffsetPx
+            ),
+            androidx.compose.ui.geometry.Rect(
+                left = boxWpx - cornerPadPx - cornerSizePx,
+                top = boxHpx - bottomOffsetPx - cornerSizePx,
+                right = boxWpx - cornerPadPx,
+                bottom = boxHpx - bottomOffsetPx
+            )
+        )
+
+        // CAPA OSCURA SEMI-TRANSPARENTE con agujeros en los cuadrados
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            // Crear path para el fondo oscuro con agujeros
+            val path = android.graphics.Path().apply {
+                fillType = android.graphics.Path.FillType.EVEN_ODD
+
+                // Agregar rectángulo completo (fondo oscuro)
+                addRect(0f, 0f, boxWpx, boxHpx, android.graphics.Path.Direction.CW)
+
+                // Agregar los cuadrados como "agujeros" transparentes
+                transparentAreas.forEach { rect ->
+                    addRect(
+                        rect.left,
+                        rect.top,
+                        rect.right,
+                        rect.bottom,
+                        android.graphics.Path.Direction.CW
+                    )
+                }
+            }
+
+            // Dibujar SOLO el fondo oscuro (los cuadrados quedan transparentes automáticamente)
+            drawPath(
+                path = path.asComposePath(),
+                color = Color.Black.copy(alpha = 0.4f), // AJUSTA TRANSPARENCIA AQUÍ: 0.3f = poco oscuro, 0.6f = más oscuro
+                blendMode = BlendMode.SrcOver
+            )
+        }
+
         // GEOMETRÍA DE CUADROS DE ESQUINA Y ESCALA DE FRAME (NECESARIO PARA CÁLCULOS)
-        val topLeft = android.graphics.RectF(
-            cornerPadPx,
-            0f,
-            cornerPadPx + cornerSizePx,
-            cornerSizePx
+        val topLeft = androidx.compose.ui.geometry.Rect(
+            left = cornerPadPx,
+            top = 0f,
+            right = cornerPadPx + cornerSizePx,
+            bottom = cornerSizePx
         )
-        val topRight = android.graphics.RectF(
-            boxWpx - cornerPadPx - cornerSizePx,
-            0f,
-            boxWpx - cornerPadPx,
-            cornerSizePx
+        val topRight = androidx.compose.ui.geometry.Rect(
+            left = boxWpx - cornerPadPx - cornerSizePx,
+            top = 0f,
+            right = boxWpx - cornerPadPx,
+            bottom = cornerSizePx
         )
-        val bottomLeft = android.graphics.RectF(
-            cornerPadPx,
-            boxHpx - bottomOffsetPx - cornerSizePx,
-            cornerPadPx + cornerSizePx,
-            boxHpx - bottomOffsetPx
+        val bottomLeft = androidx.compose.ui.geometry.Rect(
+            left = cornerPadPx,
+            top = boxHpx - bottomOffsetPx - cornerSizePx,
+            right = cornerPadPx + cornerSizePx,
+            bottom = boxHpx - bottomOffsetPx
         )
-        val bottomRight = android.graphics.RectF(
-            boxWpx - cornerPadPx - cornerSizePx,
-            boxHpx - bottomOffsetPx - cornerSizePx,
-            boxWpx - cornerPadPx,
-            boxHpx - bottomOffsetPx
+        val bottomRight = androidx.compose.ui.geometry.Rect(
+            left = boxWpx - cornerPadPx - cornerSizePx,
+            top = boxHpx - bottomOffsetPx - cornerSizePx,
+            right = boxWpx - cornerPadPx,
+            bottom = boxHpx - bottomOffsetPx
         )
 
         val hasDims = frameW > 0 && frameH > 0
@@ -326,138 +382,26 @@ private fun ScanningOverlay(
         val offsetX = (boxWpx - scaledW) / 2f
         val offsetY = (boxHpx - scaledH) / 2f
 
-        // PINTADO EN TIEMPO REAL SOLO SI EL CUADRADO/ESQUINA ESTÁ DENTRO DE LOS RECUDAROS UI
-        val insideRealtime = BooleanArray(4) { false }
-        for (idx in 0 until 4) {
-            val b = boxesNorm.getOrNull(idx)
-            val containedByBox = if (b != null && b.size >= 4) {
-                val px = offsetX + b[0] * scaledW
-                val py = offsetY + b[1] * scaledH
-                val pw = b[2] * scaledW
-                val ph = b[3] * scaledH
-                val bx0 = px
-                val by0 = py
-                val bx1 = px + pw
-                val by1 = py + ph
-                when (idx) {
-                    0 -> (bx0 >= topLeft.left && by0 >= topLeft.top && bx1 <= topLeft.right && by1 <= topLeft.bottom)
-                    1 -> (bx0 >= topRight.left && by0 >= topRight.top && bx1 <= topRight.right && by1 <= topRight.bottom)
-                    2 -> (bx0 >= bottomRight.left && by0 >= bottomRight.top && bx1 <= bottomRight.right && by1 <= bottomRight.bottom)
-                    3 -> (bx0 >= bottomLeft.left && by0 >= bottomLeft.top && bx1 <= bottomLeft.right && by1 <= bottomLeft.bottom)
-                    else -> false
-                }
-            } else false
-            val p = cornersNorm.getOrNull(idx)
-            val containedByCorner = if (p != null) {
-                val cx = offsetX + p.first * scaledW
-                val cy = offsetY + p.second * scaledH
-                when (idx) {
-                    0 -> (cx >= topLeft.left && cy >= topLeft.top && cx <= topLeft.right && cy <= topLeft.bottom)
-                    1 -> (cx >= topRight.left && cy >= topRight.top && cx <= topRight.right && cy <= topRight.bottom)
-                    2 -> (cx >= bottomRight.left && cy >= bottomRight.top && cx <= bottomRight.right && cy <= bottomRight.bottom)
-                    3 -> (cx >= bottomLeft.left && cy >= bottomLeft.top && cx <= bottomLeft.right && cy <= bottomLeft.bottom)
-                    else -> false
-                }
-            } else false
-            insideRealtime[idx] = containedByBox || containedByCorner
-        }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            val fillColor = Color(0x3300C853) // VERDE SEMITRANSPARENTE
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Black.copy(0.1f))
-            )
-            if (insideRealtime[0]) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(cornerPadding)
-                        .size(cornerSize)
-                        .background(fillColor, cornerShape)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Black.copy(0.1f))
-            )
-            if (insideRealtime[1]) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(cornerPadding)
-                        .size(cornerSize)
-                        .background(fillColor, cornerShape)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .offset(y = (-bottomOffset))
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Black.copy(0.1f))
-            )
-            if (insideRealtime[3]) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .offset(y = (-bottomOffset))
-                        .padding(cornerPadding)
-                        .size(cornerSize)
-                        .background(fillColor, cornerShape)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(y = (-bottomOffset))
-                    .padding(cornerPadding)
-                    .size(cornerSize)
-                    .border(2.dp, baseColor, cornerShape)
-                    .background(Color.Black.copy(0.1f))
-            )
-            if (insideRealtime[2]) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(y = (-bottomOffset))
-                        .padding(cornerPadding)
-                        .size(cornerSize)
-                        .background(fillColor, cornerShape)
-                )
-            }
-        }
-
         val inside = BooleanArray(4) { false }
         val insideBoxes = BooleanArray(4) { false }
         val insideCorners = BooleanArray(4) { false }
         val boxColor = Color(0xFF00C853)
 
+        // Dibujar solo marcadores dentro de los recuadros UI (filtro estricto)
         Canvas(modifier = Modifier.fillMaxSize()) {
             boxesNorm.forEachIndexed { idx, b ->
                 val px = offsetX + b[0] * scaledW
                 val py = offsetY + b[1] * scaledH
                 val pw = b[2] * scaledW
                 val ph = b[3] * scaledH
-                val bx0 = px
-                val by0 = py
-                val bx1 = px + pw
-                val by1 = py + ph
+                val cx = px + pw * 0.5f
+                val cy = py + ph * 0.5f
+                val pad = 8f
                 val contained = when (idx) {
-                    0 -> (bx0 >= topLeft.left && by0 >= topLeft.top && bx1 <= topLeft.right && by1 <= topLeft.bottom)
-                    1 -> (bx0 >= topRight.left && by0 >= topRight.top && bx1 <= topRight.right && by1 <= topRight.bottom)
-                    2 -> (bx0 >= bottomRight.left && by0 >= bottomRight.top && bx1 <= bottomRight.right && by1 <= bottomRight.bottom)
-                    3 -> (bx0 >= bottomLeft.left && by0 >= bottomLeft.top && bx1 <= bottomLeft.right && by1 <= bottomLeft.bottom)
+                    0 -> (cx >= (topLeft.left - pad) && cy >= (topLeft.top - pad) && cx <= (topLeft.right + pad) && cy <= (topLeft.bottom + pad))
+                    1 -> (cx >= (topRight.left - pad) && cy >= (topRight.top - pad) && cx <= (topRight.right + pad) && cy <= (topRight.bottom + pad))
+                    2 -> (cx >= (bottomRight.left - pad) && cy >= (bottomRight.top - pad) && cx <= (bottomRight.right + pad) && cy <= (bottomRight.bottom + pad))
+                    3 -> (cx >= (bottomLeft.left - pad) && cy >= (bottomLeft.top - pad) && cx <= (bottomLeft.right + pad) && cy <= (bottomLeft.bottom + pad))
                     else -> false
                 }
                 when (idx) {
@@ -466,21 +410,24 @@ private fun ScanningOverlay(
                     2 -> insideBoxes[2] = contained
                     3 -> insideBoxes[3] = contained
                 }
-                drawRect(
-                    color = boxColor,
-                    topLeft = androidx.compose.ui.geometry.Offset(px, py),
-                    size = androidx.compose.ui.geometry.Size(pw, ph),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f)
-                )
+                if (contained) {
+                    drawRect(
+                        color = boxColor,
+                        topLeft = androidx.compose.ui.geometry.Offset(px, py),
+                        size = androidx.compose.ui.geometry.Size(pw, ph),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f)
+                    )
+                }
             }
             cornersNorm.forEachIndexed { idx, p ->
                 val cx = offsetX + p.first * scaledW
                 val cy = offsetY + p.second * scaledH
+                val pad = 4f
                 val containedCorner = when (idx) {
-                    0 -> (cx >= topLeft.left && cy >= topLeft.top && cx <= topLeft.right && cy <= topLeft.bottom)
-                    1 -> (cx >= topRight.left && cy >= topRight.top && cx <= topRight.right && cy <= topRight.bottom)
-                    2 -> (cx >= bottomRight.left && cy >= bottomRight.top && cx <= bottomRight.right && cy <= bottomRight.bottom)
-                    3 -> (cx >= bottomLeft.left && cy >= bottomLeft.top && cx <= bottomLeft.right && cy <= bottomLeft.bottom)
+                    0 -> (cx >= (topLeft.left - pad) && cy >= (topLeft.top - pad) && cx <= (topLeft.right + pad) && cy <= (topLeft.bottom + pad))
+                    1 -> (cx >= (topRight.left - pad) && cy >= (topRight.top - pad) && cx <= (topRight.right + pad) && cy <= (topRight.bottom + pad))
+                    2 -> (cx >= (bottomRight.left - pad) && cy >= (bottomRight.top - pad) && cx <= (bottomRight.right + pad) && cy <= (bottomRight.bottom + pad))
+                    3 -> (cx >= (bottomLeft.left - pad) && cy >= (bottomLeft.top - pad) && cx <= (bottomLeft.right + pad) && cy <= (bottomLeft.bottom + pad))
                     else -> false
                 }
                 when (idx) {
@@ -489,21 +436,27 @@ private fun ScanningOverlay(
                     2 -> insideCorners[2] = containedCorner
                     3 -> insideCorners[3] = containedCorner
                 }
-                drawCircle(
-                    color = boxColor,
-                    radius = 6f,
-                    center = androidx.compose.ui.geometry.Offset(cx, cy),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f)
-                )
+                if (containedCorner) {
+                    drawCircle(
+                        color = boxColor,
+                        radius = 6f,
+                        center = androidx.compose.ui.geometry.Offset(cx, cy),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f)
+                    )
+                }
             }
         }
 
         LaunchedEffect(boxesNorm, cornersNorm, frameW, frameH) {
             for (i in 0 until 4) {
-                inside[i] = (insideBoxes.getOrNull(i) ?: false) || (insideCorners.getOrNull(i) ?: false)
+                // ESTRICTO: solo considerar dentro si cualquiera de las dos pruebas en UI es verdadera
+                val inBox = insideBoxes.getOrNull(i) ?: false
+                val inCorner = insideCorners.getOrNull(i) ?: false
+                inside[i] = inBox || inCorner
             }
             onMarkersComputed(inside)
         }
+
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -545,6 +498,9 @@ private fun ScanningOverlay(
         }
     }
 }
+
+// ... (el resto de las funciones se mantienen IGUAL: captureAndProcess, detectCornersRemote, cropRemote, etc.)
+
 private fun captureAndProcess(
     imageCapture: ImageCapture,
     context: android.content.Context,
@@ -665,12 +621,10 @@ private fun yuv420ToJpeg(image: ImageProxy, quality: Int = 70): ByteArray {
     return out2.toByteArray()
 }
 
-// -- JPEG se envía tal cual; el backend normaliza EXIF --
-
 private data class DetectionResult(
     val markers: BooleanArray,
-    val corners: List<List<Float>>, // pixel coords
-    val boxes: List<List<Float>>, // pixel rects [x,y,w,h]
+    val corners: List<List<Float>>,
+    val boxes: List<List<Float>>,
     val count: Int,
     val w: Int,
     val h: Int
@@ -713,3 +667,40 @@ private fun detectMarkersRemote(client: OkHttpClient, image: ImageProxy): Detect
     }
 }
 
+private fun reorderCornersAndBoxes(
+    corners: List<List<Float>>,
+    boxes: List<List<Float>>
+): Pair<List<List<Float>>, List<List<Float>>> {
+    if (corners.size != 4) return Pair(corners, boxes)
+    val idxByY = (0..3).sortedBy { corners[it][1] }
+    val top = idxByY.take(2).sortedBy { corners[it][0] }
+    val bottom = idxByY.takeLast(2).sortedBy { corners[it][0] }
+    val order = listOf(top[0], top[1], bottom[1], bottom[0])
+    val orderedCorners = order.map { corners[it] }
+    val centers = boxes.map { listOf(it[0] + it[2] * 0.5f, it[1] + it[3] * 0.5f) }
+    val used = BooleanArray(boxes.size) { false }
+    val orderedBoxes = ArrayList<List<Float>>(4)
+    for (i in 0 until 4) {
+        val cx = orderedCorners[i][0]
+        val cy = orderedCorners[i][1]
+        var best = -1
+        var bestDist = Float.MAX_VALUE
+        for (j in boxes.indices) {
+            if (used[j]) continue
+            val dx = centers[j][0] - cx
+            val dy = centers[j][1] - cy
+            val d = dx * dx + dy * dy
+            if (d < bestDist) {
+                bestDist = d
+                best = j
+            }
+        }
+        if (best >= 0) {
+            used[best] = true
+            orderedBoxes.add(boxes[best])
+        } else {
+            orderedBoxes.add(listOf(0f, 0f, 0f, 0f))
+        }
+    }
+    return Pair(orderedCorners, orderedBoxes)
+}
