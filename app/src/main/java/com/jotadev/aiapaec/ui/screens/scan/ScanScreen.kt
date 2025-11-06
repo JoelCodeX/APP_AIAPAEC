@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.graphics.ImageFormat
 import android.graphics.YuvImage
 import android.net.Uri
@@ -18,7 +19,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
+import androidx.camera.core.Preview as CameraPreview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
@@ -66,6 +67,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.exifinterface.media.ExifInterface
 import androidx.navigation.NavController
@@ -81,6 +83,8 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.max
+
+private const val BASE_URL = "http://10.0.2.2:5000"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,7 +134,7 @@ fun ScanScreen(navController: NavController) {
         var previewView by remember { mutableStateOf<PreviewView?>(null) }
         val mainExecutor = ContextCompat.getMainExecutor(context)
         var markers by remember { mutableStateOf(listOf(false, false, false, false)) }
-        var stableCount by remember { mutableStateOf(0) }
+        var stableCount by remember { mutableIntStateOf(0) }
         var capturing by remember { mutableStateOf(false) }
         val client = remember { OkHttpClient() }
         val gson = remember { Gson() }
@@ -158,7 +162,7 @@ fun ScanScreen(navController: NavController) {
                 val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
                 cameraProviderFuture.addListener({
                     val cameraProvider = cameraProviderFuture.get()
-                    val preview = Preview.Builder().build()
+                    val preview = CameraPreview.Builder().build()
                     preview.setSurfaceProvider(previewView!!.surfaceProvider)
                     val selector = CameraSelector.DEFAULT_BACK_CAMERA
                     val analysis = ImageAnalysis.Builder()
@@ -174,7 +178,7 @@ fun ScanScreen(navController: NavController) {
                             busy = true
                             lastTs = now
                             Thread {
-                                val res = detectMarkersRemote(client, image, roiNorm)
+                                val res = detectMarkersLocal(image, roiNorm)
                                 image.close()
                                 if (res != null) {
                                     androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
@@ -242,7 +246,7 @@ fun ScanScreen(navController: NavController) {
                         if (!capturing && stableCount >= 1) {
                             capturing = true
                             stableCount = 0
-                            captureAndProcess(imageCapture, context, client, gson, navController) {
+                            captureAndProcessLocal(imageCapture, context, navController, cornersNorm) {
                                 capturing = false
                             }
                         }
@@ -255,7 +259,7 @@ fun ScanScreen(navController: NavController) {
             // Botón de captura manual
             IconButton(
                 onClick = {
-                    captureAndProcess(imageCapture, context, client, gson, navController) {}
+                    captureAndProcessLocal(imageCapture, context, navController, cornersNorm) {}
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -287,7 +291,7 @@ private fun ScanningOverlay(
 ) {
     val cornerSize = 90.dp
     val cornerPadding = 0.dp
-    val bottomOffset = 290.dp
+    val bottomOffset = 280.dp
     val density = LocalDensity.current
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -525,12 +529,11 @@ private fun ScanningOverlay(
 
 // ... (el resto de las funciones se mantienen IGUAL: captureAndProcess, detectCornersRemote, cropRemote, etc.)
 
-private fun captureAndProcess(
+private fun captureAndProcessLocal(
     imageCapture: ImageCapture,
     context: android.content.Context,
-    client: OkHttpClient,
-    gson: Gson,
     navController: NavController,
+    lastCornersNorm: List<Pair<Float, Float>>,
     onDone: () -> Unit
 ) {
     val output = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "scan_${System.currentTimeMillis()}.jpg")
@@ -541,9 +544,29 @@ private fun captureAndProcess(
         }
         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
             Thread {
-                val detectCorners = detectCornersRemote(client, output)
-                if (detectCorners != null) {
-                    val outFile = cropRemote(client, gson, output, detectCorners)
+                val raw = BitmapFactory.decodeFile(output.absolutePath)
+                val bmp = if (raw != null) applyExifOrientation(raw, output.absolutePath) else null
+                var useCorners: List<FloatArray>? = null
+                if (bmp != null) {
+                    // DETECTAR SIEMPRE EN LA IMAGEN GUARDADA (EVITA DESALINEOS ENTRE FRAME Y CAPTURA)
+                    val (corners, _) = CornerDetector.detectarEsquinasYCuadrados(bmp)
+                    useCorners = if (corners.list.size == 4) corners.list else null
+                    // SI FALLA LA DETECCIÓN, USAR ÚLTIMAS ESQUINAS NORMALIZADAS COMO PISTA
+                    if (useCorners == null && lastCornersNorm.size == 4) {
+                        val wBmp = bmp.width.toFloat(); val hBmp = bmp.height.toFloat()
+                        useCorners = listOf(
+                            floatArrayOf(lastCornersNorm[0].first * wBmp, lastCornersNorm[0].second * hBmp),
+                            floatArrayOf(lastCornersNorm[1].first * wBmp, lastCornersNorm[1].second * hBmp),
+                            floatArrayOf(lastCornersNorm[2].first * wBmp, lastCornersNorm[2].second * hBmp),
+                            floatArrayOf(lastCornersNorm[3].first * wBmp, lastCornersNorm[3].second * hBmp)
+                        )
+                    }
+                    val outFile = if (useCorners != null && useCorners.size == 4) {
+                        val cropped = CornerDetector.recortarPorEsquinasAutoSize(bmp, useCorners!!, maxDim = 2200)
+                        val outPng = File(output.parentFile, output.nameWithoutExtension + "_crop.png")
+                        FileOutputStream(outPng).use { cropped.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                        outPng
+                    } else null
                     Handler(Looper.getMainLooper()).post {
                         onDone()
                         if (outFile != null) {
@@ -559,88 +582,108 @@ private fun captureAndProcess(
     })
 }
 
-private fun detectCornersRemote(
-    client: OkHttpClient,
-    file: File
-): List<List<Float>>? {
-    val url = "http://192.168.18.224:5000/scan/detect-corners"
-    val body = MultipartBody.Builder().setType(MultipartBody.FORM)
-        .addFormDataPart("file", file.name, file.asRequestBody("image/jpeg".toMediaType()))
-        .build()
-    val req = Request.Builder().url(url).post(body).build()
-    client.newCall(req).execute().use { resp ->
-        if (!resp.isSuccessful) return null
-        val text = resp.body?.string() ?: return null
-        val json = JSONObject(text)
-        val arr = json.getJSONArray("corners")
-        val out = ArrayList<List<Float>>(4)
-        for (i in 0 until arr.length()) {
-            val p = arr.getJSONArray(i)
-            out.add(listOf(p.getDouble(0).toFloat(), p.getDouble(1).toFloat()))
-        }
-        return out
+private fun applyExifOrientation(src: Bitmap, path: String): Bitmap {
+    val exif = ExifInterface(path)
+    val ori = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+    val m = Matrix()
+    when (ori) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> m.postRotate(90f)
+        ExifInterface.ORIENTATION_ROTATE_180 -> m.postRotate(180f)
+        ExifInterface.ORIENTATION_ROTATE_270 -> m.postRotate(270f)
+        else -> {}
     }
+    return Bitmap.createBitmap(src, 0, 0, src.width, src.height, m, true)
 }
 
-private fun cropRemote(
-    client: OkHttpClient,
-    gson: Gson,
-    file: File,
-    corners: List<List<Float>>
-): File? {
-    val url = "http://192.168.18.224:5000/scan/crop"
-    val cornersJson = gson.toJson(corners)
-    val body = MultipartBody.Builder().setType(MultipartBody.FORM)
-        .addFormDataPart("file", file.name, file.asRequestBody("image/jpeg".toMediaType()))
-        .addFormDataPart("corners", cornersJson)
-        .addFormDataPart("width", "1200")
-        .addFormDataPart("height", "1800")
-        .build()
-    val req = Request.Builder().url(url).post(body).build()
-    client.newCall(req).execute().use { resp ->
-        if (!resp.isSuccessful) return null
-        val png = resp.body?.bytes() ?: return null
-        val out = File(file.parentFile, file.nameWithoutExtension + "_crop.png")
-        FileOutputStream(out).use { it.write(png) }
-        return out
-    }
+@Preview(showBackground = true)
+@Composable
+private fun ScanningOverlayPreview() {
+    val corners = listOf(
+        Pair(0.08f, 0.06f), // TL
+        Pair(0.92f, 0.06f), // TR
+        Pair(0.92f, 0.75f), // BR (sobre el área visible superior de la UI)
+        Pair(0.08f, 0.75f)  // BL
+    )
+    val boxes = listOf(
+        listOf(0.06f, 0.03f, 0.10f, 0.10f), // TL
+        listOf(0.84f, 0.03f, 0.10f, 0.10f), // TR
+        listOf(0.84f, 0.72f, 0.10f, 0.10f), // BR
+        listOf(0.06f, 0.72f, 0.10f, 0.10f)  // BL
+    )
+    ScanningOverlay(
+        primaryInstruction = "Alinear cuadrados en visores",
+        secondaryInstruction = "Mantén la hoja estable",
+        markers = listOf(true, true, true, true),
+        cornersNorm = corners,
+        boxesNorm = boxes,
+        cornersCount = 4,
+        frameW = 1080,
+        frameH = 1920,
+        onRoiComputed = {},
+        onMarkersComputed = {}
+    )
 }
+
+// REMOTO ELIMINADO: detectCornersRemote
+
+// REMOTO ELIMINADO: cropRemote
 
 private fun yuv420ToJpeg(image: ImageProxy, quality: Int = 70): ByteArray {
-    val yPlane = image.planes[0].buffer
-    val uPlane = image.planes[1].buffer
-    val vPlane = image.planes[2].buffer
-    val ySize = yPlane.remaining()
-    val uSize = uPlane.remaining()
-    val vSize = vPlane.remaining()
-    val nv21 = ByteArray(ySize + uSize + vSize)
-    yPlane.get(nv21, 0, ySize)
-    val pixelStride = image.planes[2].pixelStride
-    val rowStride = image.planes[2].rowStride
     val w = image.width
     val h = image.height
-    var offset = ySize
-    val vBuffer = ByteArray(vSize)
-    val uBuffer = ByteArray(uSize)
-    vPlane.get(vBuffer)
-    uPlane.get(uBuffer)
-    var i = 0
-    while (i < vSize && i < uSize) {
-        nv21[offset++] = vBuffer[i]
-        nv21[offset++] = uBuffer[i]
-        i += pixelStride
+    val yPlane = image.planes[0]
+    val uPlane = image.planes[1]
+    val vPlane = image.planes[2]
+
+    val yRow = yPlane.rowStride
+    val yPix = yPlane.pixelStride
+    val uRow = uPlane.rowStride
+    val uPix = uPlane.pixelStride
+    val vRow = vPlane.rowStride
+    val vPix = vPlane.pixelStride
+
+    val yBuf = yPlane.buffer
+    val uBuf = uPlane.buffer
+    val vBuf = vPlane.buffer
+    yBuf.rewind(); uBuf.rewind(); vBuf.rewind()
+
+    val nv21 = ByteArray(w * h + (w * h) / 2)
+    var offset = 0
+
+    var r = 0
+    while (r < h) {
+        var c = 0
+        val yBase = r * yRow
+        while (c < w) {
+            nv21[offset++] = yBuf.get(yBase + c * yPix)
+            c++
+        }
+        r++
     }
+
+    r = 0
+    while (r < h / 2) {
+        var c = 0
+        val uBase = r * uRow
+        val vBase = r * vRow
+        while (c < w / 2) {
+            nv21[offset++] = vBuf.get(vBase + c * vPix)
+            nv21[offset++] = uBuf.get(uBase + c * uPix)
+            c++
+        }
+        r++
+    }
+
     val yuv = YuvImage(nv21, ImageFormat.NV21, w, h, null)
     val out = java.io.ByteArrayOutputStream()
     yuv.compressToJpeg(android.graphics.Rect(0, 0, w, h), quality, out)
     val bytes = out.toByteArray()
-    val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
     val rotation = image.imageInfo.rotationDegrees
-    if (rotation == 0) {
-        // SIN ROTACIÓN: DEVOLVER JPEG DIRECTO PARA MAXIMIZAR VELOCIDAD
-        return bytes
-    }
-    val matrix = android.graphics.Matrix()
+    if (rotation == 0) return bytes
+
+    val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    val matrix = Matrix()
     matrix.postRotate(rotation.toFloat())
     val rotated = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, matrix, true)
     val maxSide = max(rotated.width, rotated.height)
@@ -665,45 +708,49 @@ private data class DetectionResult(
     val h: Int
 )
 
-private fun detectMarkersRemote(client: OkHttpClient, image: ImageProxy, roiNorm: List<Float>?): DetectionResult? {
-    val url = "http://192.168.18.224:5000/scan/detect-corners"
-    val jpeg = yuv420ToJpeg(image, 70)
-    val bodyBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
-        .addFormDataPart("file", "frame.jpg", jpeg.toRequestBody("image/jpeg".toMediaType()))
+private fun detectMarkersLocal(image: ImageProxy, roiNorm: List<Float>?): DetectionResult? {
+    val jpeg = kotlin.runCatching { yuv420ToJpeg(image, 70) }.getOrNull() ?: return null
+    val bmp = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size) ?: return null
+    val W = bmp.width
+    val H = bmp.height
+    var work = bmp
+    var offsetX = 0
+    var offsetY = 0
     if (roiNorm != null && roiNorm.size == 4) {
-        val roiStr = "[${roiNorm[0]},${roiNorm[1]},${roiNorm[2]},${roiNorm[3]}]"
-        bodyBuilder.addFormDataPart("roi", roiStr)
+        val x = (roiNorm[0] * W).toInt()
+        val y = (roiNorm[1] * H).toInt()
+        val w = (roiNorm[2] * W).toInt()
+        val h = (roiNorm[3] * H).toInt()
+        offsetX = x; offsetY = y
+        work = Bitmap.createBitmap(bmp, x.coerceAtLeast(0), y.coerceAtLeast(0), w.coerceAtLeast(1).coerceAtMost(W - x), h.coerceAtLeast(1).coerceAtMost(H - y))
     }
-    val body = bodyBuilder.build()
-    val req = Request.Builder().url(url).post(body).build()
-    client.newCall(req).execute().use { resp ->
-        if (!resp.isSuccessful) return null
-        val text = resp.body?.string() ?: return null
-        val json = JSONObject(text)
-        val cornersJson = json.optJSONArray("corners") ?: return null
-        val markersJson = json.optJSONArray("markers")
-        val boxesJson = json.optJSONArray("boxes")
-        val countJson = json.optInt("count", cornersJson.length())
-        val imageSizeJson = json.optJSONObject("image_size")
-        val corners = ArrayList<List<Float>>(4)
-        for (i in 0 until cornersJson.length()) {
-            val c = cornersJson.getJSONArray(i)
-            corners.add(listOf(c.getDouble(0).toFloat(), c.getDouble(1).toFloat()))
-        }
-        val boxes = ArrayList<List<Float>>()
-        if (boxesJson != null) {
-            for (i in 0 until boxesJson.length()) {
-                val b = boxesJson.getJSONArray(i)
-                boxes.add(listOf(b.getDouble(0).toFloat(), b.getDouble(1).toFloat(), b.getDouble(2).toFloat(), b.getDouble(3).toFloat()))
-            }
-        }
-        val markers = if (markersJson != null && markersJson.length() == 4) {
-            BooleanArray(4) { i -> markersJson.getBoolean(i) }
-        } else BooleanArray(4) { false }
-        val w = imageSizeJson?.optInt("w", image.width) ?: image.width
-        val h = imageSizeJson?.optInt("h", image.height) ?: image.height
-        return DetectionResult(markers, corners, boxes, countJson, w, h)
+    val det = kotlin.runCatching { CornerDetector.detectarEsquinasYCuadrados(work) }.getOrNull() ?: return null
+    val cornersRes = det.first
+    val boxesRes = det.second
+    val corners = cornersRes.list.map { listOf(it[0] + offsetX, it[1] + offsetY) }
+    val boxes = boxesRes.list.map { listOf((it[0] + offsetX).toFloat(), (it[1] + offsetY).toFloat(), it[2].toFloat(), it[3].toFloat()) }
+    val s = minOf(W, H)
+    val size = max(24, (s * 0.06).toInt())
+    val pad = max(32, (s * 0.08).toInt())
+    val rects = listOf(
+        intArrayOf(pad, pad, size, size),
+        intArrayOf(W - pad - size, pad, size, size),
+        intArrayOf(W - pad - size, H - pad - size, size, size),
+        intArrayOf(pad, H - pad - size, size, size)
+    )
+    val cornersFull = ArrayList<List<Float>>(4)
+    val n = corners.size.coerceIn(0, 4)
+    for (i in 0 until n) cornersFull.add(corners[i])
+    while (cornersFull.size < 4) cornersFull.add(listOf(0f, 0f))
+    val mk = BooleanArray(4)
+    for (i in 0 until 4) {
+        val cx = cornersFull[i][0].toInt()
+        val cy = cornersFull[i][1].toInt()
+        val r = rects[i]
+        mk[i] = (cx >= r[0] && cx <= r[0] + r[2] && cy >= r[1] && cy <= r[1] + r[3])
     }
+    val count = cornersRes.list.size
+    return DetectionResult(mk, corners.map { it.map { v -> v.toFloat() } }, boxes, count, W, H)
 }
 
 private fun reorderCornersAndBoxes(

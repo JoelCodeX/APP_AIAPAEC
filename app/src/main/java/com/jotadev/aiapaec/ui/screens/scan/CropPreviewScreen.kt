@@ -1,6 +1,9 @@
 package com.jotadev.aiapaec.ui.screens.scan
 
 import android.graphics.BitmapFactory
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,13 +23,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CropPreviewScreen(navController: NavController, filePath: String) {
+    val overlayPath = remember { mutableStateOf<String?>(null) }
+    val client = remember { OkHttpClient() }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -49,7 +65,11 @@ fun CropPreviewScreen(navController: NavController, filePath: String) {
             )
         }
     ) { inner ->
-        val bmp = BitmapFactory.decodeFile(filePath)
+    LaunchedEffect(filePath) {
+        overlayPath.value = filePath
+    }
+
+        val bmp = BitmapFactory.decodeFile(overlayPath.value ?: filePath)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -58,11 +78,14 @@ fun CropPreviewScreen(navController: NavController, filePath: String) {
             contentAlignment = Alignment.Center
         ) {
             if (bmp != null) {
-                Image(
-                    bitmap = bmp.asImageBitmap(),
-                    contentDescription = "Imagen recortada",
-                    modifier = Modifier.fillMaxSize()
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Image(
+                        bitmap = bmp.asImageBitmap(),
+                        contentDescription = "Imagen recortada",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    GridOverlay()
+                }
             } else {
                 Text(
                     text = "No se pudo cargar la imagen",
@@ -70,5 +93,48 @@ fun CropPreviewScreen(navController: NavController, filePath: String) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun GridOverlay(lines: Int = 8, color: Color = Color.White.copy(alpha = 0.35f)) {
+    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        val stepX = w / lines
+        val stepY = h / lines
+        for (i in 1 until lines) {
+            // VERTICAL
+            drawLine(
+                color = color,
+                start = androidx.compose.ui.geometry.Offset(stepX * i, 0f),
+                end = androidx.compose.ui.geometry.Offset(stepX * i, h),
+                strokeWidth = 1.5f
+            )
+            // HORIZONTAL
+            drawLine(
+                color = color,
+                start = androidx.compose.ui.geometry.Offset(0f, stepY * i),
+                end = androidx.compose.ui.geometry.Offset(w, stepY * i),
+                strokeWidth = 1.5f
+            )
+        }
+        // MARCO
+        drawRect(
+            color = color.copy(alpha = 0.6f),
+            style = Stroke(width = 2.2f),
+            topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
+            size = androidx.compose.ui.geometry.Size(w, h)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CropPreviewGridPreview() {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(Color(0xFF101010))) {
+        GridOverlay()
     }
 }

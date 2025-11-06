@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import android.net.Uri
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.screens.classes.ClassesScreen
 import com.jotadev.aiapaec.ui.screens.classes.DetailsClasses
@@ -61,7 +62,8 @@ fun MainNavGraph(
             ScanScreen(navController = navController)
         }
         composable("${NavigationRoutes.CROP_PREVIEW}?path={path}") { backStackEntry ->
-            val path = backStackEntry.arguments?.getString("path") ?: ""
+            val raw = backStackEntry.arguments?.getString("path") ?: ""
+            val path = Uri.decode(raw)
             CropPreviewScreen(navController = navController, filePath = path)
         }
         
