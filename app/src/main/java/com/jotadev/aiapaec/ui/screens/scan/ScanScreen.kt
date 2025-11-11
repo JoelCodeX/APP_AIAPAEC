@@ -43,6 +43,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -138,12 +141,17 @@ fun ScanScreen(navController: NavController) {
         var capturing by remember { mutableStateOf(false) }
         val client = remember { OkHttpClient() }
         val gson = remember { Gson() }
-        var cornersNorm by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
+    var cornersNorm by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
+    var circlesNorm by remember { mutableStateOf<List<List<Float>>>(emptyList()) }
+    var sheetType by remember { mutableStateOf(CornerDetector.SheetType.S20) }
         var boxesNorm by remember { mutableStateOf<List<List<Float>>>(emptyList()) }
         var cornersCount by remember { mutableIntStateOf(0) }
         var frameW by remember { mutableIntStateOf(0) }
         var frameH by remember { mutableIntStateOf(0) }
         var roiNorm by remember { mutableStateOf<List<Float>?>(null) }
+        var roiLocked by remember { mutableStateOf(false) }
+        // ESTADO PREVIO DE ESQUINAS PARA MEDIR DERIVA ENTRE FRAMES
+        var prevCornersNorm by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
         val currentRotation = LocalView.current.display?.rotation ?: 0
         val imageCapture = remember(currentRotation) {
             ImageCapture.Builder()
@@ -178,7 +186,7 @@ fun ScanScreen(navController: NavController) {
                             busy = true
                             lastTs = now
                             Thread {
-                                val res = detectMarkersLocal(image, roiNorm)
+                val res = detectMarkersLocal(image, roiNorm, sheetType)
                                 image.close()
                                 if (res != null) {
                                     androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
@@ -187,15 +195,70 @@ fun ScanScreen(navController: NavController) {
                                         val ordered = reorderCornersAndBoxes(res.corners, res.boxes)
                                         val oc = ordered.first
                                         val ob = ordered.second
-                                        cornersNorm = oc.map { p ->
-                                            Pair(p[0] / res.w.toFloat(), p[1] / res.h.toFloat())
+                                        // HOLD-LAST: si falta alguna esquina/caja, mantener la última válida para evitar parpadeo
+                                        val nextCorners = if (oc.size == 4) {
+                                            oc.map { p -> Pair(p[0] / res.w.toFloat(), p[1] / res.h.toFloat()) }
+                                        } else if (cornersNorm.size == 4) {
+                                            cornersNorm.toList()
+                                        } else {
+                                            oc.map { p -> Pair(p[0] / res.w.toFloat(), p[1] / res.h.toFloat()) }
                                         }
-                                        boxesNorm = ob.map { b ->
+                                        val prevCorners = cornersNorm
+                                        cornersNorm = if (prevCorners.size == nextCorners.size && nextCorners.size == 4) {
+                                            val th = 0.005f // DEADBand ~0.5% del tamaño normalizado
                                             listOf(
-                                                b[0] / res.w.toFloat(),
-                                                b[1] / res.h.toFloat(),
-                                                b[2] / res.w.toFloat(),
-                                                b[3] / res.h.toFloat()
+                                                run {
+                                                    val dx = nextCorners[0].first - prevCorners[0].first
+                                                    val dy = nextCorners[0].second - prevCorners[0].second
+                                                    val d = kotlin.math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                                                    if (d <= th) prevCorners[0] else Pair(prevCorners[0].first * 0.7f + nextCorners[0].first * 0.3f, prevCorners[0].second * 0.7f + nextCorners[0].second * 0.3f)
+                                                },
+                                                run {
+                                                    val dx = nextCorners[1].first - prevCorners[1].first
+                                                    val dy = nextCorners[1].second - prevCorners[1].second
+                                                    val d = kotlin.math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                                                    if (d <= th) prevCorners[1] else Pair(prevCorners[1].first * 0.7f + nextCorners[1].first * 0.3f, prevCorners[1].second * 0.7f + nextCorners[1].second * 0.3f)
+                                                },
+                                                run {
+                                                    val dx = nextCorners[2].first - prevCorners[2].first
+                                                    val dy = nextCorners[2].second - prevCorners[2].second
+                                                    val d = kotlin.math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                                                    if (d <= th) prevCorners[2] else Pair(prevCorners[2].first * 0.7f + nextCorners[2].first * 0.3f, prevCorners[2].second * 0.7f + nextCorners[2].second * 0.3f)
+                                                },
+                                                run {
+                                                    val dx = nextCorners[3].first - prevCorners[3].first
+                                                    val dy = nextCorners[3].second - prevCorners[3].second
+                                                    val d = kotlin.math.hypot(dx.toDouble(), dy.toDouble()).toFloat()
+                                                    if (d <= th) prevCorners[3] else Pair(prevCorners[3].first * 0.7f + nextCorners[3].first * 0.3f, prevCorners[3].second * 0.7f + nextCorners[3].second * 0.3f)
+                                                }
+                                            )
+                                        } else nextCorners
+                                        boxesNorm = if (ob.size == 4) {
+                                            ob.map { b ->
+                                                listOf(
+                                                    b[0] / res.w.toFloat(),
+                                                    b[1] / res.h.toFloat(),
+                                                    b[2] / res.w.toFloat(),
+                                                    b[3] / res.h.toFloat()
+                                                )
+                                            }
+                                        } else if (boxesNorm.size == 4) {
+                                            boxesNorm.toList()
+                                        } else {
+                                            ob.map { b ->
+                                                listOf(
+                                                    b[0] / res.w.toFloat(),
+                                                    b[1] / res.h.toFloat(),
+                                                    b[2] / res.w.toFloat(),
+                                                    b[3] / res.h.toFloat()
+                                                )
+                                            }
+                                        }
+                                        circlesNorm = res.circles.map { c ->
+                                            listOf(
+                                                c[0] / res.w.toFloat(),
+                                                c[1] / res.h.toFloat(),
+                                                c[2] / res.w.toFloat()
                                             )
                                         }
                                         cornersCount = res.count
@@ -230,24 +293,126 @@ fun ScanScreen(navController: NavController) {
                 modifier = Modifier.fillMaxSize()
             )
 
+            var hysteresis by remember { mutableStateOf(IntArray(4) { 0 }) }
             ScanningOverlay(
                 primaryInstruction = "Alinear cuadrados en visores",
                 secondaryInstruction = "Mantén la hoja estable para el escaneo",
                 markers = markers,
                 cornersNorm = cornersNorm,
                 boxesNorm = boxesNorm,
+                circlesNorm = circlesNorm,
                 cornersCount = cornersCount,
                 frameW = frameW,
                 frameH = frameH,
                 onRoiComputed = { r -> roiNorm = r.toList() },
                 onMarkersComputed = { inside ->
-                    if (inside.all { it }) {
-                        stableCount++
-                        if (!capturing && stableCount >= 1) {
+                    // HISTÉRESIS: evita parpadeo cuando un marcador cae 1-2 frames
+                    val adj = inside.copyOf()
+                    for (i in 0 until 4) {
+                        if (inside[i]) hysteresis[i] = 3 else if (hysteresis[i] > 0) { hysteresis[i]--; adj[i] = true }
+                    }
+                    // VALIDACIÓN DE CARTILLA: requiere 4 esquinas y geometría consistente
+                    val hasFourCorners = cornersCount == 4 && cornersNorm.size == 4
+                    val validSheet = if (hasFourCorners && frameW > 0 && frameH > 0) {
+                        fun dist(a: Pair<Float, Float>, b: Pair<Float, Float>): Double {
+                            val ax = a.first * frameW; val ay = a.second * frameH
+                            val bx = b.first * frameW; val by = b.second * frameH
+                            val dx = (ax - bx).toDouble(); val dy = (ay - by).toDouble()
+                            return kotlin.math.hypot(dx, dy)
+                        }
+                        val tl = cornersNorm[0]; val tr = cornersNorm[1]; val br = cornersNorm[2]; val bl = cornersNorm[3]
+                        val wAvg = ((dist(tl, tr) + dist(bl, br)) / 2.0)
+                        val hAvg = ((dist(tl, bl) + dist(tr, br)) / 2.0)
+                        val ratio = if (wAvg > 0.0) hAvg / wAvg else 0.0
+                        val area = wAvg * hAvg
+                        val minArea = (frameW.toDouble() * frameH.toDouble()) * 0.07
+                        val ratioOk = ratio >= 0.95 && ratio <= 2.05 // hoja vertical más tolerante
+                        val areaOk = area >= minArea
+                        // ORTOGONALIDAD: ángulo cercano a 90° entre lados adyacentes
+                        val vTopX = (tr.first - tl.first) * frameW; val vTopY = (tr.second - tl.second) * frameH
+                        val vLeftX = (bl.first - tl.first) * frameW; val vLeftY = (bl.second - tl.second) * frameH
+                        val dot = (vTopX * vLeftX + vTopY * vLeftY)
+                        val nTop = kotlin.math.hypot(vTopX.toDouble(), vTopY.toDouble())
+                        val nLeft = kotlin.math.hypot(vLeftX.toDouble(), vLeftY.toDouble())
+                        val cosA = if (nTop > 0.0 && nLeft > 0.0) kotlin.math.abs(dot) / (nTop * nLeft) else 1.0
+                        val orthoOk = cosA <= 0.15
+                        // PARALELISMO: longitudes opuestas similares
+                        val wDiff = kotlin.math.abs(dist(tl, tr) - dist(bl, br))
+                        val hDiff = kotlin.math.abs(dist(tl, bl) - dist(tr, br))
+                        val parallelOk = (wDiff <= wAvg * 0.08) && (hDiff <= hAvg * 0.08)
+                        ratioOk && areaOk && orthoOk && parallelOk
+                    } else false
+
+                    val allInside = adj.all { it }
+                    // ALINEACIÓN: cada esquina cerca del centro del recuadro correspondiente
+                    val alignedOk = if (hasFourCorners && boxesNorm.size == 4 && frameW > 0 && frameH > 0) {
+                        val s = kotlin.math.min(frameW, frameH).toDouble()
+                        // UMBRAL DE ALINEACIÓN MÁS PERMISIVO para dibujar antes
+                        val th = s * 0.016 // ~1.6% del tamaño
+                        var worst = 0.0
+                        for (i in 0 until 4) {
+                            val b = boxesNorm[i]
+                            val bcX = (b[0] + b[2] * 0.5f) * frameW
+                            val bcY = (b[1] + b[3] * 0.5f) * frameH
+                            val cX = cornersNorm[i].first * frameW
+                            val cY = cornersNorm[i].second * frameH
+                            val d = kotlin.math.hypot((bcX - cX).toDouble(), (bcY - cY).toDouble())
+                            if (d > worst) worst = d
+                        }
+                        worst <= th
+                    } else false
+                    // DERIVA: movimiento mínimo entre frames consecutivos para asegurar estabilidad
+                    val driftOk = if (prevCornersNorm.size == 4 && cornersNorm.size == 4 && frameW > 0 && frameH > 0) {
+                        var maxDrift = 0.0
+                        for (i in 0 until 4) {
+                            val px = prevCornersNorm[i].first * frameW
+                            val py = prevCornersNorm[i].second * frameH
+                            val cx = cornersNorm[i].first * frameW
+                            val cy = cornersNorm[i].second * frameH
+                            val d = kotlin.math.hypot((cx - px).toDouble(), (cy - py).toDouble())
+                            if (d > maxDrift) maxDrift = d
+                        }
+                        val s = kotlin.math.min(frameW, frameH).toDouble()
+                        // DRIFT un poco más permisivo para mantener estabilidad visual
+                        val driftTh = s * 0.008 // ~0.8% del tamaño
+                        maxDrift <= driftTh
+                    } else true
+                    // ACTUALIZAR ESQUINAS PREVIAS TRAS CÁLCULO
+                    prevCornersNorm = cornersNorm.toList()
+                    // ROI LOCK: cuando está alineado y válido, congelar ROI alrededor de la hoja
+                    if (hasFourCorners && validSheet && alignedOk && frameW > 0 && frameH > 0) {
+                        val xs = floatArrayOf(cornersNorm[0].first, cornersNorm[1].first, cornersNorm[2].first, cornersNorm[3].first)
+                        val ys = floatArrayOf(cornersNorm[0].second, cornersNorm[1].second, cornersNorm[2].second, cornersNorm[3].second)
+                        val minX = xs.minOrNull() ?: 0f
+                        val maxX = xs.maxOrNull() ?: 1f
+                        val minY = ys.minOrNull() ?: 0f
+                        val maxY = ys.maxOrNull() ?: 1f
+                        val padX = 0.06f
+                        val padY = 0.06f
+                        val rx = (minX - padX).coerceAtLeast(0f)
+                        val ry = (minY - padY).coerceAtLeast(0f)
+                        val rw = (maxX - minX + 2f * padX).coerceAtMost(1f - rx)
+                        val rh = (maxY - minY + 2f * padY).coerceAtMost(1f - ry)
+                        val minW = 0.30f
+                        val minH = 0.50f
+                        val finalW = rw.coerceAtLeast(minW)
+                        val finalH = rh.coerceAtLeast(minH)
+                        roiNorm = listOf(rx, ry, finalW, finalH)
+                        roiLocked = true
+                    } else if (!allInside || !validSheet || !alignedOk) {
+                        roiLocked = false
+                        roiNorm = null
+                    }
+                    if (allInside && validSheet && alignedOk) {
+                        if (driftOk) stableCount++ else stableCount = 0
+                        // DISPARO RÁPIDO PERO ESTABLE: 5 frames
+                        if (!capturing && stableCount >= 5) {
                             capturing = true
                             stableCount = 0
-                            captureAndProcessLocal(imageCapture, context, navController, cornersNorm) {
+                            captureAndProcessLocal(imageCapture, context, navController, cornersNorm, sheetType) {
                                 capturing = false
+                                roiLocked = false
+                                roiNorm = null
                             }
                         }
                     } else {
@@ -257,9 +422,28 @@ fun ScanScreen(navController: NavController) {
             )
 
             // Botón de captura manual
+            // Selector de modo de cartilla (20/50)
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 110.dp)
+                    .background(Color.Black.copy(alpha = 0.55f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val active = MaterialTheme.colorScheme.primary
+                val inactive = Color.White
+                TextButton(onClick = { sheetType = CornerDetector.SheetType.S20 }) {
+                    Text(text = "20", color = if (sheetType == CornerDetector.SheetType.S20) active else inactive)
+                }
+                TextButton(onClick = { sheetType = CornerDetector.SheetType.S50 }) {
+                    Text(text = "50", color = if (sheetType == CornerDetector.SheetType.S50) active else inactive)
+                }
+            }
+
             IconButton(
                 onClick = {
-                    captureAndProcessLocal(imageCapture, context, navController, cornersNorm) {}
+                    captureAndProcessLocal(imageCapture, context, navController, cornersNorm, sheetType) {}
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -283,6 +467,7 @@ private fun ScanningOverlay(
     markers: List<Boolean> = listOf(false, false, false, false),
     cornersNorm: List<Pair<Float, Float>> = emptyList(),
     boxesNorm: List<List<Float>> = emptyList(),
+    circlesNorm: List<List<Float>> = emptyList(),
     cornersCount: Int = 0,
     frameW: Int = 0,
     frameH: Int = 0,
@@ -424,7 +609,7 @@ private fun ScanningOverlay(
                 val ph = b[3] * scaledH
                 val cx = px + pw * 0.5f
                 val cy = py + ph * 0.5f
-                val pad = 8f
+                val pad = 12f
                 val contained = when (idx) {
                     0 -> (cx >= (topLeft.left - pad) && cy >= (topLeft.top - pad) && cx <= (topLeft.right + pad) && cy <= (topLeft.bottom + pad))
                     1 -> (cx >= (topRight.left - pad) && cy >= (topRight.top - pad) && cx <= (topRight.right + pad) && cy <= (topRight.bottom + pad))
@@ -450,7 +635,7 @@ private fun ScanningOverlay(
             cornersNorm.forEachIndexed { idx, p ->
                 val cx = offsetX + p.first * scaledW
                 val cy = offsetY + p.second * scaledH
-                val pad = 4f
+                val pad = 10f
                 val containedCorner = when (idx) {
                     0 -> (cx >= (topLeft.left - pad) && cy >= (topLeft.top - pad) && cx <= (topLeft.right + pad) && cy <= (topLeft.bottom + pad))
                     1 -> (cx >= (topRight.left - pad) && cy >= (topRight.top - pad) && cx <= (topRight.right + pad) && cy <= (topRight.bottom + pad))
@@ -472,6 +657,17 @@ private fun ScanningOverlay(
                         style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f)
                     )
                 }
+            }
+            circlesNorm.forEach { c ->
+                val cx = offsetX + c[0] * scaledW
+                val cy = offsetY + c[1] * scaledH
+                val r = c[2] * scaledW
+                drawCircle(
+                    color = Color(0xFF00B8D4),
+                    radius = r,
+                    center = androidx.compose.ui.geometry.Offset(cx, cy),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f)
+                )
             }
         }
 
@@ -534,6 +730,7 @@ private fun captureAndProcessLocal(
     context: android.content.Context,
     navController: NavController,
     lastCornersNorm: List<Pair<Float, Float>>,
+    type: CornerDetector.SheetType,
     onDone: () -> Unit
 ) {
     val output = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "scan_${System.currentTimeMillis()}.jpg")
@@ -549,7 +746,7 @@ private fun captureAndProcessLocal(
                 var useCorners: List<FloatArray>? = null
                 if (bmp != null) {
                     // DETECTAR SIEMPRE EN LA IMAGEN GUARDADA (EVITA DESALINEOS ENTRE FRAME Y CAPTURA)
-                    val (corners, _) = CornerDetector.detectarEsquinasYCuadrados(bmp)
+                    val (corners, _) = CornerDetector.detectarEsquinasYCuadrados(bmp, type)
                     useCorners = if (corners.list.size == 4) corners.list else null
                     // SI FALLA LA DETECCIÓN, USAR ÚLTIMAS ESQUINAS NORMALIZADAS COMO PISTA
                     if (useCorners == null && lastCornersNorm.size == 4) {
@@ -703,12 +900,13 @@ private data class DetectionResult(
     val markers: BooleanArray,
     val corners: List<List<Float>>,
     val boxes: List<List<Float>>,
+    val circles: List<List<Float>>,
     val count: Int,
     val w: Int,
     val h: Int
 )
 
-private fun detectMarkersLocal(image: ImageProxy, roiNorm: List<Float>?): DetectionResult? {
+private fun detectMarkersLocal(image: ImageProxy, roiNorm: List<Float>?, type: CornerDetector.SheetType): DetectionResult? {
     val jpeg = kotlin.runCatching { yuv420ToJpeg(image, 70) }.getOrNull() ?: return null
     val bmp = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size) ?: return null
     val W = bmp.width
@@ -724,11 +922,13 @@ private fun detectMarkersLocal(image: ImageProxy, roiNorm: List<Float>?): Detect
         offsetX = x; offsetY = y
         work = Bitmap.createBitmap(bmp, x.coerceAtLeast(0), y.coerceAtLeast(0), w.coerceAtLeast(1).coerceAtMost(W - x), h.coerceAtLeast(1).coerceAtMost(H - y))
     }
-    val det = kotlin.runCatching { CornerDetector.detectarEsquinasYCuadrados(work) }.getOrNull() ?: return null
+    val det = kotlin.runCatching { CornerDetector.detectarEsquinasYCuadrados(work, type) }.getOrNull() ?: return null
     val cornersRes = det.first
     val boxesRes = det.second
     val corners = cornersRes.list.map { listOf(it[0] + offsetX, it[1] + offsetY) }
     val boxes = boxesRes.list.map { listOf((it[0] + offsetX).toFloat(), (it[1] + offsetY).toFloat(), it[2].toFloat(), it[3].toFloat()) }
+    // CÍRCULOS NO EN TIEMPO REAL: se detectan tras la captura/recorte
+    val circles = emptyList<List<Float>>()
     val s = minOf(W, H)
     val size = max(24, (s * 0.06).toInt())
     val pad = max(32, (s * 0.08).toInt())
@@ -750,7 +950,7 @@ private fun detectMarkersLocal(image: ImageProxy, roiNorm: List<Float>?): Detect
         mk[i] = (cx >= r[0] && cx <= r[0] + r[2] && cy >= r[1] && cy <= r[1] + r[3])
     }
     val count = cornersRes.list.size
-    return DetectionResult(mk, corners.map { it.map { v -> v.toFloat() } }, boxes, count, W, H)
+    return DetectionResult(mk, corners.map { it.map { v -> v.toFloat() } }, boxes, circles, count, W, H)
 }
 
 private fun reorderCornersAndBoxes(

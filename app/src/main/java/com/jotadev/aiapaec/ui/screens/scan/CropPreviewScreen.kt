@@ -1,6 +1,7 @@
 package com.jotadev.aiapaec.ui.screens.scan
 
 import android.graphics.BitmapFactory
+import com.jotadev.aiapaec.ui.screens.scan.CornerDetector
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,7 @@ import java.io.FileOutputStream
 @Composable
 fun CropPreviewScreen(navController: NavController, filePath: String) {
     val overlayPath = remember { mutableStateOf<String?>(null) }
+    val circlesNorm = remember { mutableStateOf<List<List<Float>>>(emptyList()) }
     val client = remember { OkHttpClient() }
 
     Scaffold(
@@ -67,6 +69,14 @@ fun CropPreviewScreen(navController: NavController, filePath: String) {
     ) { inner ->
     LaunchedEffect(filePath) {
         overlayPath.value = filePath
+        val bmp = BitmapFactory.decodeFile(filePath)
+        if (bmp != null) {
+            val circles = CornerDetector.detectarCirculosS20(bmp)
+            val w = bmp.width.toFloat(); val h = bmp.height.toFloat()
+            circlesNorm.value = circles.list.map { c ->
+                listOf(c[0] / w, c[1] / h, c[2] / w)
+            }
+        }
     }
 
         val bmp = BitmapFactory.decodeFile(overlayPath.value ?: filePath)
@@ -85,6 +95,7 @@ fun CropPreviewScreen(navController: NavController, filePath: String) {
                         modifier = Modifier.fillMaxSize()
                     )
                     GridOverlay()
+                    CirclesOverlay(circlesNorm = circlesNorm.value)
                 }
             } else {
                 Text(
@@ -126,6 +137,25 @@ private fun GridOverlay(lines: Int = 8, color: Color = Color.White.copy(alpha = 
             topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
             size = androidx.compose.ui.geometry.Size(w, h)
         )
+    }
+}
+
+@Composable
+private fun CirclesOverlay(circlesNorm: List<List<Float>>, color: Color = Color(0xFF00B8D4)) {
+    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        circlesNorm.forEach { c ->
+            val cx = c[0] * w
+            val cy = c[1] * h
+            val r = c[2] * w
+            drawCircle(
+                color = color,
+                radius = r,
+                center = androidx.compose.ui.geometry.Offset(cx, cy),
+                style = Stroke(width = 2f)
+            )
+        }
     }
 }
 

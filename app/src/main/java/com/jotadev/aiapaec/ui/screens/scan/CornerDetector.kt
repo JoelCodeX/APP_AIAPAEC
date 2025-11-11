@@ -3,6 +3,7 @@ package com.jotadev.aiapaec.ui.screens.scan
 import android.graphics.Bitmap
 import org.opencv.android.Utils
 import org.opencv.core.CvType
+import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
 import org.opencv.core.MatOfPoint2f
@@ -11,10 +12,13 @@ import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 
 object CornerDetector {
+    enum class SheetType { S20, S50 }
     data class Boxes(val list: List<IntArray>)
     data class Corners(val list: List<FloatArray>)
+    // CÍRCULOS DETECTADOS (cx, cy, r)
+    data class Circles(val list: List<FloatArray>)
 
-    fun detectarEsquinasYCuadrados(src: Bitmap): Pair<Corners, Boxes> {
+    fun detectarEsquinasYCuadrados(src: Bitmap, type: SheetType = SheetType.S20): Pair<Corners, Boxes> {
         val img = Mat()
         Utils.bitmapToMat(src, img)
         val h = img.rows()
@@ -26,17 +30,29 @@ object CornerDetector {
         val gray = Mat()
         // CONVERTIR CORRECTAMENTE DESDE RGBA (bitmapToMat produce 8UC4)
         Imgproc.cvtColor(resized, gray, Imgproc.COLOR_RGBA2GRAY)
-        // MEJORAR CONTRASTE PARA CUADRADOS PEQUEÑOS
-        val eq = Mat(); Imgproc.equalizeHist(gray, eq)
-        val blur = Mat()
-        Imgproc.GaussianBlur(eq, blur, Size(5.0, 5.0), 0.0)
+        // MEJORAR CONTRASTE (CLAHE para iluminación desigual)
+        val eq = Mat(); val clahe = Imgproc.createCLAHE(2.0, Size(8.0, 8.0)); clahe.apply(gray, eq)
+        // Pipeline según tipo de cartilla
         val thr = Mat()
-        // RESTAURAR OTSU PARA UNA SEGMENTACIÓN MÁS ESTABLE EN FONDOS BLANCOS
-        Imgproc.threshold(blur, thr, 0.0, 255.0, Imgproc.THRESH_BINARY_INV or Imgproc.THRESH_OTSU)
-        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(3.0, 3.0))
-        val er = Mat(); Imgproc.erode(thr, er, kernel)
-        val cl = Mat(); Imgproc.morphologyEx(er, cl, Imgproc.MORPH_CLOSE, kernel)
-        val dl = Mat(); Imgproc.dilate(cl, dl, kernel)
+        val dl = Mat()
+        if (type == SheetType.S50) {
+            val blur = Mat(); Imgproc.GaussianBlur(eq, blur, Size(5.0, 5.0), 0.0)
+            Imgproc.threshold(blur, thr, 0.0, 255.0, Imgproc.THRESH_BINARY_INV or Imgproc.THRESH_OTSU)
+            val kernel2 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(2.0, 2.0))
+            val cl2 = Mat(); Imgproc.morphologyEx(thr, cl2, Imgproc.MORPH_CLOSE, kernel2)
+            Imgproc.dilate(cl2, dl, kernel2)
+        } else {
+            val blur = Mat(); Imgproc.GaussianBlur(eq, blur, Size(5.0, 5.0), 0.0)
+            // COMBINAR OTSU + ADAPTATIVO para robustez en condiciones de luz variables
+            val thrOtsu = Mat(); Imgproc.threshold(blur, thrOtsu, 0.0, 255.0, Imgproc.THRESH_BINARY_INV or Imgproc.THRESH_OTSU)
+            val thrAdapt = Mat(); Imgproc.adaptiveThreshold(blur, thrAdapt, 255.0, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 31, 2.0)
+            Core.bitwise_or(thrOtsu, thrAdapt, thr)
+            thrOtsu.release(); thrAdapt.release()
+            val kernel3 = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(3.0, 3.0))
+            val er = Mat(); Imgproc.erode(thr, er, kernel3)
+            val cl = Mat(); Imgproc.morphologyEx(er, cl, Imgproc.MORPH_CLOSE, kernel3)
+            Imgproc.dilate(cl, dl, kernel3)
+        }
         val contours = mutableListOf<MatOfPoint>()
         val hierarchy = Mat()
         Imgproc.findContours(dl, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
@@ -47,38 +63,53 @@ object CornerDetector {
             val c2f = MatOfPoint2f(*c.toArray())
             val p = Imgproc.arcLength(c2f, true)
             val ap = MatOfPoint2f()
-            Imgproc.approxPolyDP(c2f, ap, 0.015 * p, true)
+            // EPS MÁS BAJO para estabilidad en aproximación de contornos (reduce saltos)
+            val eps = if (type == SheetType.S50) 0.010 else 0.012
+            Imgproc.approxPolyDP(c2f, ap, eps * p, true)
             approxList.add(ap)
             if (ap.rows() == 4) indices.add(idx)
         }
+        // Construir rectángulos filtrados y centros precisos usando momentos del contorno
         val rectsAll = mutableListOf<IntArray>()
         val areas = mutableListOf<Double>()
+        val aspects = mutableListOf<Double>()
+        val centersAll = mutableListOf<Point>()
         for (i in indices) {
             val ap = approxList[i]
             val apPts = ap.toArray()
             val rect = Imgproc.boundingRect(MatOfPoint(*apPts))
-            rectsAll.add(intArrayOf(rect.x, rect.y, rect.width, rect.height))
-            areas.add(Imgproc.contourArea(ap))
+            val rectArr = intArrayOf(rect.x, rect.y, rect.width, rect.height)
+            val area = Imgproc.contourArea(ap)
+            val aspect = if (rect.height > 0) rect.width.toDouble() / rect.height.toDouble() else 0.0
+            // Centro por momentos del contorno original (más estable que rectángulo)
+            val m = Imgproc.moments(contours[i])
+            val cx = if (m.m00 != 0.0) m.m10 / m.m00 else (rect.x + rect.width / 2.0)
+            val cy = if (m.m00 != 0.0) m.m01 / m.m00 else (rect.y + rect.height / 2.0)
+            rectsAll.add(rectArr)
+            areas.add(area)
+            aspects.add(aspect)
+            centersAll.add(Point(cx, cy))
         }
-        val rectsArr = rectsAll.toTypedArray()
-        val aspects = rectsArr.map { it[2].toDouble() / it[3].toDouble() }
-        // UMBRALES MÁS PERMISIVOS PARA CUADRADOS PEQUEÑOS (PLANTILLA 50)
-        val areaMin = imgArea * 0.000002
+        // UMBRALES por tipo
+        // ÁREA MÍNIMA MÁS BAJA para sensibilidad inmediata
+        val areaMin = imgArea * (if (type == SheetType.S50) 0.0000008 else 0.000002)
         val areaMax = imgArea * 0.05
         val rectsF = mutableListOf<IntArray>()
-        for (i in rectsArr.indices) {
+        val centersF = mutableListOf<Point>()
+        for (i in rectsAll.indices) {
             // FILTRO POR RELLENO: área del contorno vs área del rectángulo
-            val rectArea = rectsArr[i][2].toDouble() * rectsArr[i][3].toDouble()
+            val rectArea = rectsAll[i][2].toDouble() * rectsAll[i][3].toDouble()
             val fillRatio = if (rectArea > 0.0) areas[i] / rectArea else 0.0
-            val ok = areas[i] >= areaMin && areas[i] <= areaMax && aspects[i] >= 0.5 && aspects[i] <= 1.85 && fillRatio >= 0.55
-            if (ok) rectsF.add(rectsArr[i])
+            // FILLO MÍNIMO MÁS PERMISIVO y aspecto más amplio
+            val fillMin = if (type == SheetType.S50) 0.30 else 0.40
+            val ok = areas[i] >= areaMin && areas[i] <= areaMax && aspects[i] >= 0.45 && aspects[i] <= 1.95 && fillRatio >= fillMin
+            if (ok) {
+                rectsF.add(rectsAll[i])
+                centersF.add(centersAll[i])
+            }
         }
-        // SELECCIÓN POR CUADRANTES: ELEGIR EL MÁS CERCANO A CADA ESQUINA
-        val candidates = rectsF.map { r ->
-            val cx = r[0] + r[2] / 2.0
-            val cy = r[1] + r[3] / 2.0
-            Point(cx, cy) to r
-        }
+        // SELECCIÓN POR CUADRANTES usando centros refinados
+        val candidates = centersF.mapIndexed { idx, p -> p to rectsF[idx] }
         fun pickNearest(target: Point, taken: MutableSet<Int>): Int? {
             var bestIdx: Int? = null
             var bestDist = Double.MAX_VALUE
@@ -100,10 +131,9 @@ object CornerDetector {
         val inv = 1.0 / scale
         if (picked.size < 4) return Corners(emptyList()) to Boxes(emptyList())
         val orderRects = listOf(rectsF[tlIdx!!], rectsF[trIdx!!], rectsF[brIdx!!], rectsF[blIdx!!])
-        val pts = orderRects.map { r ->
-            val cx = r[0] + r[2] / 2.0
-            val cy = r[1] + r[3] / 2.0
-            floatArrayOf((cx * inv).toFloat(), (cy * inv).toFloat())
+        val orderCenters = listOf(centersF[tlIdx!!], centersF[trIdx!!], centersF[brIdx!!], centersF[blIdx!!])
+        val pts = orderCenters.map { p ->
+            floatArrayOf((p.x * inv).toFloat(), (p.y * inv).toFloat())
         }
         val boxes = orderRects.map { r -> intArrayOf((r[0] * inv).toInt(), (r[1] * inv).toInt(), (r[2] * inv).toInt(), (r[3] * inv).toInt()) }
         return Corners(pts) to Boxes(boxes)
@@ -149,5 +179,59 @@ object CornerDetector {
         val outW = (wAvg * scale).toInt()
         val outH = (hAvg * scale).toInt()
         return recortarPorEsquinas(src, esquinas, outW, outH)
+    }
+
+    // DETECTAR CÍRCULOS TIPO S20 EN TIEMPO REAL
+    fun detectarCirculosS20(src: Bitmap): Circles {
+        val img = Mat(); Utils.bitmapToMat(src, img)
+        val h = img.rows(); val w = img.cols()
+        val target = 2200.0
+        val scale = target / maxOf(h, w).toDouble()
+        val resized = Mat(); Imgproc.resize(img, resized, Size(w * scale, h * scale), 0.0, 0.0, Imgproc.INTER_AREA)
+        val gray = Mat(); Imgproc.cvtColor(resized, gray, Imgproc.COLOR_RGBA2GRAY)
+        val eq = Mat(); val clahe = Imgproc.createCLAHE(2.0, Size(8.0, 8.0)); clahe.apply(gray, eq)
+        val blur = Mat(); Imgproc.GaussianBlur(eq, blur, Size(5.0, 5.0), 0.0)
+
+        val circles = Mat()
+        // HOUGH CIRCLES: parámetros adaptados a burbujas impresas
+        // dp=1.2, minDist proporcional, thresholds moderados para estabilidad
+        val minDist = (resized.rows() / 36.0)
+        Imgproc.HoughCircles(
+            blur,
+            circles,
+            Imgproc.HOUGH_GRADIENT,
+            1.2,
+            minDist,
+            120.0,
+            22.0,
+            12,
+            40
+        )
+        val inv = 1.0 / scale
+        val out = ArrayList<FloatArray>()
+        val cols = circles.cols()
+        val rows = circles.rows()
+        val n = if (cols > 1 && rows == 1) cols else rows
+        for (i in 0 until n) {
+            val data = if (rows == 1) circles.get(0, i) else circles.get(i, 0)
+            if (data != null && data.size >= 3) {
+                val cx = (data[0] * inv).toFloat()
+                val cy = (data[1] * inv).toFloat()
+                val r = (data[2] * inv).toFloat()
+                out.add(floatArrayOf(cx, cy, r))
+            }
+        }
+
+        // Filtrar y normalizar a exactamente 100 si hay más
+        if (out.size > 100) {
+            // Separar por mitad vertical aproximada y tomar 50 por bloque
+            val midY = (h / 2.0f)
+            val top = out.filter { it[1] < midY }.sortedBy { it[1] }.take(50)
+            val bottom = out.filter { it[1] >= midY }.sortedBy { it[1] }.take(50)
+            val merged = ArrayList<FloatArray>(100); merged.addAll(top); merged.addAll(bottom)
+            return Circles(merged)
+        }
+        // Si faltan, devolver los encontrados (overlay informativo)
+        return Circles(out)
     }
 }
