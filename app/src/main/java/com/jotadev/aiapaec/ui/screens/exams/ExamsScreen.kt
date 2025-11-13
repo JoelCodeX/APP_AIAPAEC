@@ -63,12 +63,7 @@ fun ExamsScreen(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            ScreenTopAppBar(
-                screenTitle = "Exámenes",
-                subtitle = "Gestión de exámenes y evaluaciones"
-            )
-        },
+        // topBar unificado en MainScreen
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {

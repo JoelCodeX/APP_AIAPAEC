@@ -26,12 +26,7 @@ fun ClassesScreen(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            ScreenTopAppBar(
-                screenTitle = "Clases",
-                subtitle = "Gestión de clases del centro educativo"
-            )
-        }
+        // topBar unificado en MainScreen
     ) { paddingValues ->
         SwipeRefresh(
             state = swipeRefreshState,

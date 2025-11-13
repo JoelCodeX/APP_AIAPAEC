@@ -63,6 +63,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun HomeScreen(
     navController: NavController,
+    onOpenSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -78,15 +79,12 @@ fun HomeScreen(
     val bimestersState by bimestersVm.uiState.collectAsState()
     val resultsVm: ResultsViewModel = viewModel()
     val resultsState by resultsVm.uiState.collectAsState()
-    var showSettings by remember { mutableStateOf(false) }
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             modifier = Modifier
                 .fillMaxSize(),
             containerColor = MaterialTheme.colorScheme.background,
-            topBar = {
-                WelcomeTopAppBar(onNavigationClick = { showSettings = true })
-            }
+            // topBar unificado en MainScreen
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -149,69 +147,8 @@ fun HomeScreen(
                 // Cuadrícula de categorías con nuestros items
                 CategoryGridSection(
                     onNavigate = { route -> navController.navigate(route) },
-                    onOpenSettings = { showSettings = true }
+                    onOpenSettings = onOpenSettings
                 )
-            }
-        }
-
-        var renderPopup by remember { mutableStateOf(false) }
-        LaunchedEffect(showSettings) {
-            if (showSettings) {
-                renderPopup = true
-            } else {
-                delay(200)
-                renderPopup = false
-            }
-        }
-
-        if (renderPopup) {
-            Popup(
-                alignment = Alignment.TopStart,
-                properties = PopupProperties(
-                    focusable = true,
-                    dismissOnBackPress = false,
-                    clippingEnabled = false
-                )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // Overlay de fondo a pantalla completa (estable y con fade aparte)
-                    AnimatedVisibility(
-                        visible = renderPopup,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.35f))
-                                .pointerInput(Unit) {
-                                    // Consumir toques para bloquear interacción sin cerrar
-                                    detectTapGestures(onTap = { showSettings = false })
-                                }
-                        )
-                    }
-
-                    // Panel animado sobre el overlay
-                    AnimatedVisibility(
-                        visible = showSettings,
-                        enter = slideInHorizontally(initialOffsetX = { -it }) + fadeIn(),
-                        exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut(),
-                        modifier = Modifier.zIndex(1f)
-                    ) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .fillMaxWidth(0.8f)
-                        ) {
-                            SettingsScreen(
-                                navController = navController,
-                                onClose = { showSettings = false })
-                        }
-                    }
-                }
             }
         }
     }

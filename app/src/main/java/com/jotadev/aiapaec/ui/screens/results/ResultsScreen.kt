@@ -92,12 +92,7 @@ fun ResultsScreen(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            ScreenTopAppBar(
-                screenTitle = "Resultados",
-                subtitle = "Consulta tus resultados y estadísticas"
-            )
-        }
+        // topBar unificado en MainScreen
     ) { paddingValues ->
         Column(
             modifier = Modifier

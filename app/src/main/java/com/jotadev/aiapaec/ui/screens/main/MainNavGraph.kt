@@ -25,7 +25,8 @@ import com.jotadev.aiapaec.ui.screens.scan.ScanResultScreen
 @Composable
 fun MainNavGraph(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenSettings: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -33,7 +34,7 @@ fun MainNavGraph(
         modifier = modifier
     ) {
         composable(NavigationRoutes.HOME) {
-            HomeScreen(navController = navController)
+            HomeScreen(navController = navController, onOpenSettings = onOpenSettings)
         }
         composable(NavigationRoutes.EXAMS) {
             ExamsScreen(navController = navController)
@@ -47,9 +48,7 @@ fun MainNavGraph(
         composable(NavigationRoutes.RESULTS) {
             ResultsScreen(navController = navController)
         }
-        composable(NavigationRoutes.SETTINGS) {
-            SettingsScreen(navController = navController, onClose = { navController.popBackStack() })
-        }
+        // La configuración se abre como panel lateral, no navegamos a una ruta aparte
 
         
         composable(NavigationRoutes.GROUP_CLASSES) {
