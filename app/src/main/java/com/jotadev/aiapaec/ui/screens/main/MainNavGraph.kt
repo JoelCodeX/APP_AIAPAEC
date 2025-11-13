@@ -18,7 +18,9 @@ import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
 import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
 import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
 import com.jotadev.aiapaec.ui.screens.scan.ScanScreen
+import com.jotadev.aiapaec.ui.screens.scan.ScanUploadScreen
 import com.jotadev.aiapaec.ui.screens.scan.CropPreviewScreen
+import com.jotadev.aiapaec.ui.screens.scan.ScanResultScreen
 
 @Composable
 fun MainNavGraph(
@@ -61,10 +63,21 @@ fun MainNavGraph(
         composable(NavigationRoutes.SCAN_CARD) {
             ScanScreen(navController = navController)
         }
+        composable(NavigationRoutes.SCAN_UPLOAD) {
+            ScanUploadScreen(navController = navController)
+        }
         composable("${NavigationRoutes.CROP_PREVIEW}?path={path}") { backStackEntry ->
             val raw = backStackEntry.arguments?.getString("path") ?: ""
             val path = Uri.decode(raw)
             CropPreviewScreen(navController = navController, filePath = path)
+        }
+        composable("${NavigationRoutes.SCAN_RESULT}?run_id={run_id}&overlay={overlay}&tipo={tipo}") { backStackEntry ->
+            val runId = backStackEntry.arguments?.getString("run_id") ?: ""
+            val rawOverlay = backStackEntry.arguments?.getString("overlay") ?: ""
+            val overlayUrl = Uri.decode(rawOverlay)
+            val tipoStr = backStackEntry.arguments?.getString("tipo") ?: "0"
+            val tipoInit = tipoStr.toIntOrNull() ?: 0
+            ScanResultScreen(navController = navController, runId = runId, overlayUrl = overlayUrl, tipoInit = tipoInit)
         }
         
         composable(NavigationRoutes.EXAM_DETAIL) { backStackEntry ->

@@ -256,7 +256,7 @@ private fun CategoryGridSection(
             subtitle = "Tarjeta QR",
             icon = Icons.Rounded.QrCodeScanner,
             color = MaterialTheme.colorScheme.primary,
-            route = NavigationRoutes.SCAN_CARD
+        route = NavigationRoutes.SCAN_UPLOAD
         ),
         CategoryItem(
             title = "Ajustes",

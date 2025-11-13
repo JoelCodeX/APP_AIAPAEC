@@ -24,8 +24,10 @@ object NavigationRoutes {
     const val EXAM_DETAIL = "exam_detail/{examId}"
     const val CREATE_EXAM = "create_exam"
     const val SCAN_CARD = "scan_card"
+    const val SCAN_UPLOAD = "scan_upload"
     const val GROUP_CLASSES = "group_classes"
     const val CROP_PREVIEW = "crop_preview"
+    const val SCAN_RESULT = "scan_result"
 
     
     // Navigation with arguments
@@ -35,4 +37,5 @@ object NavigationRoutes {
     fun detailsStudent(studentId: Int) = "student_detail/$studentId"
     fun detailsClass(classId: Int) = "class_detail/$classId"
     fun cropPreview(path: String) = "${CROP_PREVIEW}?path=$path"
+    fun scanResult(runId: String, overlayUrl: String, tipo: Int) = "${SCAN_RESULT}?run_id=$runId&overlay=$overlayUrl&tipo=$tipo"
 }

@@ -87,7 +87,8 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.max
 
-private const val BASE_URL = "http://10.0.2.2:5000"
+// HOST BACKEND EN DISPOSITIVO FÍSICO (AJUSTA SI CAMBIA LA IP)
+private const val BASE_URL = "http://192.168.18.224:5000"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,6 +151,7 @@ fun ScanScreen(navController: NavController) {
         var frameH by remember { mutableIntStateOf(0) }
         var roiNorm by remember { mutableStateOf<List<Float>?>(null) }
         var roiLocked by remember { mutableStateOf(false) }
+        var roiHold by remember { mutableIntStateOf(0) }
         // ESTADO PREVIO DE ESQUINAS PARA MEDIR DERIVA ENTRE FRAMES
         var prevCornersNorm by remember { mutableStateOf<List<Pair<Float, Float>>>(emptyList()) }
         val currentRotation = LocalView.current.display?.rotation ?: 0
@@ -192,7 +194,10 @@ fun ScanScreen(navController: NavController) {
                                     androidx.compose.runtime.snapshots.Snapshot.withMutableSnapshot {
                                         frameW = res.w
                                         frameH = res.h
-                                        val ordered = reorderCornersAndBoxes(res.corners, res.boxes)
+                                        val prevPix: List<List<Float>>? = if (prevCornersNorm.size == 4) {
+                                            prevCornersNorm.map { p -> listOf(p.first * res.w.toFloat(), p.second * res.h.toFloat()) }
+                                        } else null
+                                        val ordered = reorderCornersAndBoxes(res.corners, res.boxes, prevPix)
                                         val oc = ordered.first
                                         val ob = ordered.second
                                         // HOLD-LAST: si falta alguna esquina/caja, mantener la última válida para evitar parpadeo
@@ -309,7 +314,7 @@ fun ScanScreen(navController: NavController) {
                     // HISTÉRESIS: evita parpadeo cuando un marcador cae 1-2 frames
                     val adj = inside.copyOf()
                     for (i in 0 until 4) {
-                        if (inside[i]) hysteresis[i] = 3 else if (hysteresis[i] > 0) { hysteresis[i]--; adj[i] = true }
+                        if (inside[i]) hysteresis[i] = 4 else if (hysteresis[i] > 0) { hysteresis[i]--; adj[i] = true }
                     }
                     // VALIDACIÓN DE CARTILLA: requiere 4 esquinas y geometría consistente
                     val hasFourCorners = cornersCount == 4 && cornersNorm.size == 4
@@ -399,9 +404,15 @@ fun ScanScreen(navController: NavController) {
                         val finalH = rh.coerceAtLeast(minH)
                         roiNorm = listOf(rx, ry, finalW, finalH)
                         roiLocked = true
+                        roiHold = 3
                     } else if (!allInside || !validSheet || !alignedOk) {
-                        roiLocked = false
-                        roiNorm = null
+                        if (roiHold > 0) {
+                            roiHold--
+                            roiLocked = true
+                        } else {
+                            roiLocked = false
+                            roiNorm = null
+                        }
                     }
                     if (allInside && validSheet && alignedOk) {
                         if (driftOk) stableCount++ else stableCount = 0
@@ -922,9 +933,19 @@ private fun detectMarkersLocal(image: ImageProxy, roiNorm: List<Float>?, type: C
         offsetX = x; offsetY = y
         work = Bitmap.createBitmap(bmp, x.coerceAtLeast(0), y.coerceAtLeast(0), w.coerceAtLeast(1).coerceAtMost(W - x), h.coerceAtLeast(1).coerceAtMost(H - y))
     }
-    val det = kotlin.runCatching { CornerDetector.detectarEsquinasYCuadrados(work, type) }.getOrNull() ?: return null
-    val cornersRes = det.first
-    val boxesRes = det.second
+    var det = kotlin.runCatching { CornerDetector.detectarEsquinasYCuadrados(work, type) }.getOrNull() ?: return null
+    var cornersRes = det.first
+    var boxesRes = det.second
+    // FALLBACK: si no hay 4 esquinas con el tipo actual, probar con el otro
+    if (cornersRes.list.size < 4) {
+        val altType = if (type == CornerDetector.SheetType.S50) CornerDetector.SheetType.S20 else CornerDetector.SheetType.S50
+        val detAlt = kotlin.runCatching { CornerDetector.detectarEsquinasYCuadrados(work, altType) }.getOrNull()
+        if (detAlt != null && detAlt.first.list.size >= cornersRes.list.size) {
+            det = detAlt
+            cornersRes = detAlt.first
+            boxesRes = detAlt.second
+        }
+    }
     val corners = cornersRes.list.map { listOf(it[0] + offsetX, it[1] + offsetY) }
     val boxes = boxesRes.list.map { listOf((it[0] + offsetX).toFloat(), (it[1] + offsetY).toFloat(), it[2].toFloat(), it[3].toFloat()) }
     // CÍRCULOS NO EN TIEMPO REAL: se detectan tras la captura/recorte
@@ -955,13 +976,34 @@ private fun detectMarkersLocal(image: ImageProxy, roiNorm: List<Float>?, type: C
 
 private fun reorderCornersAndBoxes(
     corners: List<List<Float>>,
-    boxes: List<List<Float>>
+    boxes: List<List<Float>>,
+    prevCorners: List<List<Float>>? = null
 ): Pair<List<List<Float>>, List<List<Float>>> {
     if (corners.size != 4) return Pair(corners, boxes)
-    val idxByY = (0..3).sortedBy { corners[it][1] }
-    val top = idxByY.take(2).sortedBy { corners[it][0] }
-    val bottom = idxByY.takeLast(2).sortedBy { corners[it][0] }
-    val order = listOf(top[0], top[1], bottom[1], bottom[0])
+    val order = if (prevCorners != null && prevCorners.size == 4) {
+        val used = BooleanArray(4) { false }
+        val o = IntArray(4) { 0 }
+        for (i in 0 until 4) {
+            var bestIdx = -1
+            var bestD = Float.MAX_VALUE
+            val px = prevCorners[i][0]
+            val py = prevCorners[i][1]
+            for (j in 0 until 4) {
+                if (used[j]) continue
+                val dx = corners[j][0] - px
+                val dy = corners[j][1] - py
+                val d = dx * dx + dy * dy
+                if (d < bestD) { bestD = d; bestIdx = j }
+            }
+            if (bestIdx >= 0) { used[bestIdx] = true; o[i] = bestIdx }
+        }
+        listOf(o[0], o[1], o[2], o[3])
+    } else {
+        val idxByY = (0..3).sortedBy { corners[it][1] }
+        val top = idxByY.take(2).sortedBy { corners[it][0] }
+        val bottom = idxByY.takeLast(2).sortedBy { corners[it][0] }
+        listOf(top[0], top[1], bottom[1], bottom[0])
+    }
     val orderedCorners = order.map { corners[it] }
     val centers = boxes.map { listOf(it[0] + it[2] * 0.5f, it[1] + it[3] * 0.5f) }
     val used = BooleanArray(boxes.size) { false }

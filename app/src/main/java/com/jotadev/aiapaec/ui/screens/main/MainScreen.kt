@@ -30,6 +30,7 @@ fun MainScreen(
         NavigationRoutes.EXAM_DETAIL,
         NavigationRoutes.CREATE_EXAM,
         NavigationRoutes.SCAN_CARD,
+        NavigationRoutes.SCAN_UPLOAD,
         NavigationRoutes.APPLY_EXAM,
         NavigationRoutes.QUIZ_ANSWERS,
         NavigationRoutes.DETAILS_STUDENT,

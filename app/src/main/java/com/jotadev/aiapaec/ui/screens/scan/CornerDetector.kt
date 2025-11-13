@@ -63,8 +63,8 @@ object CornerDetector {
             val c2f = MatOfPoint2f(*c.toArray())
             val p = Imgproc.arcLength(c2f, true)
             val ap = MatOfPoint2f()
-            // EPS MÁS BAJO para estabilidad en aproximación de contornos (reduce saltos)
-            val eps = if (type == SheetType.S50) 0.010 else 0.012
+            // EPS MÁS PERMISIVO para recuperar polígonos de 4 vértices
+            val eps = if (type == SheetType.S50) 0.012 else 0.014
             Imgproc.approxPolyDP(c2f, ap, eps * p, true)
             approxList.add(ap)
             if (ap.rows() == 4) indices.add(idx)

@@ -183,7 +183,7 @@ fun ApplyExam(navController: NavController, examId: String) {
                 StudentStatusRow(
                     student = student,
                     status = state.studentStatuses[student.id] ?: "Por corregir",
-                    onScanClick = { navController.navigate(NavigationRoutes.SCAN_CARD) }
+    onScanClick = { navController.navigate(NavigationRoutes.SCAN_UPLOAD) }
                 )
             }
 
