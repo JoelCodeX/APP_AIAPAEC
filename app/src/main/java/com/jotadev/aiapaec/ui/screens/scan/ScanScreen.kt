@@ -88,7 +88,7 @@ import java.io.FileOutputStream
 import kotlin.math.max
 
 // HOST BACKEND EN DISPOSITIVO FÍSICO (AJUSTA SI CAMBIA LA IP)
-private const val BASE_URL = "http://192.168.18.224:5000"
+private const val BASE_URL = "http://192.168.1.12:5000"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

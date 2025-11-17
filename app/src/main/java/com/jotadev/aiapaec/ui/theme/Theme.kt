@@ -27,7 +27,7 @@ private val AiapaecLightColorScheme = lightColorScheme(
     surfaceVariant = Gold60,
     onSurfaceVariant = Black,
 
-    error = Color(0xFFBA1A1A),
+    error = Color(0xFFFF0000),
     onError = White
 )
 

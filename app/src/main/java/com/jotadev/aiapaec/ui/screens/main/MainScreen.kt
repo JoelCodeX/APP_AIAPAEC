@@ -62,7 +62,8 @@ fun MainScreen(
         NavigationRoutes.CROP_PREVIEW
     )
 
-    Scaffold(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.systemBars)
@@ -81,23 +82,22 @@ fun MainScreen(
                 )
             }
         }
-    ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            MainNavGraph(
-                navController = navController,
-                modifier = Modifier.padding(innerPadding),
-                onOpenSettings = { showSettings = true }
-            )
-
-            SettingsSidePanel(
-                show = showSettings,
-                onClose = { showSettings = false },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                SettingsScreen(navController = navController, onClose = { showSettings = false })
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                MainNavGraph(
+                    navController = navController,
+                    modifier = Modifier.padding(innerPadding),
+                    onOpenSettings = { showSettings = true }
+                )
             }
+        }
+
+        SettingsSidePanel(
+            show = showSettings,
+            onClose = { showSettings = false },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SettingsScreen(navController = navController, onClose = { showSettings = false })
         }
     }
 }
@@ -144,7 +144,7 @@ private fun SettingsSidePanel(
         }
     }
     if (renderPopup) {
-        Box(modifier = modifier) {
+        Box(modifier = modifier.zIndex(100f)) {
             AnimatedVisibility(
                 visible = renderPopup,
                 enter = fadeIn(),
@@ -169,7 +169,7 @@ private fun SettingsSidePanel(
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .fillMaxWidth(0.7f)
+                        .fillMaxWidth(0.8f)
                         .background(MaterialTheme.colorScheme.onPrimary)
                 ) {
                     content()

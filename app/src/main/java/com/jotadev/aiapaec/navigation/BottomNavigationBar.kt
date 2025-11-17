@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,24 +72,31 @@ fun BottomNavigationBar(
                     ) {
                         if (selected) {
                             Icon(
-                                imageVector = item.iconFilled,
+                                painter = painterResource(id = item.iconFilled),
                                 contentDescription = item.label,
                                 tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(30.dp)
                             )
                             Text(
                                 text = item.label,
                                 fontWeight = FontWeight.ExtraBold,
-                                fontSize = 12.sp,
+                                fontSize = 13.sp,
                                 color = MaterialTheme.colorScheme.secondary,
                                 maxLines = 1
                             )
                         } else {
                             Icon(
-                                imageVector = item.iconOutlined,
+                                painter = painterResource(id = item.iconOutlined),
                                 contentDescription = item.label,
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(24.dp)
+                            )
+                            Text(
+                                text = item.label,
+                                fontWeight = FontWeight.ExtraLight,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1
                             )
                         }
                     }

@@ -22,21 +22,21 @@ fun CreateExamDialog(
     initialName: String = "",
     initialClass: String = "",
     initialBimester: String = "",
-    title: String = "Crear Nuevo Examen"
+    title: String = "Crear Nuevo Examen",
+    examNames: List<String> = generateWeeklyExamNames(8)
 ) {
     if (isVisible) {
         var examName by remember { mutableStateOf(initialName) }
         var selectedClass by remember { mutableStateOf(initialClass) }
         var selectedBimester by remember { mutableStateOf(initialBimester) }
-        var nameError by remember { mutableStateOf(false) }
 
         Dialog(onDismissRequest = onDismiss) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Column(
@@ -55,29 +55,12 @@ fun CreateExamDialog(
                     )
 
                     // NOMBRE DEL EXAMEN
-                    OutlinedTextField(
-                        value = examName,
-                        onValueChange = {
-                            examName = it
-                            nameError = false
-                        },
-                        label = { Text("Nombre del examen") },
-                        placeholder = { Text("Ej: Evaluación semanal N° 01") },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = nameError,
-                        supportingText = if (nameError) {
-                            {
-                                Text(
-                                    "El nombre es obligatorio",
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        } else null,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
+                    FilterDropdown(
+                        label = "Nombre del examen",
+                        selectedValue = examName,
+                        options = examNames,
+                        onValueChange = { examName = it },
+                        placeholder = "Selecciona un examen"
                     )
 
                     // SELECTOR DE CLASE
@@ -115,12 +98,8 @@ fun CreateExamDialog(
 
                         Button(
                             onClick = {
-                                if (examName.isBlank()) {
-                                    nameError = true
-                                } else {
-                                    onSaveExam(examName, selectedClass, selectedBimester)
-                                    onDismiss()
-                                }
+                                onSaveExam(examName, selectedClass, selectedBimester)
+                                onDismiss()
                             },
                             modifier = Modifier.weight(1f),
                             enabled = examName.isNotBlank() && selectedClass.isNotBlank() && selectedBimester.isNotBlank(),
@@ -134,3 +113,7 @@ fun CreateExamDialog(
         }
     }
 }
+
+// Genera nombres "Examen Semanal N°01" hasta "N°count"
+private fun generateWeeklyExamNames(count: Int): List<String> =
+    (1..count).map { "Examen Semanal N°" + it.toString().padStart(2, '0') }

@@ -51,6 +51,18 @@ class LoginViewModel(
         )
     }
 
+    fun setRecordarUsuario(remember: Boolean) {
+        _uiState.value = _uiState.value.copy(recordarUsuario = remember)
+        if (!remember) {
+            // Limpiar email recordado si el usuario desactiva "Recordar"
+            UserStorage.clearRememberedEmail()
+            UserStorage.saveRememberFlag(false)
+        } else {
+            // Persistir bandera cuando el usuario activa "Recordar"
+            UserStorage.saveRememberFlag(true)
+        }
+    }
+
     fun login() {
         val currentState = _uiState.value
         
@@ -77,6 +89,11 @@ class LoginViewModel(
                         role = u?.role,
                         branchId = u?.branchId
                     )
+                    // Guardar email ingresado SOLO para login si el usuario eligió recordar
+                    if (currentState.recordarUsuario) {
+                        UserStorage.saveRememberedEmail(currentState.usuario)
+                        UserStorage.saveRememberFlag(true)
+                    }
                 }
                 is Result.Error -> {
                     _uiState.value = _uiState.value.copy(
@@ -92,7 +109,7 @@ class LoginViewModel(
         }
     }
     
-    private fun isValidEmail(email: String): Boolean {
+    fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
@@ -107,5 +124,17 @@ class LoginViewModel(
             mostrarContrasena = false,
             errorMessage = null
         )
+    }
+
+    // Precargar email recordado si existe
+    fun prefillRememberedEmail() {
+        val savedEmail = UserStorage.getRememberedEmail()
+        val rememberFlag = UserStorage.getRememberFlag()
+        if (rememberFlag && !savedEmail.isNullOrBlank()) {
+            _uiState.value = _uiState.value.copy(
+                usuario = savedEmail,
+                recordarUsuario = true
+            )
+        }
     }
 }

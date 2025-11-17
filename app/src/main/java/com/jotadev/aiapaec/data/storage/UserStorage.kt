@@ -10,6 +10,8 @@ object UserStorage {
     private const val KEY_INSTITUTION = "user_institution"
     private const val KEY_ROLE = "user_role"
     private const val KEY_BRANCH_ID = "user_branch_id"
+    private const val KEY_REMEMBER_EMAIL = "remember_email" // Email para login recordado
+    private const val KEY_REMEMBER_FLAG = "remember_flag" // Estado del checkbox Recordar
 
     private var prefs: SharedPreferences? = null
 
@@ -44,5 +46,36 @@ object UserStorage {
 
     fun clear() {
         prefs?.edit()?.clear()?.apply()
+    }
+
+    // Limpia solo el email guardado
+    fun clearEmail() {
+        prefs?.edit()?.putString(KEY_EMAIL, "")?.apply()
+    }
+
+    // Guarda el email para precarga de login si el usuario marcó "Recordar"
+    fun saveRememberedEmail(email: String?) {
+        prefs?.edit()?.putString(KEY_REMEMBER_EMAIL, email ?: "")?.apply()
+    }
+
+    // Obtiene el email recordado para el login
+    fun getRememberedEmail(): String? = prefs?.getString(KEY_REMEMBER_EMAIL, null)
+
+    // Limpia el email recordado para login
+    fun clearRememberedEmail() {
+        prefs?.edit()?.putString(KEY_REMEMBER_EMAIL, "")?.apply()
+    }
+
+    // Guarda el estado del checkbox Recordar
+    fun saveRememberFlag(remember: Boolean) {
+        prefs?.edit()?.putBoolean(KEY_REMEMBER_FLAG, remember)?.apply()
+    }
+
+    // Obtiene el estado del checkbox Recordar
+    fun getRememberFlag(): Boolean = prefs?.getBoolean(KEY_REMEMBER_FLAG, false) ?: false
+
+    // Limpia el estado del checkbox Recordar
+    fun clearRememberFlag() {
+        prefs?.edit()?.putBoolean(KEY_REMEMBER_FLAG, false)?.apply()
     }
 }
