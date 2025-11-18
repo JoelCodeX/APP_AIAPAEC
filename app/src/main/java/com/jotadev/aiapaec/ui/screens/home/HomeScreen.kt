@@ -1,76 +1,72 @@
 package com.jotadev.aiapaec.ui.screens.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Leaderboard
-import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.automirrored.rounded.Assignment
-import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.rounded.Assessment
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Leaderboard
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
-import com.jotadev.aiapaec.ui.components.WelcomeTopAppBar
+import com.jotadev.aiapaec.presentation.BimestersViewModel
 import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
-import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
+import com.jotadev.aiapaec.ui.screens.results.ExamResult
+import com.jotadev.aiapaec.ui.screens.results.ResultsViewModel
 import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
-import com.jotadev.aiapaec.ui.screens.results.ResultsViewModel
-import com.jotadev.aiapaec.ui.screens.results.ExamResult
-import com.jotadev.aiapaec.presentation.BimestersViewModel
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    onOpenSettings: () -> Unit,
-    viewModel: HomeViewModel = viewModel()
+    onOpenSettings: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
     val settingsViewModel: SettingsViewModel = viewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsState()
     val userName = settingsUiState.userProfile?.name ?: "Usuario"
-    val institution = settingsUiState.userProfile?.institution ?: "AIAPAEC"
+    settingsUiState.userProfile?.institution ?: "AIAPAEC"
     val studentsVm: StudentsViewModel = viewModel()
     val studentsState by studentsVm.uiState.collectAsState()
     val classesVm: ClassesViewModel = viewModel()
@@ -84,7 +80,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize(),
             containerColor = MaterialTheme.colorScheme.background,
-            // topBar unificado en MainScreen
+    
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -270,33 +266,6 @@ private data class CategoryItem(
     val route: String,
     val isSettingsAction: Boolean = false
 )
-
-@Composable
-private fun StatCard(title: String, value: String, modifier: Modifier = Modifier) {
-    ElevatedCard(
-        modifier = modifier
-            .height(88.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
-
 @Composable
 private fun MetricCard(
     label: String,

@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
                 }
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = MaterialTheme.colorScheme.primary
                 ) {
                     AppNavigation()
 //                    ApplyExam( navController = androidx.navigation.compose.rememberNavController(), examId = "exam123" )

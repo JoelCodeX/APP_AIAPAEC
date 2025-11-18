@@ -34,6 +34,7 @@ data class ApplyExamUiState(
     val performanceBars: List<PerformanceBar> = emptyList(),
     val studentStatuses: Map<Int, String> = emptyMap(),
     val answers: List<QuizAnswer> = emptyList(),
+    val hasKey: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -60,6 +61,11 @@ class ApplyExamViewModel(
                     _uiState.update { it.copy(quiz = quiz) }
                     // Cargar respuestas del quiz si existen
                     loadAnswers(quiz.id)
+                    // Verificar si existen solucionarios subidos
+                    when (val keys = quizzesRepository.listAnswerKeys(quiz.id, page = 1, pageSize = 10)) {
+                        is Result.Success -> _uiState.update { it.copy(hasKey = keys.data.items.isNotEmpty()) }
+                        else -> { /* no-op, mantener valor actual */ }
+                    }
                     // Cargar estudiantes (filtrar por classId si existe)
                     val pageResult = getStudents(page = 1, perPage = 100, query = null)
                     when (pageResult) {
@@ -120,7 +126,7 @@ class ApplyExamViewModel(
                     is Result.Success -> {
                         // Refresh quiz to reflect new answer key
                         when (val q = quizzesRepository.getQuiz(quizId)) {
-                            is Result.Success -> _uiState.update { it.copy(quiz = q.data, isLoading = false) }
+                            is Result.Success -> _uiState.update { it.copy(quiz = q.data, isLoading = false, hasKey = true) }
                             is Result.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = q.message) }
                             is Result.Loading -> _uiState.update { it.copy(isLoading = true) }
                         }
@@ -144,7 +150,8 @@ class ApplyExamViewModel(
         viewModelScope.launch {
             when (val result = quizzesRepository.getQuizAnswers(quizId)) {
                 is Result.Success -> {
-                    _uiState.update { it.copy(answers = result.data.items) }
+                    val items = result.data.items
+                    _uiState.update { it.copy(answers = items, hasKey = it.hasKey || items.isNotEmpty()) }
                 }
                 is Result.Error -> {
                     _uiState.update { it.copy(errorMessage = result.message) }

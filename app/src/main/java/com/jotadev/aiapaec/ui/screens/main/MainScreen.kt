@@ -15,6 +15,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -35,10 +36,21 @@ import androidx.navigation.compose.rememberNavController
 import com.jotadev.aiapaec.navigation.BottomNavItem
 import com.jotadev.aiapaec.navigation.BottomNavigationBar
 import com.jotadev.aiapaec.navigation.NavigationRoutes
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.rounded.ArrowBack
 import com.jotadev.aiapaec.ui.components.ScreenTopAppBar
 import com.jotadev.aiapaec.ui.components.WelcomeTopAppBar
+import com.jotadev.aiapaec.ui.components.CustomTopAppBar
 import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
+import com.google.errorprone.annotations.ImmutableTypeParameter
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun MainScreen(
@@ -71,7 +83,8 @@ fun MainScreen(
         topBar = {
             MainTopBar(
                 currentRoute = currentRoute,
-                onOpenSettings = { showSettings = true }
+                onOpenSettings = { showSettings = true },
+                navController = navController
             )
         },
         bottomBar = {
@@ -105,7 +118,8 @@ fun MainScreen(
 @Composable
 private fun MainTopBar(
     currentRoute: String?,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    navController: NavHostController
 ) {
     when {
         currentRoute?.startsWith(NavigationRoutes.HOME) == true -> {
@@ -113,6 +127,79 @@ private fun MainTopBar(
         }
         currentRoute?.startsWith(NavigationRoutes.EXAMS) == true -> {
             ScreenTopAppBar(screenTitle = "Exámenes")
+        }
+        currentRoute?.startsWith(NavigationRoutes.QUIZ_ANSWERS) == true -> {
+            val handle = navController.currentBackStackEntry?.savedStateHandle
+            val isEditing by (handle?.getStateFlow("answers_is_editing", false) ?: MutableStateFlow(false)).collectAsState()
+            val hasChanges by (handle?.getStateFlow("answers_has_changes", false) ?: MutableStateFlow(false)).collectAsState()
+            val hasAny by (handle?.getStateFlow("answers_has_any", false) ?: MutableStateFlow(false)).collectAsState()
+            CustomTopAppBar(
+                title = "Respuestas",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.currentBackStackEntry?.savedStateHandle?.set("answers_back_request", true)
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                actions = {
+                    if (!isEditing) {
+                        IconButton(onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("answers_edit_toggle", true)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Editar respuestas",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    } else if (hasChanges) {
+                        IconButton(onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("answers_save_request", true)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Save,
+                                contentDescription = "Guardar cambios",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                    if (!isEditing && hasAny) {
+                        IconButton(onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("answers_delete_request", true)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Eliminar solucionario",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+                }
+            )
+        }
+        currentRoute?.startsWith(NavigationRoutes.APPLY_EXAM) == true -> {
+            // Subpantalla: usar un único TopBar global con botón de regresar
+            CustomTopAppBar(
+                title = "Aplicar evaluación",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            )
         }
         currentRoute?.startsWith(NavigationRoutes.CLASSES) == true -> {
             ScreenTopAppBar(screenTitle = "Clases")

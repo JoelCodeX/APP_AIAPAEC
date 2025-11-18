@@ -72,7 +72,7 @@ fun ExamsScreen(navController: NavController) {
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.padding(bottom = 80.dp)
+                modifier = Modifier.padding(bottom = 40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,

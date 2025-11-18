@@ -32,7 +32,7 @@ object RetrofitClient {
     } else {
         // IP LOCAL RED WIFI + PUERTO FLASK (CAMBIAR SEGÚN TU IPv4)
         // EJEMPLO: http://<TU_IP_LOCAL>:5000/api/
-        "http://192.168.1.12:5000/api/"
+        "http://192.168.18.224:5000/api/"
     }
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

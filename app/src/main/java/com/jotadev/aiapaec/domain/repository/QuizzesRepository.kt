@@ -50,4 +50,11 @@ interface QuizzesRepository {
     ): Result<AnswerKeysPage>
 
     suspend fun getQuizAnswers(id: Int): Result<QuizAnswersPage>
+
+    suspend fun deleteLatestAnswerKey(id: Int): Result<Unit>
+
+    suspend fun updateAnswerKeys(
+        id: Int,
+        answers: List<com.jotadev.aiapaec.data.api.UpdateAnswerItem>
+    ): Result<Unit>
 }

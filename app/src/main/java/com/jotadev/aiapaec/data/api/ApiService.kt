@@ -118,6 +118,17 @@ interface ApiService {
         @Path("id") id: Int
     ): Response<AnswerKeysListResponse>
 
+    @DELETE("quizzes/{id}/answer_keys")
+    suspend fun deleteLatestAnswerKey(
+        @Path("id") id: Int
+    ): Response<ApiResponseNoData>
+
+    @PUT("quizzes/{id}/answer_keys")
+    suspend fun updateAnswerKeys(
+        @Path("id") id: Int,
+        @Body request: UpdateAnswersRequest
+    ): Response<ApiResponseNoData>
+
     // QUIZ ANSWERS
     @GET("quizzes/{id}/answers")
     suspend fun getQuizAnswers(
@@ -165,6 +176,16 @@ data class QuizItemResponse(
 data class ApiResponseNoData(
     val success: Boolean,
     val message: String
+)
+
+data class UpdateAnswersRequest(
+    val answers: List<UpdateAnswerItem>
+)
+
+data class UpdateAnswerItem(
+    @SerializedName("question_number") val question_number: Int,
+    @SerializedName("correct_option") val correct_option: String,
+    @SerializedName("points_value") val points_value: Double?
 )
 
 data class AnswerKeysListResponse(

@@ -18,8 +18,8 @@ fun CustomTopAppBar(
     title: String,
     subtitle: String? = null,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.tertiary,
-    contentColor: Color = Color.White,
+    backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     navigationIcon: @Composable (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
@@ -58,8 +58,8 @@ fun CustomTopAppBar(
 @Composable
 fun WelcomeTopAppBar(
     subtitle: String = "Sistema de gestión de exámenes AIAPAEC",
-    backgroundColor: Color = MaterialTheme.colorScheme.tertiary,
-    contentColor: Color = MaterialTheme.colorScheme.onTertiary,
+    backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     modifier: Modifier = Modifier,
     onNavigationClick: () -> Unit = {}
 ) {
@@ -87,8 +87,8 @@ fun WelcomeTopAppBar(
 fun ScreenTopAppBar(
     screenTitle: String,
     subtitle: String? = null,
-    backgroundColor: Color = MaterialTheme.colorScheme.tertiary,
-    contentColor: Color = MaterialTheme.colorScheme.onTertiary,
+    backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary,
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {}
 ) {

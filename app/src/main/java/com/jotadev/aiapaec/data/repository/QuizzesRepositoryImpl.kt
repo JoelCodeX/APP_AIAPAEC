@@ -4,6 +4,8 @@ import com.jotadev.aiapaec.data.api.RetrofitClient
 import com.jotadev.aiapaec.data.api.CreateQuizRequest
 import com.jotadev.aiapaec.data.api.UpdateQuizRequest
 import com.jotadev.aiapaec.data.mappers.toDomain
+import com.jotadev.aiapaec.data.api.UpdateAnswersRequest
+import com.jotadev.aiapaec.data.api.UpdateAnswerItem
 import com.jotadev.aiapaec.domain.models.Result
 import com.jotadev.aiapaec.domain.models.Quiz
 import com.jotadev.aiapaec.domain.models.QuizzesPage
@@ -249,6 +251,58 @@ class QuizzesRepositoryImpl : QuizzesRepository {
     override suspend fun deleteQuiz(id: Int): Result<Unit> {
         return try {
             val response = api.deleteQuiz(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body?.success == true) {
+                    Result.Success(Unit)
+                } else {
+                    Result.Error(body?.message ?: "RESPUESTA VACÍA DEL SERVIDOR")
+                }
+            } else {
+                val errorMessage = when (response.code()) {
+                    401 -> "TOKEN INVÁLIDO O EXPIRADO"
+                    403 -> "ACCESO DENEGADO"
+                    404 -> "RECURSO NO ENCONTRADO"
+                    400 -> "SOLICITUD INVÁLIDA"
+                    500 -> "ERROR DEL SERVIDOR"
+                    else -> "ERROR DEL SERVIDOR: ${response.code()}"
+                }
+                Result.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Result.Error("ERROR DE CONEXIÓN: ${e.message}")
+        }
+    }
+
+    override suspend fun deleteLatestAnswerKey(id: Int): Result<Unit> {
+        return try {
+            val response = api.deleteLatestAnswerKey(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body?.success == true) {
+                    Result.Success(Unit)
+                } else {
+                    Result.Error(body?.message ?: "RESPUESTA VACÍA DEL SERVIDOR")
+                }
+            } else {
+                val errorMessage = when (response.code()) {
+                    401 -> "TOKEN INVÁLIDO O EXPIRADO"
+                    403 -> "ACCESO DENEGADO"
+                    404 -> "RECURSO NO ENCONTRADO"
+                    400 -> "SOLICITUD INVÁLIDA"
+                    500 -> "ERROR DEL SERVIDOR"
+                    else -> "ERROR DEL SERVIDOR: ${response.code()}"
+                }
+                Result.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            Result.Error("ERROR DE CONEXIÓN: ${e.message}")
+        }
+    }
+
+    override suspend fun updateAnswerKeys(id: Int, answers: List<UpdateAnswerItem>): Result<Unit> {
+        return try {
+            val response = api.updateAnswerKeys(id, UpdateAnswersRequest(answers = answers))
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.success == true) {

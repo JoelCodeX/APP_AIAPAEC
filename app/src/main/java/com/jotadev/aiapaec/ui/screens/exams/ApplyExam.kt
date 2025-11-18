@@ -4,27 +4,56 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBackIos
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,7 +87,6 @@ fun ApplyExam(navController: NavController, examId: String) {
                     android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
             } catch (_: Exception) { /* Ignorar si no aplica */ }
-            // Subir automáticamente el PDF seleccionado
             if (state.quiz != null) {
                 vm.uploadAnswerKeyFromUri(state.quiz!!.id, uri, context.contentResolver)
             }
@@ -68,30 +96,7 @@ fun ApplyExam(navController: NavController, examId: String) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = state.quiz?.title ?: "Aplicar evaluación",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBackIosNew,
-                            contentDescription = "Regresar",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
+        // topBar unificado en MainScreen; aquí no se redefine
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -107,61 +112,22 @@ fun ApplyExam(navController: NavController, examId: String) {
                     className = state.quiz?.className ?: "—",
                     date = formatDate(state.quiz?.createdAt),
                     studentCount = state.students.size,
-                    hasKey = state.quiz?.answerKeyFile != null,
-                    numQuestions = state.quiz?.numQuestions
-                )
-            }
-
-            // BOTONES DE ACCIÓN
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    ElevatedButton(
-                        onClick = {
-                            // Abrir el explorador de archivos para seleccionar un PDF
-                            if (state.quiz == null) return@ElevatedButton
-                            if (selectedPdfUri == null) {
-                                pdfPickerLauncher.launch(arrayOf("application/pdf"))
+                    hasKey = state.hasKey,
+                    numQuestions = state.quiz?.numQuestions,
+                    onActionClick = {
+                        state.quiz?.let { quiz ->
+                            if (!state.hasKey) {
+                                if (selectedPdfUri == null) {
+                                    pdfPickerLauncher.launch(arrayOf("application/pdf"))
+                                } else {
+                                    vm.uploadAnswerKeyFromUri(quiz.id, selectedPdfUri!!, context.contentResolver)
+                                }
                             } else {
-                                // Intentar subir el PDF ya seleccionado
-                                vm.uploadAnswerKeyFromUri(state.quiz!!.id, selectedPdfUri!!, context.contentResolver)
+                                navController.navigate(NavigationRoutes.quizAnswers(examId))
                             }
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.elevatedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Key,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Subir solucionario", fontWeight = FontWeight.SemiBold)
+                        }
                     }
-                    OutlinedButton(
-                        onClick = { navController.navigate(NavigationRoutes.quizAnswers(examId)) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.elevatedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.onPrimary,
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Assignment,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Ver respuestas", fontWeight = FontWeight.SemiBold)
-                    }
-                }
+                )
             }
 
             // GRAFICO DE BARRAS DE RENDIMIENTO
@@ -209,72 +175,107 @@ private fun ExamInfoCard(
     date: String,
     studentCount: Int,
     hasKey: Boolean,
-    numQuestions: Int?
+    numQuestions: Int?,
+    onActionClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(150.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.onPrimary)
+            .background(
+               brush = Brush.verticalGradient(
+                   colors = listOf(
+                       Color(color = 0xA4901012),
+                       Color(color = 0xE1790F0E)
+                   )
+               )
+            )
             .padding(8.dp)
     ) {
         Text(
             text = "Detalles de la evaluación",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSecondaryContainer
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimary
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Row(modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween) {
-            InfoChip(label = "Bimestre", value = bimester)
-            InfoChip(label = "Clase", value = className)
-            InfoChip(label = "Fecha", value = date)
+            InfoChip(label = "Bimestre", value = bimester, icon = Icons.Filled.Assignment)
+            InfoChip(label = "Clase", value = className, icon = Icons.Filled.School)
+            InfoChip(label = "Fecha", value = date, icon = Icons.Filled.CalendarToday)
 
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatusPill(
                 label = if (hasKey) "Con solucionario" else "Sin solucionario",
-                color = if (hasKey) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.secondary,
+                icon = if (hasKey) Icons.Filled.Key else Icons.Filled.Cancel
             )
             StatusPill(
                 label = numQuestions?.let { "$it preguntas" } ?: "Sin asignar",
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.secondary,
+                icon = Icons.Filled.QuestionMark
             )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        val actionText = if (hasKey) "Ver respuestas" else "Subir solucionario"
+        val actionIcon = if (hasKey) Icons.AutoMirrored.Filled.Assignment else Icons.Filled.Key
+        Button(
+            onClick = onActionClick,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(imageVector = actionIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = actionText, fontWeight = FontWeight.SemiBold)
         }
     }
 }
 
 @Composable
-private fun InfoChip(label: String, value: String) {
-    Column(
+private fun InfoChip(label: String, value: String, icon: ImageVector) {
+    Row(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.onPrimary)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
-        Text(text = value, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Light)
+        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(text = value, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Medium)
     }
 }
 
 @Composable
-private fun StatusPill(label: String, color: Color) {
+private fun StatusPill(label: String, color: Color, icon: ImageVector? = null) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(color.copy(alpha = 0.15f))
+            .background(color.copy(alpha = 0.3f))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        Text(
-            text = label,
-            color = color,
-            fontWeight = FontWeight.Medium
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            Text(
+                text = label,
+                color = color,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
     }
 }
 
@@ -284,11 +285,30 @@ private fun StudentStatusRow(student: Student, status: String, onScanClick: () -
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.onPrimary)
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), shape = RoundedCornerShape(10.dp))
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        // Avatar con iniciales
+        val initials = (student.firstName.takeIf { it.isNotBlank() }?.firstOrNull()?.toString() ?: "") +
+                (student.lastName.takeIf { it.isNotBlank() }?.firstOrNull()?.toString() ?: "")
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = initials.uppercase(),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${student.firstName} ${student.lastName}",
@@ -307,12 +327,7 @@ private fun StudentStatusRow(student: Student, status: String, onScanClick: () -
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = if (isCorrected) "Corregido" else "Por corregir",
-                tint = tint,
-                modifier = Modifier.size(20.dp)
-            )
+            StatusPill(label = if (isCorrected) "Corregido" else "Por corregir", color = tint, icon = icon)
             if (!isCorrected) {
                 OutlinedButton(
                     onClick = onScanClick,
