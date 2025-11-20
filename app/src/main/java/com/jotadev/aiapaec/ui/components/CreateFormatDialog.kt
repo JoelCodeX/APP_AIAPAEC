@@ -1,0 +1,160 @@
+package com.jotadev.aiapaec.ui.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+
+@Composable
+fun CreateFormatDialog(
+    isOpen: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (grade: String, section: String, numQuestions: Int, formatType: String, scoreFormat: String) -> Unit,
+    isMetaLoading: Boolean = false,
+    gradeOptions: List<String> = emptyList(),
+    sectionOptions: List<String> = emptyList(),
+    title: String = "Nuevo formato",
+    initialGrade: String? = null,
+    initialSection: String? = null,
+    initialNumQuestions: Int? = null,
+    initialFormatType: String? = null,
+    initialScoreFormat: String? = null,
+    confirmButtonText: String = "Guardar",
+    formatTypeOptions: List<String> = FormatOptions.formatTypes,
+    scoreFormatOptions: List<String> = FormatOptions.scoreFormats
+ ) {
+    val grade = remember { mutableStateOf<String?>(initialGrade) }
+    val section = remember { mutableStateOf<String?>(initialSection) }
+    val numQuestions = remember { mutableStateOf<String>(initialNumQuestions?.toString() ?: "") }
+    val formatType = remember { mutableStateOf<String?>(initialFormatType) }
+    val scoreFormat = remember { mutableStateOf<String?>(initialScoreFormat) }
+
+    if (!isOpen) return
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)){
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.90f),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.onPrimary
+            )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterDropdown(
+                            label = "Grado",
+                            selectedValue = grade.value ?: "",
+                            options = gradeOptions,
+                            onValueChange = { grade.value = it },
+                            placeholder = if (isMetaLoading) "Cargando…" else if (gradeOptions.isEmpty()) "Sin datos" else "Selecciona grado",
+                            enabled = !isMetaLoading && gradeOptions.isNotEmpty(),
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterDropdown(
+                            label = "Sección",
+                            selectedValue = section.value ?: "",
+                            options = sectionOptions,
+                            onValueChange = { section.value = it },
+                            placeholder = if (isMetaLoading) "Cargando…" else if (sectionOptions.isEmpty()) "Sin datos" else "Selecciona sección",
+                            enabled = !isMetaLoading && sectionOptions.isNotEmpty(),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                    FilterDropdown(
+                        label = "Formato",
+                        selectedValue = formatType.value ?: "",
+                        options = formatTypeOptions,
+                        onValueChange = { formatType.value = it },
+                        placeholder = "Selecciona formato",
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterDropdown(
+                        label = "N° de preguntas",
+                        selectedValue = numQuestions.value,
+                        options = FormatOptions.questionCounts,
+                        onValueChange = { numQuestions.value = it },
+                        placeholder = "Selecciona número",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                    FilterDropdown(
+                        label = "Puntaje",
+                        selectedValue = scoreFormat.value ?: "",
+                        options = scoreFormatOptions,
+                        onValueChange = { scoreFormat.value = it },
+                        placeholder = "Selecciona puntaje",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        val canSave =
+                            grade.value != null &&
+                            section.value != null &&
+                            formatType.value != null &&
+                            scoreFormat.value != null &&
+                            numQuestions.value.toIntOrNull() != null
+                        androidx.compose.material3.OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) { Text("Cancelar") }
+                        androidx.compose.material3.Button(
+                            onClick = {
+                                val g = grade.value ?: return@Button
+                                val s = section.value ?: return@Button
+                                val f = formatType.value ?: return@Button
+                                val sf = scoreFormat.value ?: return@Button
+                                val n = numQuestions.value.toIntOrNull() ?: return@Button
+                                onConfirm(g, s, n, f, sf)
+                                onDismiss()
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = canSave
+                        ) { Text(confirmButtonText) }
+                    }
+                }
+            }
+    }
+
+}

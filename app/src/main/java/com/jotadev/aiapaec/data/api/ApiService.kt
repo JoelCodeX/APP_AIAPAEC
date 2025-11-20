@@ -134,6 +134,45 @@ interface ApiService {
     suspend fun getQuizAnswers(
         @Path("id") id: Int
     ): Response<QuizAnswersListResponse>
+
+    // GRADES
+    @GET("grades")
+    suspend fun getGrades(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 100,
+        @Query("q") query: String? = null
+    ): Response<GradesResponse>
+
+    // SECTIONS
+    @GET("sections")
+    suspend fun getSections(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 100,
+        @Query("q") query: String? = null
+    ): Response<SectionsResponse>
+
+    // WEEKLY FORMAT ASSIGNMENTS (CRUD)
+    @GET("weekly-assignments")
+    suspend fun getWeeklyAssignments(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20
+    ): Response<WeeklyAssignmentsResponse>
+
+    @POST("weekly-assignments")
+    suspend fun createWeeklyAssignment(
+        @Body request: CreateWeeklyAssignmentRequest
+    ): Response<WeeklyAssignmentItemResponse>
+
+    @PUT("weekly-assignments/{id}")
+    suspend fun updateWeeklyAssignment(
+        @Path("id") id: Int,
+        @Body request: UpdateWeeklyAssignmentRequest
+    ): Response<WeeklyAssignmentItemResponse>
+
+    @DELETE("weekly-assignments/{id}")
+    suspend fun deleteWeeklyAssignment(
+        @Path("id") id: Int
+    ): Response<ApiResponseNoData>
 }
 
 // Generic API wrapper format: { success, message, data }
@@ -180,6 +219,57 @@ data class ApiResponseNoData(
 
 data class UpdateAnswersRequest(
     val answers: List<UpdateAnswerItem>
+)
+
+// WEEKLY ASSIGNMENTS DTOS
+data class WeeklyAssignmentsResponse(
+    val success: Boolean,
+    val message: String,
+    val data: WeeklyAssignmentsPageDto?
+)
+
+data class WeeklyAssignmentItemResponse(
+    val success: Boolean,
+    val message: String,
+    val data: WeeklyAssignmentDto?
+)
+
+data class WeeklyAssignmentsPageDto(
+    val items: List<WeeklyAssignmentDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
+data class WeeklyAssignmentDto(
+    val id: Int,
+    @SerializedName("sede_id") val sede_id: Int?,
+    @SerializedName("grado_id") val grado_id: Int?,
+    @SerializedName("grado_nombre") val grado_nombre: String?,
+    @SerializedName("seccion_id") val seccion_id: Int?,
+    @SerializedName("seccion_nombre") val seccion_nombre: String?,
+    @SerializedName("numero_preguntas") val numero_preguntas: Int,
+    @SerializedName("formato_id") val formato_id: Int?,
+    @SerializedName("formato_nombre") val formato_nombre: String?,
+    @SerializedName("session_id") val session_id: Int?,
+    @SerializedName("puntaje") val puntaje: Double?
+)
+
+data class CreateWeeklyAssignmentRequest(
+    val grade: String,
+    val section: String,
+    @SerializedName("num_questions") val num_questions: Int,
+    @SerializedName("format_type") val format_type: String,
+    @SerializedName("score_format") val score_format: String
+)
+
+data class UpdateWeeklyAssignmentRequest(
+    val grade: String,
+    val section: String,
+    @SerializedName("num_questions") val num_questions: Int,
+    @SerializedName("format_type") val format_type: String,
+    @SerializedName("score_format") val score_format: String
 )
 
 data class UpdateAnswerItem(
@@ -244,6 +334,49 @@ data class QuizAnswersListResponse(
 
 data class QuizAnswersPageDto(
     val items: List<QuizAnswerDto>
+)
+
+// Grades/Sections DTOs
+data class GradesResponse(
+    val success: Boolean,
+    val message: String,
+    val data: GradesPageDto?
+)
+
+data class SectionsResponse(
+    val success: Boolean,
+    val message: String,
+    val data: SectionsPageDto?
+)
+
+data class GradesPageDto(
+    val items: List<GradeDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
+data class SectionsPageDto(
+    val items: List<SectionDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
+data class GradeDto(
+    val id: Int,
+    val nombre: String,
+    val nivel: String?,
+    val descripcion: String?
+)
+
+data class SectionDto(
+    val id: Int,
+    val nombre: String,
+    val turno: String?,
+    val capacidad: Int?
 )
 
 data class StudentDto(

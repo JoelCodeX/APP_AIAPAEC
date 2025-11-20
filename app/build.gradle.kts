@@ -108,6 +108,5 @@ dependencies {
     implementation(libs.androidx.exifinterface.v137)
 
     // OPENCV (procesamiento de imagen en cliente)
-    implementation(libs.opencv.android)
 
 }

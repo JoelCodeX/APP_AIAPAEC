@@ -6,10 +6,10 @@ object NavigationRoutes {
     
     // Bottom Navigation Routes
     const val HOME = "home"
+    const val FORMATS = "formats"
     const val EXAMS = "exams"
     const val CLASSES = "classes"
     const val STUDENTS = "students"
-    const val RESULTS = "results"
     const val SETTINGS = "settings"
 
     //Secondary Screens Details

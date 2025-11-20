@@ -52,8 +52,8 @@ import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.presentation.BimestersViewModel
 import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
-import com.jotadev.aiapaec.ui.screens.results.ExamResult
-import com.jotadev.aiapaec.ui.screens.results.ResultsViewModel
+import com.jotadev.aiapaec.ui.screens.exams.ExamResult
+import com.jotadev.aiapaec.ui.screens.exams.ResultsViewModel
 import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
 
@@ -178,11 +178,11 @@ private fun CategoryGridSection(
             route = NavigationRoutes.STUDENTS
         ),
         CategoryItem(
-            title = "Resultados",
+            title = "Formatos",
             subtitle = "Ver reportes",
             icon = Icons.Rounded.Leaderboard,
             color = MaterialTheme.colorScheme.error,
-            route = NavigationRoutes.RESULTS
+            route = NavigationRoutes.FORMATS
         ),
         CategoryItem(
             title = "Escanear",
@@ -418,9 +418,8 @@ private fun buildMonthlyAverage(
     results: List<ExamResult>,
     months: Int
 ): Pair<List<String>, List<Float>> {
-    val monthNames =
-        listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
-    val byMonth = results.groupBy { it.date.substring(5, 7).toInt() }
+    val monthNames = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+    val byMonth = results.groupBy { it.date.substring(5, 7).toIntOrNull() ?: 1 }
     val monthsSorted = byMonth.keys.sorted().takeLast(months)
     val labels = monthsSorted.map { monthNames[(it - 1).coerceIn(0, 11)] }
     val values = monthsSorted.map { m ->

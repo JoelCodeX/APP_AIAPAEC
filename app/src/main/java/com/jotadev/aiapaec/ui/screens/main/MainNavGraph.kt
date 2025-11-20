@@ -1,26 +1,23 @@
 package com.jotadev.aiapaec.ui.screens.main
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import android.net.Uri
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.screens.classes.ClassesScreen
 import com.jotadev.aiapaec.ui.screens.classes.DetailsClasses
-import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
-import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
 import com.jotadev.aiapaec.ui.screens.exams.AnswersScreen
+import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
+import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
 import com.jotadev.aiapaec.ui.screens.home.HomeScreen
-import com.jotadev.aiapaec.ui.screens.results.ResultsScreen
-import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
-import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
-import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
-import com.jotadev.aiapaec.ui.screens.scan.ScanScreen
-import com.jotadev.aiapaec.ui.screens.scan.ScanUploadScreen
-import com.jotadev.aiapaec.ui.screens.scan.CropPreviewScreen
+import com.jotadev.aiapaec.ui.screens.format.FormatScreen
 import com.jotadev.aiapaec.ui.screens.scan.ScanResultScreen
+import com.jotadev.aiapaec.ui.screens.scan.ScanUploadScreen
+import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
+import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
 
 @Composable
 fun MainNavGraph(
@@ -45,8 +42,8 @@ fun MainNavGraph(
         composable(NavigationRoutes.STUDENTS) {
             StudentsScreen(navController = navController)
         }
-        composable(NavigationRoutes.RESULTS) {
-            ResultsScreen(navController = navController)
+        composable(NavigationRoutes.FORMATS) {
+            FormatScreen(navController = navController)
         }
         // La configuración se abre como panel lateral, no navegamos a una ruta aparte
 
@@ -58,17 +55,8 @@ fun MainNavGraph(
         composable(NavigationRoutes.CREATE_EXAM) {
             // CreateExamScreen(navController = navController)
         }
-        
-        composable(NavigationRoutes.SCAN_CARD) {
-            ScanScreen(navController = navController)
-        }
         composable(NavigationRoutes.SCAN_UPLOAD) {
             ScanUploadScreen(navController = navController)
-        }
-        composable("${NavigationRoutes.CROP_PREVIEW}?path={path}") { backStackEntry ->
-            val raw = backStackEntry.arguments?.getString("path") ?: ""
-            val path = Uri.decode(raw)
-            CropPreviewScreen(navController = navController, filePath = path)
         }
         composable("${NavigationRoutes.SCAN_RESULT}?run_id={run_id}&overlay={overlay}&tipo={tipo}") { backStackEntry ->
             val runId = backStackEntry.arguments?.getString("run_id") ?: ""
