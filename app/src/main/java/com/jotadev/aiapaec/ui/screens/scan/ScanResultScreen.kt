@@ -25,7 +25,7 @@ import org.json.JSONObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
-private const val BASE_ROOT: String = "http://192.168.18.224:5000"
+ private const val BASE_ROOT: String = "http://192.168.1.8:5000"
 
 data class AnswerItem(val q: Int, val r: Int, val letra: String)
 

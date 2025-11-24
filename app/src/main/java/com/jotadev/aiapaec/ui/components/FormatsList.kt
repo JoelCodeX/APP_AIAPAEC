@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -25,6 +27,7 @@ fun FormatsList(
     onClick: (FormatItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val expandedFormatId = remember { mutableStateOf<String?>(null) }
     if (items.isEmpty()) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -41,7 +44,16 @@ fun FormatsList(
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
         ) {
             items(items) { item ->
-                FormatCard(item = item, onEditClick = onEdit, onDeleteClick = onDelete, onClick = onClick)
+                FormatCard(
+                    item = item,
+                    onEditClick = onEdit,
+                    onDeleteClick = onDelete,
+                    onClick = onClick,
+                    isExpanded = expandedFormatId.value == item.id,
+                    onToggleExpand = {
+                        expandedFormatId.value = if (expandedFormatId.value == item.id) null else item.id
+                    }
+                )
             }
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }

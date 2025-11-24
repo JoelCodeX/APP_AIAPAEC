@@ -2,8 +2,8 @@ package com.jotadev.aiapaec.ui.screens.exams
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -41,6 +41,18 @@ fun ExamsScreen(navController: NavController) {
     var selectedClass by remember { mutableStateOf("Todas") }
     var showDialog by remember { mutableStateOf(false) }
     var editingExam by remember { mutableStateOf<UiExam?>(null) }
+
+    val handle = navController.currentBackStackEntry?.savedStateHandle
+    val examsCreateFlow = handle?.getStateFlow("exams_create_request", false) ?: MutableStateFlow(false)
+    val examsCreateRequest by examsCreateFlow.collectAsStateWithLifecycle()
+
+    LaunchedEffect(examsCreateRequest) {
+        if (examsCreateRequest) {
+            editingExam = null
+            showDialog = true
+            handle?.set("exams_create_request", false)
+        }
+    }
     var isRefreshing by remember { mutableStateOf(false) }
     val bimesterOptions = remember(bimestersState.bimesters) {
         listOf("Todos") + bimestersState.bimesters.map { it.name }
@@ -62,24 +74,7 @@ fun ExamsScreen(navController: NavController) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        // topBar unificado en MainScreen
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    editingExam = null
-                    showDialog = true
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.padding(bottom = 40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Crear examen"
-                )
-            }
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         val swipeState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
         SwipeRefresh(

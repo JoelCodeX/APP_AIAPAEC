@@ -17,9 +17,17 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -123,7 +132,32 @@ private fun MainTopBar(
             WelcomeTopAppBar(onNavigationClick = onOpenSettings)
         }
         currentRoute?.startsWith(NavigationRoutes.EXAMS) == true -> {
-            ScreenTopAppBar(screenTitle = "Exámenes")
+            ScreenTopAppBar(
+                screenTitle = "Exámenes",
+                actions = {
+                    Box(modifier = Modifier.size(40.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f))
+                                .blur(12.dp)
+                        )
+                        IconButton(
+                            onClick = {
+                                navController.currentBackStackEntry?.savedStateHandle?.set("exams_create_request", true)
+                            },
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Crear examen",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            )
         }
         currentRoute?.startsWith(NavigationRoutes.QUIZ_ANSWERS) == true -> {
             val handle = navController.currentBackStackEntry?.savedStateHandle
@@ -205,7 +239,32 @@ private fun MainTopBar(
             ScreenTopAppBar(screenTitle = "Estudiantes")
         }
         currentRoute?.startsWith(NavigationRoutes.FORMATS) == true -> {
-            ScreenTopAppBar(screenTitle = "Formatos")
+            ScreenTopAppBar(
+                screenTitle = "Formatos",
+                actions = {
+                    Box(modifier = Modifier.size(40.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f))
+                                .blur(12.dp)
+                        )
+                        IconButton(
+                            onClick = {
+                                navController.currentBackStackEntry?.savedStateHandle?.set("formats_create_request", true)
+                            },
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Asignar formato",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            )
         }
         else -> {}
     }

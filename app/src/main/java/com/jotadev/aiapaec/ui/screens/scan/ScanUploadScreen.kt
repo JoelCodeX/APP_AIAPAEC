@@ -69,7 +69,7 @@ import kotlin.math.roundToInt
 private const val ROI_BOTTOM_TRIM: Float = 0.20f
 
 // HOST BACKEND EN DISPOSITIVO FÍSICO (AJUSTA SI CAMBIA LA IP)
-private const val BASE_ROOT: String = "http://192.168.18.224:5000"
+ private const val BASE_ROOT: String = "http://192.168.1.8:5000"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

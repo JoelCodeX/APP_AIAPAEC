@@ -21,6 +21,7 @@ fun ExamsList(
     onExamClick: (Exam) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var expandedExamId by remember { mutableStateOf<String?>(null) }
     if (exams.isEmpty()) {
         // ESTADO VACIO
         Box(
@@ -65,7 +66,11 @@ fun ExamsList(
                     exam = exam,
                     onEditClick = onEditExam,
                     onDeleteClick = onDeleteExam,
-                    onClick = onExamClick
+                    onClick = onExamClick,
+                    isExpanded = expandedExamId == exam.id,
+                    onToggleExpand = {
+                        expandedExamId = if (expandedExamId == exam.id) null else exam.id
+                    }
                 )
             }
             

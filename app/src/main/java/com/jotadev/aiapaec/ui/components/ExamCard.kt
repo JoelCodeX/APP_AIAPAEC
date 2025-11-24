@@ -1,12 +1,23 @@
 package com.jotadev.aiapaec.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButtonDefaults.iconButtonColors
@@ -15,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
 data class Exam(
@@ -34,7 +46,9 @@ fun ExamCard(
     exam: Exam,
     onEditClick: (Exam) -> Unit,
     onDeleteClick: (Exam) -> Unit,
-    onClick: (Exam) -> Unit
+    onClick: (Exam) -> Unit,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -45,7 +59,7 @@ fun ExamCard(
             .clickable { onClick(exam) },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.onPrimary
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -54,89 +68,62 @@ fun ExamCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // ENCABEZADO CON NOMBRE Y ACCIONES
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Text(
-                    text = exam.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    // BOTON EDITAR (SOLO SI NO FUE APLICADO)
-                    if (!exam.isApplied) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = exam.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
                         IconButton(
-                            onClick = { onEditClick(exam) },
+                            onClick = { onToggleExpand() },
                             modifier = Modifier.size(36.dp),
                             colors = iconButtonColors(
-                                contentColor = Color.Blue,
-                                containerColor = Color.Blue.copy(alpha = 0.1f)
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                                containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f)
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Editar examen",
-                                tint = Color.Blue,
-                                modifier = Modifier.size(24.dp)
+                                imageVector = Icons.Default.MoreHoriz,
+                                contentDescription = "Más acciones",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
-                    // BOTON ELIMINAR
-                    IconButton(
-                        onClick = { showDeleteDialog = true },
-                        modifier = Modifier.size(36.dp),
-                        colors = iconButtonColors(
-                            contentColor = Color.Red,
-                            containerColor = Color.Red.copy(alpha = 0.1f)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Eliminar examen",
-                            tint = Color.Red,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = exam.numQuestions?.let { "$it preguntas" } ?: "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(
-                modifier = Modifier.height(8.dp),
-                thickness = DividerDefaults.Thickness,
-                color = DividerDefaults.color
-            )
-            Spacer(modifier = Modifier.height(8.dp))
 
             // INFORMACION DEL EXAMEN
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                ExamInfoChip(
-                    label = "Clase",
-                    value = exam.className,
-                    modifier = Modifier.weight(1f)
-                )
-                ExamInfoChip(
-                    label = "Bimestre",
-                    value = exam.bimester,
-                    modifier = Modifier.weight(1f)
-                )
-                ExamInfoChip(
-                    label = "Fecha",
-                    value = exam.date,
-                    modifier = Modifier.weight(1f)
-                )
+                ExamInfoChip(label = "Clase", value = exam.className, icon = Icons.Default.School, modifier = Modifier.weight(1f))
+                ExamInfoChip(label = "Bimestre", value = exam.bimester, icon = Icons.Default.Leaderboard, modifier = Modifier.weight(1f))
+                ExamInfoChip(label = "Fecha", value = exam.date, icon = Icons.Default.Event, modifier = Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -149,6 +136,7 @@ fun ExamCard(
                 ExamInfoChip(
                     label = "Tipo",
                     value = exam.numQuestions?.let { "$it preguntas" } ?: "Sin asignar",
+                    icon = Icons.Default.Assignment,
                     modifier = Modifier.weight(1f),
                 )
 
@@ -172,6 +160,48 @@ fun ExamCard(
                             MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 )
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(4.dp))
+    AnimatedVisibility(
+        visible = isExpanded,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (!exam.isApplied) {
+                FilledTonalButton(
+                    onClick = { onEditClick(exam) },
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = Color.Blue.copy(alpha = 0.1f),
+                        contentColor = Color.Blue
+                    ),
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Editar examen")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Editar")
+                }
+            }
+            FilledTonalButton(
+                onClick = { showDeleteDialog = true },
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = Color.Red.copy(alpha = 0.1f),
+                    contentColor = Color.Red
+                ),
+                shape = RoundedCornerShape(4.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Eliminar examen")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "Eliminar")
             }
         }
     }
@@ -208,19 +238,15 @@ fun ExamCard(
 fun ExamInfoChip(
     label: String,
     value: String,
+    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(imageVector = icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Text(text = value, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
     }
 }

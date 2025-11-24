@@ -30,9 +30,8 @@ object RetrofitClient {
         // IP EMULADOR ANDROID STUDIO
         "http://10.0.2.2:5000/api/"
     } else {
-        // IP LOCAL RED WIFI + PUERTO FLASK (CAMBIAR SEGÚN TU IPv4)
-        // EJEMPLO: http://<TU_IP_LOCAL>:5000/api/
-        "http://192.168.18.224:5000/api/"
+        // IP LOCAL RED WIFI + PUERTO FLASK
+        "http://192.168.1.8:5000/api/"
     }
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
