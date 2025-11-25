@@ -112,8 +112,8 @@ fun FormatSearchAndFilterBar(
                         selectedValue = selectedSection ?: "Todas",
                         options = listOf("Todas") + sectionOptions,
                         onValueChange = { onSectionChange(if (it == "Todas") null else it) },
-                        placeholder = if (isMetaLoading) "Cargando…" else if (sectionOptions.isEmpty()) "Sin datos" else null,
-                        enabled = !isMetaLoading && sectionOptions.isNotEmpty()
+                        placeholder = if (isMetaLoading) "Cargando…" else if ((selectedGrade ?: "").isBlank()) "Selecciona grado primero" else if (sectionOptions.isEmpty()) "Sin datos" else null,
+                        enabled = !isMetaLoading && sectionOptions.isNotEmpty() && !(selectedGrade ?: "").isBlank()
                     )
                 }
 

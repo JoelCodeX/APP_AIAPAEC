@@ -8,15 +8,15 @@ class UpdateQuizUseCase(private val repository: QuizzesRepository) {
     suspend operator fun invoke(
         id: Int,
         title: String?,
-        description: String?,
-        classId: Int?,
         bimesterId: Int?,
-        totalPoints: Double?,
+        unidadId: Int?,
+        gradoId: Int?,
+        seccionId: Int?,
+        fecha: String?,
         numQuestions: Int?,
-        pointsPerQuestion: Double?,
-        answerKeyFile: String?,
-        keyVersion: String?
+        detalle: String?,
+        asignacionId: Int?
     ): Result<Quiz> {
-        return repository.updateQuiz(id, title, description, classId, bimesterId, totalPoints, numQuestions, pointsPerQuestion, answerKeyFile, keyVersion)
+        return repository.updateQuiz(id, title, bimesterId, unidadId, gradoId, seccionId, fecha, numQuestions, detalle, asignacionId)
     }
 }

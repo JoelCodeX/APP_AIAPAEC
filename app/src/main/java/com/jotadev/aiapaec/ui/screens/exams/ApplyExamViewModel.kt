@@ -71,9 +71,7 @@ class ApplyExamViewModel(
                     when (pageResult) {
                         is Result.Success -> {
                             val items = pageResult.data.items
-                            val filtered = quiz.classId?.let { classId ->
-                                items.filter { it.classId == classId }
-                            } ?: items
+                            val filtered = items
                             val statuses = filtered.associate { it.id to "Por corregir" }
                             val bars = buildPerformanceBars(filtered)
                             _uiState.update {

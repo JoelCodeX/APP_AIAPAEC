@@ -345,7 +345,8 @@ private fun ExamItem(exam: Quiz, onClick: () -> Unit) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                val subtitle = listOfNotNull(exam.className, exam.bimesterName).joinToString(" · ")
+                val gradoSeccion = listOfNotNull(exam.gradoNombre, exam.seccionNombre).joinToString(" ")
+                val subtitle = listOfNotNull(gradoSeccion.takeIf { it.isNotBlank() }, exam.bimesterName).joinToString(" · ")
                 if (subtitle.isNotBlank()) {
                     Text(
                         text = subtitle,

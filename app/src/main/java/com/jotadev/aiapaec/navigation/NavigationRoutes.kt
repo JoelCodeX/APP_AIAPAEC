@@ -1,5 +1,6 @@
 package com.jotadev.aiapaec.navigation
 
+import android.net.Uri
 object NavigationRoutes {
     const val LOGIN = "login"
     const val MAIN = "main"
@@ -29,6 +30,9 @@ object NavigationRoutes {
     const val CROP_PREVIEW = "crop_preview"
     const val SCAN_RESULT = "scan_result"
 
+    // Weekly formats screen
+    const val WEEKLY = "weekly_formats"
+
     
     // Navigation with arguments
     fun examDetail(examId: String) = "exam_detail/$examId"
@@ -38,4 +42,5 @@ object NavigationRoutes {
     fun detailsClass(classId: Int) = "class_detail/$classId"
     fun cropPreview(path: String) = "${CROP_PREVIEW}?path=$path"
     fun scanResult(runId: String, overlayUrl: String, tipo: Int) = "${SCAN_RESULT}?run_id=$runId&overlay=$overlayUrl&tipo=$tipo"
+    fun weekly(title: String) = "${WEEKLY}?title=${Uri.encode(title)}"
 }

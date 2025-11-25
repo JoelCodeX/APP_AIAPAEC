@@ -109,7 +109,7 @@ fun ApplyExam(navController: NavController, examId: String) {
             item {
                 ExamInfoCard(
                     bimester = state.quiz?.bimesterName ?: "—",
-                    className = state.quiz?.className ?: "—",
+                    className = listOfNotNull(state.quiz?.gradoNombre, state.quiz?.seccionNombre).joinToString(" ").ifBlank { "—" },
                     date = formatDate(state.quiz?.createdAt),
                     studentCount = state.students.size,
                     hasKey = state.hasKey,

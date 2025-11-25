@@ -11,38 +11,32 @@ import androidx.navigation.NavController
 import com.jotadev.aiapaec.ui.components.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun ClassesScreen(navController: NavController) {
     val vm: ClassesViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = state.isLoading)
+    val pullState = rememberPullRefreshState(
+        refreshing = state.isLoading,
+        onRefresh = { vm.refresh() }
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         // topBar unificado en MainScreen
     ) { paddingValues ->
-        SwipeRefresh(
-            state = swipeRefreshState,
-            onRefresh = { vm.refresh() },
-            indicator = { s, trigger ->
-                SwipeRefreshIndicator(
-                    state = s,
-                    refreshTriggerDistance = trigger,
-                    scale = true,
-                    backgroundColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
-            },
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .pullRefresh(pullState)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // BARRA DE BUSQUEDA Y FILTROS
@@ -78,6 +72,13 @@ fun ClassesScreen(navController: NavController) {
                     )
                 }
             }
+            PullRefreshIndicator(
+                refreshing = state.isLoading,
+                state = pullState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

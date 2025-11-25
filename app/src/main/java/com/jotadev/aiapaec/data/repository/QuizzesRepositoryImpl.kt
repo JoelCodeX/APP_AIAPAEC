@@ -21,9 +21,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class QuizzesRepositoryImpl : QuizzesRepository {
     private val api = RetrofitClient.apiService
 
-    override suspend fun getQuizzes(page: Int, perPage: Int, query: String?, classId: Int?, bimesterId: Int?): Result<QuizzesPage> {
+    override suspend fun getQuizzes(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?): Result<QuizzesPage> {
         return try {
-            val response = api.getQuizzes(page = page, perPage = perPage, query = query, classId = classId, bimesterId = bimesterId)
+            val response = api.getQuizzes(page = page, perPage = perPage, query = query, gradoId = gradoId, seccionId = seccionId, bimesterId = bimesterId)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.data != null) {
@@ -155,26 +155,26 @@ class QuizzesRepositoryImpl : QuizzesRepository {
 
     override suspend fun createQuiz(
         title: String,
-        description: String?,
-        classId: Int,
-        bimesterId: Int,
-        totalPoints: Double?,
+        bimesterId: Int?,
+        unidadId: Int?,
+        gradoId: Int?,
+        seccionId: Int?,
+        fecha: String,
         numQuestions: Int?,
-        pointsPerQuestion: Double?,
-        answerKeyFile: String?,
-        keyVersion: String?
+        detalle: String?,
+        asignacionId: Int?
     ): Result<Quiz> {
         return try {
             val request = CreateQuizRequest(
                 title = title,
-                description = description,
-                class_id = classId,
                 bimester_id = bimesterId,
-                total_points = totalPoints,
+                unidad_id = unidadId,
+                grado_id = gradoId,
+                seccion_id = seccionId,
+                fecha = fecha,
                 num_questions = numQuestions,
-                points_per_question = pointsPerQuestion,
-                answer_key_file = answerKeyFile,
-                key_version = keyVersion
+                detalle = detalle,
+                asignacion_id = asignacionId
             )
             val response = api.createQuiz(request)
             if (response.isSuccessful) {
@@ -203,26 +203,26 @@ class QuizzesRepositoryImpl : QuizzesRepository {
     override suspend fun updateQuiz(
         id: Int,
         title: String?,
-        description: String?,
-        classId: Int?,
         bimesterId: Int?,
-        totalPoints: Double?,
+        unidadId: Int?,
+        gradoId: Int?,
+        seccionId: Int?,
+        fecha: String?,
         numQuestions: Int?,
-        pointsPerQuestion: Double?,
-        answerKeyFile: String?,
-        keyVersion: String?
+        detalle: String?,
+        asignacionId: Int?
     ): Result<Quiz> {
         return try {
             val request = UpdateQuizRequest(
                 title = title,
-                description = description,
-                class_id = classId,
                 bimester_id = bimesterId,
-                total_points = totalPoints,
+                unidad_id = unidadId,
+                grado_id = gradoId,
+                seccion_id = seccionId,
+                fecha = fecha,
                 num_questions = numQuestions,
-                points_per_question = pointsPerQuestion,
-                answer_key_file = answerKeyFile,
-                key_version = keyVersion
+                detalle = detalle,
+                asignacion_id = asignacionId
             )
             val response = api.updateQuiz(id, request)
             if (response.isSuccessful) {

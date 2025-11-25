@@ -6,14 +6,16 @@ import androidx.compose.material3.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.*
 import java.util.*
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,7 +24,7 @@ import com.jotadev.aiapaec.presentation.BimestersViewModel
 import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
 import com.jotadev.aiapaec.ui.components.Exam as UiExam
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun ExamsScreen(navController: NavController) {
     // ViewModel for dynamic bimesters
@@ -76,25 +78,18 @@ fun ExamsScreen(navController: NavController) {
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        val swipeState = rememberSwipeRefreshState(isRefreshing = isRefreshing)
-        SwipeRefresh(
-            state = swipeState,
+        val pullState = rememberPullRefreshState(
+            refreshing = isRefreshing,
             onRefresh = {
                 examsVm.refreshExams()
                 isRefreshing = examsState.isLoading
-            },
-            indicator = { s, trigger ->
-                SwipeRefreshIndicator(
-                    state = s,
-                    refreshTriggerDistance = trigger,
-                    scale = true,
-                    backgroundColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
-            },
+            }
+        )
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .pullRefresh(pullState)
         ) {
             Column(
                 modifier = Modifier
@@ -105,23 +100,20 @@ fun ExamsScreen(navController: NavController) {
                     searchText = searchText,
                     onSearchTextChange = {
                         searchText = it
-                        val classId = classesState.classes.firstOrNull { c -> c.name == selectedClass }?.id
                         val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
-                        examsVm.loadExams(query = searchText.ifBlank { null }, classId = classId, bimesterId = bimesterId)
+                        examsVm.loadExams(query = searchText.ifBlank { null }, gradoId = null, seccionId = null, bimesterId = bimesterId)
                     },
                     selectedBimester = selectedBimester,
                     onBimesterChange = {
                         selectedBimester = it
-                        val classId = classesState.classes.firstOrNull { c -> c.name == selectedClass }?.id
                         val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
-                        examsVm.loadExams(query = searchText.ifBlank { null }, classId = classId, bimesterId = bimesterId)
+                        examsVm.loadExams(query = searchText.ifBlank { null }, gradoId = null, seccionId = null, bimesterId = bimesterId)
                     },
                     selectedClass = selectedClass,
                     onClassChange = {
                         selectedClass = it
-                        val classId = classesState.classes.firstOrNull { c -> c.name == selectedClass }?.id
                         val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
-                        examsVm.loadExams(query = if (searchText.isBlank()) null else searchText, classId = classId, bimesterId = bimesterId)
+                        examsVm.loadExams(query = if (searchText.isBlank()) null else searchText, gradoId = null, seccionId = null, bimesterId = bimesterId)
                     },
                     bimesters = bimesterOptions,
                     classes = classOptions
@@ -143,6 +135,13 @@ fun ExamsScreen(navController: NavController) {
                     modifier = Modifier.weight(1f)
                 )
             }
+            PullRefreshIndicator(
+                refreshing = isRefreshing,
+                state = pullState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
 
         // DIALOGO PARA CREAR / EDITAR EXAMEN

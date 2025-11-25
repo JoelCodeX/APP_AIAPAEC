@@ -7,15 +7,15 @@ import com.jotadev.aiapaec.domain.repository.QuizzesRepository
 class CreateQuizUseCase(private val repository: QuizzesRepository) {
     suspend operator fun invoke(
         title: String,
-        description: String?,
-        classId: Int,
-        bimesterId: Int,
-        totalPoints: Double?,
+        bimesterId: Int?,
+        unidadId: Int?,
+        gradoId: Int?,
+        seccionId: Int?,
+        fecha: String,
         numQuestions: Int?,
-        pointsPerQuestion: Double?,
-        answerKeyFile: String?,
-        keyVersion: String?
+        detalle: String?,
+        asignacionId: Int?
     ): Result<Quiz> {
-        return repository.createQuiz(title, description, classId, bimesterId, totalPoints, numQuestions, pointsPerQuestion, answerKeyFile, keyVersion)
+        return repository.createQuiz(title, bimesterId, unidadId, gradoId, seccionId, fecha, numQuestions, detalle, asignacionId)
     }
 }

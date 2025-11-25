@@ -77,7 +77,8 @@ fun MainScreen(
         NavigationRoutes.QUIZ_ANSWERS,
         NavigationRoutes.DETAILS_STUDENT,
         NavigationRoutes.DETAILS_CLASS,
-        NavigationRoutes.CROP_PREVIEW
+        NavigationRoutes.CROP_PREVIEW,
+        NavigationRoutes.WEEKLY
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -259,6 +260,46 @@ private fun MainTopBar(
                             Icon(
                                 imageVector = Icons.Filled.Add,
                                 contentDescription = "Asignar formato",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            )
+        }
+        currentRoute?.startsWith(NavigationRoutes.WEEKLY) == true -> {
+            val weeklyTitle = navController.currentBackStackEntry?.arguments?.getString("title") ?: "Formatos semanales"
+            CustomTopAppBar(
+                title = weeklyTitle,
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                actions = {
+                    Box(modifier = Modifier.size(40.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f))
+                                .blur(12.dp)
+                        )
+                        IconButton(
+                            onClick = {
+                                navController.currentBackStackEntry?.savedStateHandle?.set("formats_create_request", true)
+                            },
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Crear formato",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }

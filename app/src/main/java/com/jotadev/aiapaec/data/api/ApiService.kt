@@ -80,7 +80,8 @@ interface ApiService {
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 20,
         @Query("q") query: String? = null,
-        @Query("class_id") classId: Int? = null,
+        @Query("grado_id") gradoId: Int? = null,
+        @Query("seccion_id") seccionId: Int? = null,
         @Query("bimester_id") bimesterId: Int? = null
     ): Response<QuizzesListResponse>
 
@@ -143,12 +144,27 @@ interface ApiService {
         @Query("q") query: String? = null
     ): Response<GradesResponse>
 
+    // BRANCH-SCOPED GRADES
+    @GET("grades/by-branch")
+    suspend fun getGradesByBranch(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 100
+    ): Response<GradesResponse>
+
     // SECTIONS
     @GET("sections")
     suspend fun getSections(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 100,
         @Query("q") query: String? = null
+    ): Response<SectionsResponse>
+
+    // BRANCH-SCOPED SECTIONS
+    @GET("sections/by-branch")
+    suspend fun getSectionsByBranch(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 100,
+        @Query("grade_id") gradeId: Int? = null
     ): Response<SectionsResponse>
 
     // WEEKLY FORMAT ASSIGNMENTS (CRUD)
@@ -399,6 +415,8 @@ data class StudentDto(
 data class ClassDto(
     val id: Int,
     val name: String,
+    val grade: String?,
+    val section: String?,
     val level: String,
     @SerializedName("student_count") val studentCount: Int
 )
@@ -414,42 +432,43 @@ data class BimesterDto(
 data class QuizDto(
     val id: Int,
     val title: String,
-    val description: String?,
-    @SerializedName("class_id") val class_id: Int,
-    @SerializedName("bimester_id") val bimester_id: Int,
-    @SerializedName("total_points") val total_points: Double?,
+    @SerializedName("bimester_id") val bimester_id: Int?,
+    @SerializedName("unidad_id") val unidad_id: Int?,
+    @SerializedName("sede_id") val sede_id: Int?,
+    @SerializedName("grado_id") val grado_id: Int?,
+    @SerializedName("seccion_id") val seccion_id: Int?,
+    @SerializedName("fecha") val fecha: String,
     @SerializedName("num_questions") val num_questions: Int?,
-    @SerializedName("points_per_question") val points_per_question: Double?,
-    @SerializedName("answer_key_file") val answer_key_file: String?,
-    @SerializedName("key_version") val key_version: String?,
+    @SerializedName("detalle") val detalle: String?,
     @SerializedName("created_at") val created_at: String?,
     @SerializedName("updated_at") val updated_at: String?,
-    @SerializedName("class_name") val class_name: String?,
+    @SerializedName("grado_nombre") val grado_nombre: String?,
+    @SerializedName("seccion_nombre") val seccion_nombre: String?,
     @SerializedName("bimester_name") val bimester_name: String?
 )
 
 data class CreateQuizRequest(
     val title: String,
-    val description: String?,
-    val class_id: Int,
-    val bimester_id: Int,
-    val total_points: Double?,
-    val num_questions: Int?,
-    val points_per_question: Double?,
-    val answer_key_file: String?,
-    val key_version: String?
+    @SerializedName("bimester_id") val bimester_id: Int?,
+    @SerializedName("unidad_id") val unidad_id: Int?,
+    @SerializedName("grado_id") val grado_id: Int?,
+    @SerializedName("seccion_id") val seccion_id: Int?,
+    @SerializedName("fecha") val fecha: String,
+    @SerializedName("num_questions") val num_questions: Int?,
+    @SerializedName("detalle") val detalle: String?,
+    @SerializedName("asignacion_id") val asignacion_id: Int?
 )
 
 data class UpdateQuizRequest(
     val title: String?,
-    val description: String?,
-    val class_id: Int?,
-    val bimester_id: Int?,
-    val total_points: Double?,
-    val num_questions: Int?,
-    val points_per_question: Double?,
-    val answer_key_file: String?,
-    val key_version: String?
+    @SerializedName("bimester_id") val bimester_id: Int?,
+    @SerializedName("unidad_id") val unidad_id: Int?,
+    @SerializedName("grado_id") val grado_id: Int?,
+    @SerializedName("seccion_id") val seccion_id: Int?,
+    @SerializedName("fecha") val fecha: String?,
+    @SerializedName("num_questions") val num_questions: Int?,
+    @SerializedName("detalle") val detalle: String?,
+    @SerializedName("asignacion_id") val asignacion_id: Int?
 )
 
 data class AnswerKeyDto(

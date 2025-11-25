@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,10 +28,12 @@ fun CreateFormatDialog(
     isOpen: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (grade: String, section: String, numQuestions: Int, formatType: String, scoreFormat: String) -> Unit,
-    isMetaLoading: Boolean = false,
-    gradeOptions: List<String> = emptyList(),
-    sectionOptions: List<String> = emptyList(),
-    title: String = "Nuevo formato",
+    onGradeChange: ((String) -> Unit)? = null,
+    isMetaLoading: Boolean,
+    gradeOptions: List<String>,
+    sectionOptions: List<String>,
+    sectionsByGrade: Map<String, List<String>> = emptyMap(),
+    title: String,
     initialGrade: String? = null,
     initialSection: String? = null,
     initialNumQuestions: Int? = null,
@@ -40,15 +43,28 @@ fun CreateFormatDialog(
     formatTypeOptions: List<String> = FormatOptions.formatTypes,
     scoreFormatOptions: List<String> = FormatOptions.scoreFormats
  ) {
-    val grade = remember { mutableStateOf<String?>(initialGrade) }
-    val section = remember { mutableStateOf<String?>(initialSection) }
-    val numQuestions = remember { mutableStateOf<String>(initialNumQuestions?.toString() ?: "") }
-    val formatType = remember { mutableStateOf<String?>(initialFormatType) }
-    val scoreFormat = remember { mutableStateOf<String?>(initialScoreFormat) }
+    val grade = remember(isOpen, initialGrade) { mutableStateOf<String?>(initialGrade) }
+    val section = remember(isOpen, initialSection) { mutableStateOf<String?>(initialSection) }
+    val numQuestions = remember(isOpen, initialNumQuestions) { mutableStateOf<String>(initialNumQuestions?.toString() ?: "") }
+    val formatType = remember(isOpen, initialFormatType) { mutableStateOf<String?>(initialFormatType) }
+    val scoreFormat = remember(isOpen, initialScoreFormat) { mutableStateOf<String?>(initialScoreFormat) }
 
     if (!isOpen) return
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)){
+        LaunchedEffect(grade.value) {
+            val g = grade.value
+            if (!g.isNullOrBlank()) onGradeChange?.invoke(g)
+        }
+        LaunchedEffect(isOpen) {
+            if (isOpen) {
+                grade.value = initialGrade
+                section.value = initialSection
+                numQuestions.value = initialNumQuestions?.toString() ?: ""
+                formatType.value = initialFormatType
+                scoreFormat.value = initialScoreFormat
+            }
+        }
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.90f),
@@ -77,18 +93,23 @@ fun CreateFormatDialog(
                             label = "Grado",
                             selectedValue = grade.value ?: "",
                             options = gradeOptions,
-                            onValueChange = { grade.value = it },
+                            onValueChange = { 
+                                grade.value = it
+                                section.value = null
+                                onGradeChange?.invoke(it)
+                            },
                             placeholder = if (isMetaLoading) "Cargando…" else if (gradeOptions.isEmpty()) "Sin datos" else "Selecciona grado",
                             enabled = !isMetaLoading && gradeOptions.isNotEmpty(),
                             modifier = Modifier.weight(1f)
                         )
+                        val currentSections = sectionsByGrade[grade.value ?: ""] ?: sectionOptions
                         FilterDropdown(
                             label = "Sección",
                             selectedValue = section.value ?: "",
-                            options = sectionOptions,
+                            options = currentSections,
                             onValueChange = { section.value = it },
-                            placeholder = if (isMetaLoading) "Cargando…" else if (sectionOptions.isEmpty()) "Sin datos" else "Selecciona sección",
-                            enabled = !isMetaLoading && sectionOptions.isNotEmpty(),
+                            placeholder = if (isMetaLoading) "Cargando…" else if (currentSections.isEmpty()) "Sin datos" else if ((grade.value ?: "").isBlank()) "Selecciona grado primero" else "Selecciona sección",
+                            enabled = !isMetaLoading && currentSections.isNotEmpty() && !(grade.value ?: "").isBlank(),
                             modifier = Modifier.weight(1f)
                         )
                     }

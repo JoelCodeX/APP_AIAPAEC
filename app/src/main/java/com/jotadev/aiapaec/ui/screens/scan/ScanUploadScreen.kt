@@ -1,25 +1,26 @@
 package com.jotadev.aiapaec.ui.screens.scan
 
 import android.Manifest
-import android.net.Uri
-import android.os.Build
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.util.Log
 import android.view.Surface
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.AspectRatio
-import androidx.camera.core.Preview as CameraPreview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,44 +33,40 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.exifinterface.media.ExifInterface
 import androidx.navigation.NavController
-import org.json.JSONObject
-import org.json.JSONArray
+import com.jotadev.aiapaec.data.api.NetworkConfig
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
 import java.io.File
-import android.util.Log
-import android.graphics.BitmapFactory
-import android.graphics.Bitmap
-import android.graphics.Matrix
-import androidx.exifinterface.media.ExifInterface
 import java.io.FileOutputStream
 import kotlin.math.roundToInt
+import androidx.camera.core.Preview as CameraPreview
 
 // PORCENTAJE DE RECORTE INFERIOR SOBRE LA ROI (0.0 a 0.5)
 private const val ROI_BOTTOM_TRIM: Float = 0.20f
 
 // HOST BACKEND EN DISPOSITIVO FÍSICO (AJUSTA SI CAMBIA LA IP)
- private const val BASE_ROOT: String = "http://192.168.1.8:5000"
+//
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -372,7 +369,7 @@ private fun decodeBitmapWithExif(file: File, reqW: Int, reqH: Int): Bitmap {
 }
 
 private fun uploadForCorners(file: File, roi: FloatArray?): Boolean {
-    val url = "$BASE_ROOT/scan/upload"
+val url = "${NetworkConfig.baseRoot}/scan/upload"
     val client = OkHttpClient.Builder().build()
     val media = "image/jpeg".toMediaType()
     val body = file.asRequestBody(media)
@@ -410,14 +407,14 @@ private fun uploadAndProcess(file: File, roi: FloatArray?): Triple<String, Strin
         val roiJson = "[" + roi.joinToString(",") { it.toString() } + "]"
         builder.addFormDataPart("roi", roiJson)
     }
-    val uploadReq = Request.Builder().url("$BASE_ROOT/scan/upload").post(builder.build()).build()
+    val uploadReq = Request.Builder().url("${NetworkConfig.baseRoot}/scan/upload").post(builder.build()).build()
     client.newCall(uploadReq).execute().use { up ->
         val txt = up.body?.string() ?: return null
         val j = runCatching { JSONObject(txt) }.getOrNull() ?: return null
         val runId = j.optString("run_id", "")
         if (runId.isEmpty()) return null
         val payload = JSONObject().put("run_id", runId).toString()
-        val procReq = Request.Builder().url("$BASE_ROOT/scan/process-auto").post(payload.toRequestBody("application/json".toMediaType())).build()
+        val procReq = Request.Builder().url("${NetworkConfig.baseRoot}/scan/process-auto").post(payload.toRequestBody("application/json".toMediaType())).build()
         client.newCall(procReq).execute().use { pr ->
             val ptxt = pr.body?.string() ?: return null
             val pj = runCatching { JSONObject(ptxt) }.getOrNull() ?: return null

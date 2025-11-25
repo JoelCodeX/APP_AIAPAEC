@@ -28,12 +28,16 @@ data class FormatUiState(
     val searchQuery: String = "",
     val error: String? = null,
     val gradesOptions: List<String> = emptyList(),
-    val sectionsOptions: List<String> = emptyList()
+    val sectionsOptions: List<String> = emptyList(),
+    val sectionsByGrade: Map<String, List<String>> = emptyMap()
 )
 
 class FormatViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(FormatUiState())
     val uiState: StateFlow<FormatUiState> = _uiState.asStateFlow()
+
+    // MAPA INTERNO PARA OBTENER ID DE GRADO DESDE NOMBRE
+    private var gradeNameToId: Map<String, Int> = emptyMap()
 
     init {
         loadFormats()
@@ -71,16 +75,17 @@ class FormatViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isMetaLoading = true)
             try {
-                val gradesResp = RetrofitClient.apiService.getGrades(page = 1, perPage = 100)
-                val sectionsResp = RetrofitClient.apiService.getSections(page = 1, perPage = 100)
-
-                val grades = gradesResp.body()?.data?.items?.map { it.nombre } ?: emptyList()
-                val sections = sectionsResp.body()?.data?.items?.map { it.nombre } ?: emptyList()
+                // Cargar SIEMPRE los grados por sede; las secciones se cargan por grado
+                val gradesResp = RetrofitClient.apiService.getGradesByBranch(page = 1, perPage = 200)
+                val gradeItems = gradesResp.body()?.data?.items ?: emptyList()
+                gradeNameToId = gradeItems.associate { it.nombre to it.id }
+                val gradesBranch = gradeItems.map { it.nombre }.distinct().sorted()
 
                 _uiState.value = _uiState.value.copy(
                     isMetaLoading = false,
-                    gradesOptions = grades,
-                    sectionsOptions = sections
+                    gradesOptions = gradesBranch,
+                    sectionsOptions = emptyList(),
+                    sectionsByGrade = emptyMap()
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isMetaLoading = false)
@@ -95,6 +100,24 @@ class FormatViewModel : ViewModel() {
 
     fun refreshFormats() {
         loadFormats()
+    }
+
+    // CARGA SECCIONES AL SELECCIONAR UN GRADO (FALLBACK POR SEDE)
+    fun loadSectionsForGrade(gradeName: String?) {
+        if (gradeName.isNullOrBlank()) return
+        val gradeId = gradeNameToId[gradeName] ?: return
+        viewModelScope.launch {
+            try {
+                val resp = RetrofitClient.apiService.getSectionsByBranch(page = 1, perPage = 200, gradeId = gradeId)
+                val items = resp.body()?.data?.items ?: emptyList()
+                val sections = items.map { it.nombre }.distinct().sorted()
+                val currentMap = _uiState.value.sectionsByGrade.toMutableMap()
+                currentMap[gradeName] = sections
+                _uiState.value = _uiState.value.copy(sectionsByGrade = currentMap, sectionsOptions = sections)
+            } catch (e: Exception) {
+                // SIN MANEJO DE ERRORES SEGÚN REGLAS
+            }
+        }
     }
 
     fun search(query: String) {

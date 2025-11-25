@@ -1,6 +1,5 @@
 package com.jotadev.aiapaec.data.api
 
-import android.os.Build
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -10,30 +9,6 @@ import com.jotadev.aiapaec.data.storage.TokenStorage
 import okhttp3.Interceptor
 
 object RetrofitClient {
-    // URL DINÁMICA SEGÚN SI ES EMULADOR O DISPOSITIVO REAL
-    private fun isEmulator(): Boolean {
-        val fingerprint = Build.FINGERPRINT.lowercase()
-        val model = Build.MODEL
-        val manufacturer = Build.MANUFACTURER
-        val brand = Build.BRAND
-        val device = Build.DEVICE
-        val product = Build.PRODUCT
-        return fingerprint.startsWith("generic") || fingerprint.contains("emulator") ||
-                model.contains("Emulator", ignoreCase = true) || model.contains("Android SDK built for", ignoreCase = true) ||
-                (brand.startsWith("generic", ignoreCase = true) && device.startsWith("generic", ignoreCase = true)) ||
-                product.equals("google_sdk", ignoreCase = true) || product.equals("sdk", ignoreCase = true) || product.equals("sdk_gphone", ignoreCase = true) ||
-                manufacturer.contains("Genymotion", ignoreCase = true) || manufacturer.contains("unknown", ignoreCase = true) ||
-                device.contains("ranchu", ignoreCase = true) || device.contains("goldfish", ignoreCase = true)
-    }
-
-    private val BASE_URL: String = if (isEmulator()) {
-        // IP EMULADOR ANDROID STUDIO
-        "http://10.0.2.2:5000/api/"
-    } else {
-        // IP LOCAL RED WIFI + PUERTO FLASK
-        "http://192.168.1.8:5000/api/"
-    }
-    
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
@@ -57,7 +32,7 @@ object RetrofitClient {
         .build()
     
     private val retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(NetworkConfig.apiBase)
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

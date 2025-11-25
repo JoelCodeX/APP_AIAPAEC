@@ -8,30 +8,30 @@ import com.jotadev.aiapaec.domain.models.AnswerKeysPage
 import com.jotadev.aiapaec.domain.models.QuizAnswersPage
 
 interface QuizzesRepository {
-    suspend fun getQuizzes(page: Int, perPage: Int, query: String?, classId: Int?, bimesterId: Int?): Result<QuizzesPage>
+    suspend fun getQuizzes(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?): Result<QuizzesPage>
     suspend fun getQuiz(id: Int): Result<Quiz>
     suspend fun createQuiz(
         title: String,
-        description: String?,
-        classId: Int,
-        bimesterId: Int,
-        totalPoints: Double?,
+        bimesterId: Int?,
+        unidadId: Int?,
+        gradoId: Int?,
+        seccionId: Int?,
+        fecha: String,
         numQuestions: Int?,
-        pointsPerQuestion: Double?,
-        answerKeyFile: String?,
-        keyVersion: String?
+        detalle: String?,
+        asignacionId: Int?
     ): Result<Quiz>
     suspend fun updateQuiz(
         id: Int,
         title: String?,
-        description: String?,
-        classId: Int?,
         bimesterId: Int?,
-        totalPoints: Double?,
+        unidadId: Int?,
+        gradoId: Int?,
+        seccionId: Int?,
+        fecha: String?,
         numQuestions: Int?,
-        pointsPerQuestion: Double?,
-        answerKeyFile: String?,
-        keyVersion: String?
+        detalle: String?,
+        asignacionId: Int?
     ): Result<Quiz>
     suspend fun deleteQuiz(id: Int): Result<Unit>
 

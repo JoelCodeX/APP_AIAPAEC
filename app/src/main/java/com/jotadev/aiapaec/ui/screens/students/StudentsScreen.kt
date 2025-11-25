@@ -1,6 +1,7 @@
 package com.jotadev.aiapaec.ui.screens.students
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,44 +13,39 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.StudentsList
 import com.jotadev.aiapaec.ui.components.StudentsSearchAndFilterBar
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun StudentsScreen(navController: NavController) {
     val vm: StudentsViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
-    val swipeState = rememberSwipeRefreshState(isRefreshing = state.isLoading)
+    val pullState = rememberPullRefreshState(
+        refreshing = state.isLoading,
+        onRefresh = { vm.refresh() }
+    )
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         // topBar unificado en MainScreen
     ) { paddingValues ->
-        SwipeRefresh(
-            state = swipeState,
-            onRefresh = { vm.refresh() },
-            indicator = { s, trigger ->
-                SwipeRefreshIndicator(
-                    state = s,
-                    refreshTriggerDistance = trigger,
-                    scale = true,
-                    backgroundColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
-                )
-            },
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .pullRefresh(pullState)
         ) {
             Column(
                 modifier = Modifier
@@ -85,6 +81,13 @@ fun StudentsScreen(navController: NavController) {
                     )
                 }
             }
+            PullRefreshIndicator(
+                refreshing = state.isLoading,
+                state = pullState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

@@ -9,17 +9,18 @@ fun QuizDto.toDomain(): Quiz {
     return Quiz(
         id = id,
         title = title,
-        description = description,
-        classId = class_id,
         bimesterId = bimester_id,
-        totalPoints = total_points,
+        unidadId = unidad_id,
+        sedeId = sede_id,
+        gradoId = grado_id,
+        seccionId = seccion_id,
+        fecha = fecha,
         numQuestions = num_questions,
-        pointsPerQuestion = points_per_question,
-        answerKeyFile = answer_key_file,
-        keyVersion = key_version,
+        detalle = detalle,
         createdAt = created_at,
         updatedAt = updated_at,
-        className = class_name,
+        gradoNombre = grado_nombre,
+        seccionNombre = seccion_nombre,
         bimesterName = bimester_name
     )
 }

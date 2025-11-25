@@ -150,7 +150,7 @@ fun AnswersScreen(navController: NavController, examId: String) {
             if (quiz != null && !editMode) {
                 ExamSummaryCard(
                     title = quiz.title,
-                    className = quiz.className ?: "—",
+                    className = listOfNotNull(quiz.gradoNombre, quiz.seccionNombre).joinToString(" ").ifBlank { "—" },
                     numQuestions = quiz.numQuestions ?: 0,
                     pointsPerQuestion = state.pointsPerQuestion
                 )

@@ -36,10 +36,10 @@ class ExamsViewModel : ViewModel() {
         loadExams()
     }
 
-    fun loadExams(page: Int = 1, perPage: Int = 20, query: String? = null, classId: Int? = null, bimesterId: Int? = null) {
+    fun loadExams(page: Int = 1, perPage: Int = 20, query: String? = null, gradoId: Int? = null, seccionId: Int? = null, bimesterId: Int? = null) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            when (val result = getQuizzes(page, perPage, query, classId, bimesterId)) {
+            when (val result = getQuizzes(page, perPage, query, gradoId, seccionId, bimesterId)) {
                 is Result.Loading -> {
                     _uiState.value = _uiState.value.copy(isLoading = true)
                 }
@@ -62,14 +62,14 @@ class ExamsViewModel : ViewModel() {
         viewModelScope.launch {
             when (val result = createQuiz(
                 title = title,
-                description = null,
-                classId = classId,
                 bimesterId = bimesterId,
-                totalPoints = null,
+                unidadId = null,
+                gradoId = null,
+                seccionId = null,
+                fecha = "",
                 numQuestions = null,
-                pointsPerQuestion = null,
-                answerKeyFile = null,
-                keyVersion = null
+                detalle = null,
+                asignacionId = null
             )) {
                 is Result.Loading -> {
                     _uiState.value = _uiState.value.copy(isLoading = true)
@@ -90,14 +90,14 @@ class ExamsViewModel : ViewModel() {
             when (val result = updateQuiz(
                 id = id,
                 title = title,
-                description = null,
-                classId = classId,
                 bimesterId = bimesterId,
-                totalPoints = null,
+                unidadId = null,
+                gradoId = null,
+                seccionId = null,
+                fecha = null,
                 numQuestions = null,
-                pointsPerQuestion = null,
-                answerKeyFile = null,
-                keyVersion = null
+                detalle = null,
+                asignacionId = null
             )) {
                 is Result.Loading -> {
                     _uiState.value = _uiState.value.copy(isLoading = true)
@@ -140,13 +140,15 @@ class ExamsViewModel : ViewModel() {
     }
 
     private fun Quiz.toUiExam(): UiExam {
+        val gradoSeccion = listOfNotNull(this.gradoNombre, this.seccionNombre).joinToString(" ")
+        val fechaStr = this.fecha.ifEmpty { this.createdAt ?: "" }
         return UiExam(
             id = this.id.toString(),
             name = this.title,
-            className = this.className ?: "",
+            className = gradoSeccion,
             bimester = this.bimesterName ?: "",
             type = "Sin asignar",
-            date = this.createdAt ?: "",
+            date = fechaStr,
             isApplied = false,
             numQuestions = this.numQuestions
         )

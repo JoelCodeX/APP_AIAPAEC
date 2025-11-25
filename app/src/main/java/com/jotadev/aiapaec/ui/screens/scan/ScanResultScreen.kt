@@ -25,7 +25,7 @@ import org.json.JSONObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
- private const val BASE_ROOT: String = "http://192.168.1.8:5000"
+import com.jotadev.aiapaec.data.api.NetworkConfig
 
 data class AnswerItem(val q: Int, val r: Int, val letra: String)
 
@@ -39,7 +39,7 @@ fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: St
 
     LaunchedEffect(runId, overlayUrl) {
         withContext(Dispatchers.IO) {
-            val ansUrl = "$BASE_ROOT/scan/results/answers/$runId"
+            val ansUrl = "${NetworkConfig.baseRoot}/scan/results/answers/$runId"
             client.newCall(Request.Builder().url(ansUrl).get().build()).execute().use { resp ->
                 val body = resp.body?.string() ?: "{}"
                 val json = JSONObject(body)
@@ -104,7 +104,7 @@ fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: St
 
 private suspend fun reprocess(client: OkHttpClient, runId: String, tipo: Int): Pair<Bitmap?, List<AnswerItem>> {
     return withContext(Dispatchers.IO) {
-        val endpoint = if (tipo == 20) "$BASE_ROOT/scan/process-20" else "$BASE_ROOT/scan/process-50"
+        val endpoint = if (tipo == 20) "${NetworkConfig.baseRoot}/scan/process-20" else "${NetworkConfig.baseRoot}/scan/process-50"
         val payload = JSONObject().put("run_id", runId).toString()
         val req = Request.Builder().url(endpoint).post(payload.toRequestBody("application/json".toMediaType())).build()
         client.newCall(req).execute().use { resp ->

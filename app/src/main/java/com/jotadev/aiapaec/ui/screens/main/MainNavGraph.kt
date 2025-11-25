@@ -14,6 +14,7 @@ import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
 import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
 import com.jotadev.aiapaec.ui.screens.home.HomeScreen
 import com.jotadev.aiapaec.ui.screens.format.FormatScreen
+import com.jotadev.aiapaec.ui.screens.format.weekly.WeeklyScreen
 import com.jotadev.aiapaec.ui.screens.scan.ScanResultScreen
 import com.jotadev.aiapaec.ui.screens.scan.ScanUploadScreen
 import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
@@ -44,6 +45,9 @@ fun MainNavGraph(
         }
         composable(NavigationRoutes.FORMATS) {
             FormatScreen(navController = navController)
+        }
+        composable("${NavigationRoutes.WEEKLY}?title={title}") {
+            WeeklyScreen(navController = navController)
         }
         // La configuración se abre como panel lateral, no navegamos a una ruta aparte
 

@@ -5,7 +5,7 @@ import com.jotadev.aiapaec.domain.models.QuizzesPage
 import com.jotadev.aiapaec.domain.repository.QuizzesRepository
 
 class GetQuizzesUseCase(private val repository: QuizzesRepository) {
-    suspend operator fun invoke(page: Int, perPage: Int, query: String?, classId: Int?, bimesterId: Int?): Result<QuizzesPage> {
-        return repository.getQuizzes(page, perPage, query, classId, bimesterId)
+    suspend operator fun invoke(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?): Result<QuizzesPage> {
+        return repository.getQuizzes(page, perPage, query, gradoId, seccionId, bimesterId)
     }
 }
