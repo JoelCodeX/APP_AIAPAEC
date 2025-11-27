@@ -92,7 +92,6 @@ fun SearchAndFilterBar(
                 singleLine = true
             )
 
-            // BOTON DE FILTRO - MOVER DENTRO DEL MISMO ROW
             IconButton(
                 onClick = { showFilters = !showFilters },
                 modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))

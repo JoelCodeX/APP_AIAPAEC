@@ -1,5 +1,6 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.format
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,6 +29,7 @@ fun FormatsList(
     modifier: Modifier = Modifier
 ) {
     val expandedFormatId = remember { mutableStateOf<String?>(null) }
+    val sortedItems = items.sortedBy { it.id.toIntOrNull() ?: Int.MAX_VALUE }
     if (items.isEmpty()) {
         Box(modifier = modifier, contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -41,9 +43,9 @@ fun FormatsList(
         LazyColumn(
             modifier = modifier,
             contentPadding = PaddingValues(vertical = 8.dp),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items) { item ->
+            items(sortedItems) { item ->
                 FormatCard(
                     item = item,
                     onEditClick = onEdit,
@@ -51,7 +53,8 @@ fun FormatsList(
                     onClick = onClick,
                     isExpanded = expandedFormatId.value == item.id,
                     onToggleExpand = {
-                        expandedFormatId.value = if (expandedFormatId.value == item.id) null else item.id
+                        expandedFormatId.value =
+                            if (expandedFormatId.value == item.id) null else item.id
                     }
                 )
             }

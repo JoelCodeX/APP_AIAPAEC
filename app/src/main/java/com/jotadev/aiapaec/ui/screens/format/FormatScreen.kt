@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -27,10 +26,10 @@ import com.jotadev.aiapaec.navigation.NavigationRoutes
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import com.jotadev.aiapaec.ui.components.CreateFormatDialog
-import com.jotadev.aiapaec.ui.components.FormatOptions
-import com.jotadev.aiapaec.ui.components.FormatSearchAndFilterBar
-import com.jotadev.aiapaec.ui.components.FormatsList
+import com.jotadev.aiapaec.ui.components.format.CreateFormatDialog
+import com.jotadev.aiapaec.ui.components.format.FormatOptions
+import com.jotadev.aiapaec.ui.components.format.FormatSearchAndFilterBar
+import com.jotadev.aiapaec.ui.components.format.FormatsList
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -158,7 +157,9 @@ fun FormatScreen(navController: NavController) {
                         val handle = navController.currentBackStackEntry?.savedStateHandle
                         handle?.set("weekly_assignment_id", item.id.toInt())
                         handle?.set("weekly_grade_name", item.grade)
+                        handle?.set("weekly_grade_id", item.gradeId)
                         handle?.set("weekly_section_name", item.section)
+                        handle?.set("weekly_section_id", item.sectionId)
                         handle?.set("weekly_num_questions", item.numQuestions)
                         navController.navigate(NavigationRoutes.weekly(item.formatType))
                     },
@@ -196,7 +197,7 @@ fun FormatScreen(navController: NavController) {
         gradeOptions = state.gradesOptions,
         sectionOptions = state.sectionsOptions,
         sectionsByGrade = state.sectionsByGrade,
-        title = "Nuevo formato",
+        title = "Asignar formato",
         confirmButtonText = "Guardar"
     )
 

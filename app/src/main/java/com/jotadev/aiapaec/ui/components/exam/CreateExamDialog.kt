@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.exam
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.jotadev.aiapaec.ui.components.FilterDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,6 +115,5 @@ fun CreateExamDialog(
     }
 }
 
-// Genera nombres "Examen Semanal N°01" hasta "N°count"
 private fun generateWeeklyExamNames(count: Int): List<String> =
     (1..count).map { "Examen Semanal N°" + it.toString().padStart(2, '0') }

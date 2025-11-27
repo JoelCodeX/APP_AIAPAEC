@@ -24,7 +24,7 @@ sealed class BottomNavItem(
         route = NavigationRoutes.CLASSES,
         iconFilled = R.drawable.group_filled,
         iconOutlined = R.drawable.group_outline,
-        label = "Clases"
+        label = "Grados"
     )
     data object Students : BottomNavItem(
         route = NavigationRoutes.STUDENTS,

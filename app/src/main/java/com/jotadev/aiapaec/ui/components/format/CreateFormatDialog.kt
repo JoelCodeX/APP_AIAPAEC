@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.format
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -6,22 +6,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.jotadev.aiapaec.ui.components.FilterDropdown
+import com.jotadev.aiapaec.ui.components.format.FormatOptions
 
 @Composable
 fun CreateFormatDialog(
@@ -93,7 +94,7 @@ fun CreateFormatDialog(
                             label = "Grado",
                             selectedValue = grade.value ?: "",
                             options = gradeOptions,
-                            onValueChange = { 
+                            onValueChange = {
                                 grade.value = it
                                 section.value = null
                                 onGradeChange?.invoke(it)
@@ -108,8 +109,11 @@ fun CreateFormatDialog(
                             selectedValue = section.value ?: "",
                             options = currentSections,
                             onValueChange = { section.value = it },
-                            placeholder = if (isMetaLoading) "Cargando…" else if (currentSections.isEmpty()) "Sin datos" else if ((grade.value ?: "").isBlank()) "Selecciona grado primero" else "Selecciona sección",
-                            enabled = !isMetaLoading && currentSections.isNotEmpty() && !(grade.value ?: "").isBlank(),
+                            placeholder = if (isMetaLoading) "Cargando…" else if (currentSections.isEmpty()) "Sin datos" else if ((grade.value
+                                    ?: "").isBlank()
+                            ) "Selecciona grado primero" else "Selecciona sección",
+                            enabled = !isMetaLoading && currentSections.isNotEmpty() && !(grade.value
+                                ?: "").isBlank(),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -126,14 +130,14 @@ fun CreateFormatDialog(
                         placeholder = "Selecciona formato",
                         modifier = Modifier.weight(1f)
                     )
-                    FilterDropdown(
-                        label = "N° de preguntas",
-                        selectedValue = numQuestions.value,
-                        options = FormatOptions.questionCounts,
-                        onValueChange = { numQuestions.value = it },
-                        placeholder = "Selecciona número",
-                        modifier = Modifier.weight(1f)
-                    )
+                        FilterDropdown(
+                            label = "N° de preguntas",
+                            selectedValue = numQuestions.value,
+                            options = FormatOptions.questionCounts,
+                            onValueChange = { numQuestions.value = it },
+                            placeholder = "Selecciona número",
+                            modifier = Modifier.weight(1f)
+                        )
                 }
 
                     FilterDropdown(
@@ -154,12 +158,12 @@ fun CreateFormatDialog(
                             formatType.value != null &&
                             scoreFormat.value != null &&
                             numQuestions.value.toIntOrNull() != null
-                        androidx.compose.material3.OutlinedButton(
+                        OutlinedButton(
                             onClick = onDismiss,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) { Text("Cancelar") }
-                        androidx.compose.material3.Button(
+                        Button(
                             onClick = {
                                 val g = grade.value ?: return@Button
                                 val s = section.value ?: return@Button

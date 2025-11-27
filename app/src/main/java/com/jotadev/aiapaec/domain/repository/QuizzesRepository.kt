@@ -11,11 +11,11 @@ interface QuizzesRepository {
     suspend fun getQuizzes(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?): Result<QuizzesPage>
     suspend fun getQuiz(id: Int): Result<Quiz>
     suspend fun createQuiz(
-        title: String,
         bimesterId: Int?,
         unidadId: Int?,
         gradoId: Int?,
         seccionId: Int?,
+        weekNumber: Int?,
         fecha: String,
         numQuestions: Int?,
         detalle: String?,
@@ -23,11 +23,11 @@ interface QuizzesRepository {
     ): Result<Quiz>
     suspend fun updateQuiz(
         id: Int,
-        title: String?,
         bimesterId: Int?,
         unidadId: Int?,
         gradoId: Int?,
         seccionId: Int?,
+        weekNumber: Int?,
         fecha: String?,
         numQuestions: Int?,
         detalle: String?,

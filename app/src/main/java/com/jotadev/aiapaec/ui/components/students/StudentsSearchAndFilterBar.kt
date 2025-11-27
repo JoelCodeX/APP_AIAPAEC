@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.students
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.jotadev.aiapaec.ui.components.FilterDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,12 +93,12 @@ fun StudentsSearchAndFilterBar(
         // FILTROS EXPANDIBLES
         AnimatedVisibility(visible = isFilterExpanded) {
                 // FILTRO POR CLASE
-                FilterDropdown(
-                    label = "Clase",
-                    selectedValue = selectedClass,
-                    options = classOptions,
-                    onValueChange = onClassChange
-                )
+            FilterDropdown(
+                label = "Clase",
+                selectedValue = selectedClass,
+                options = classOptions,
+                onValueChange = onClassChange
+            )
             
         }
     }

@@ -106,6 +106,20 @@ interface ApiService {
         @Path("id") id: Int
     ): Response<ApiResponseNoData>
 
+    @GET("units")
+    suspend fun getUnits(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+        @Query("bimester_id") bimesterId: Int? = null
+    ): Response<UnitsResponse>
+
+    @GET("weeks")
+    suspend fun getWeeks(
+        @Query("page") page: Int = 1,
+        @Query("per_page") perPage: Int = 20,
+        @Query("unit_id") unitId: Int? = null
+    ): Response<WeeksResponse>
+    
     // ANSWER KEYS
     @Multipart
     @POST("quizzes/{id}/answer_keys")
@@ -244,6 +258,18 @@ data class WeeklyAssignmentsResponse(
     val data: WeeklyAssignmentsPageDto?
 )
 
+data class UnitsResponse(
+    val success: Boolean,
+    val message: String,
+    val data: UnitsPageDto?
+)
+
+data class WeeksResponse(
+    val success: Boolean,
+    val message: String,
+    val data: WeeksPageDto?
+)
+
 data class WeeklyAssignmentItemResponse(
     val success: Boolean,
     val message: String,
@@ -342,6 +368,22 @@ data class AnswerKeysPageDto(
     val items: List<AnswerKeyDto>
 )
 
+data class UnitsPageDto(
+    val items: List<UnitDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
+data class WeeksPageDto(
+    val items: List<WeekDto>,
+    val page: Int,
+    val per_page: Int,
+    val total: Int,
+    val pages: Int
+)
+
 data class QuizAnswersListResponse(
     val success: Boolean,
     val message: String,
@@ -429,14 +471,32 @@ data class BimesterDto(
     @SerializedName("academic_year") val academic_year: Int
 )
 
+data class UnitDto(
+    val id: Int,
+    @SerializedName("bimester_id") val bimester_id: Int,
+    @SerializedName("unit_number") val unit_number: Int,
+    val name: String?,
+    @SerializedName("start_date") val start_date: String?,
+    @SerializedName("end_date") val end_date: String?
+)
+
+data class WeekDto(
+    val id: Int,
+    @SerializedName("unit_id") val unit_id: Int,
+    @SerializedName("week_number") val week_number: Int,
+    @SerializedName("start_date") val start_date: String?,
+    @SerializedName("end_date") val end_date: String?
+)
+
 data class QuizDto(
     val id: Int,
-    val title: String,
+    // TITLE REMOVED
     @SerializedName("bimester_id") val bimester_id: Int?,
     @SerializedName("unidad_id") val unidad_id: Int?,
     @SerializedName("sede_id") val sede_id: Int?,
     @SerializedName("grado_id") val grado_id: Int?,
     @SerializedName("seccion_id") val seccion_id: Int?,
+    @SerializedName("week_number") val week_number: Int?,
     @SerializedName("fecha") val fecha: String,
     @SerializedName("num_questions") val num_questions: Int?,
     @SerializedName("detalle") val detalle: String?,
@@ -448,11 +508,12 @@ data class QuizDto(
 )
 
 data class CreateQuizRequest(
-    val title: String,
+    // TITLE REMOVED
     @SerializedName("bimester_id") val bimester_id: Int?,
     @SerializedName("unidad_id") val unidad_id: Int?,
     @SerializedName("grado_id") val grado_id: Int?,
     @SerializedName("seccion_id") val seccion_id: Int?,
+    @SerializedName("week_number") val week_number: Int?,
     @SerializedName("fecha") val fecha: String,
     @SerializedName("num_questions") val num_questions: Int?,
     @SerializedName("detalle") val detalle: String?,
@@ -460,11 +521,12 @@ data class CreateQuizRequest(
 )
 
 data class UpdateQuizRequest(
-    val title: String?,
+    // TITLE REMOVED
     @SerializedName("bimester_id") val bimester_id: Int?,
     @SerializedName("unidad_id") val unidad_id: Int?,
     @SerializedName("grado_id") val grado_id: Int?,
     @SerializedName("seccion_id") val seccion_id: Int?,
+    @SerializedName("week_number") val week_number: Int?,
     @SerializedName("fecha") val fecha: String?,
     @SerializedName("num_questions") val num_questions: Int?,
     @SerializedName("detalle") val detalle: String?,

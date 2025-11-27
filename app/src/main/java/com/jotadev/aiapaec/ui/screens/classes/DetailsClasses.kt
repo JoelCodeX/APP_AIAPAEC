@@ -24,7 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.ui.components.CustomTopAppBar
-import com.jotadev.aiapaec.ui.components.StudentsList
+import com.jotadev.aiapaec.ui.components.students.StudentsList
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 
 @Composable

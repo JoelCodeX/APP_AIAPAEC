@@ -6,16 +6,16 @@ import com.jotadev.aiapaec.domain.repository.QuizzesRepository
 
 class CreateQuizUseCase(private val repository: QuizzesRepository) {
     suspend operator fun invoke(
-        title: String,
         bimesterId: Int?,
         unidadId: Int?,
         gradoId: Int?,
         seccionId: Int?,
+        weekNumber: Int?,
         fecha: String,
         numQuestions: Int?,
         detalle: String?,
         asignacionId: Int?
     ): Result<Quiz> {
-        return repository.createQuiz(title, bimesterId, unidadId, gradoId, seccionId, fecha, numQuestions, detalle, asignacionId)
+        return repository.createQuiz(bimesterId, unidadId, gradoId, seccionId, weekNumber, fecha, numQuestions, detalle, asignacionId)
     }
 }

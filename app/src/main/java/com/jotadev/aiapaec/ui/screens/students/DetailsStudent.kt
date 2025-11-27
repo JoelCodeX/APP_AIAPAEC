@@ -331,7 +331,7 @@ private fun ExamItem(exam: Quiz, onClick: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = (exam.title.firstOrNull() ?: 'E').uppercaseChar().toString(),
+                    text = ((exam.detalle?.firstOrNull() ?: 'E').uppercaseChar().toString()),
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
@@ -339,7 +339,7 @@ private fun ExamItem(exam: Quiz, onClick: () -> Unit) {
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = exam.title,
+                    text = (exam.detalle ?: "QUIZ SEMANAL"),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,

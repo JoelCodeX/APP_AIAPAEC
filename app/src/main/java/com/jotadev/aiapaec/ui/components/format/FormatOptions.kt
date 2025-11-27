@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.format
 
 object FormatOptions {
     val formatTypes = listOf(

@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.students
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

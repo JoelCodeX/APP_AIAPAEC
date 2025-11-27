@@ -241,7 +241,7 @@ private fun MainTopBar(
         }
         currentRoute?.startsWith(NavigationRoutes.FORMATS) == true -> {
             ScreenTopAppBar(
-                screenTitle = "Formatos",
+                screenTitle = "Asiganción de Formatos",
                 actions = {
                     Box(modifier = Modifier.size(40.dp)) {
                         Box(
@@ -269,8 +269,16 @@ private fun MainTopBar(
         }
         currentRoute?.startsWith(NavigationRoutes.WEEKLY) == true -> {
             val weeklyTitle = navController.currentBackStackEntry?.arguments?.getString("title") ?: "Formatos semanales"
+            val prevHandle = navController.previousBackStackEntry?.savedStateHandle
+            val gradeName = prevHandle?.get<String>("weekly_grade_name") ?: ""
+            val sectionName = prevHandle?.get<String>("weekly_section_name") ?: ""
+            val weeklySubtitle = when {
+                gradeName.isNotBlank() && sectionName.isNotBlank() -> "$gradeName | $sectionName"
+                else -> null
+            }
             CustomTopAppBar(
                 title = weeklyTitle,
+                subtitle = weeklySubtitle,
                 backgroundColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 navigationIcon = {
@@ -293,13 +301,13 @@ private fun MainTopBar(
                         )
                         IconButton(
                             onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("formats_create_request", true)
+                                navController.currentBackStackEntry?.savedStateHandle?.set("weekly_create_request", true)
                             },
                             modifier = Modifier.align(Alignment.Center)
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
-                                contentDescription = "Crear formato",
+                                contentDescription = "Crear quiz semanal",
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }

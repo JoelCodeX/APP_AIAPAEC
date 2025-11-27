@@ -1,17 +1,14 @@
 package com.jotadev.aiapaec.ui.screens.exams
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.*
-import java.util.*
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -21,8 +18,10 @@ import kotlinx.coroutines.isActive
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jotadev.aiapaec.presentation.BimestersViewModel
+import com.jotadev.aiapaec.ui.components.exam.CreateExamDialog
+import com.jotadev.aiapaec.ui.components.exam.ExamsList
 import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
-import com.jotadev.aiapaec.ui.components.Exam as UiExam
+import com.jotadev.aiapaec.ui.components.exam.Exam as UiExam
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -154,9 +153,14 @@ fun ExamsScreen(navController: NavController) {
                 if (classId != null && bimesterId != null) {
                     val editingIdInt = editingExam?.id?.toIntOrNull()
                     if (editingExam == null) {
-                        examsVm.createExam(name, classId, bimesterId)
+                        examsVm.createExam(classId, bimesterId, name)
                     } else if (editingIdInt != null) {
-                        examsVm.updateExam(id = editingIdInt, title = name, classId = classId, bimesterId = bimesterId)
+                        examsVm.updateExam(
+                            id = editingIdInt,
+                            classId = classId,
+                            bimesterId = bimesterId,
+                            detalle = name
+                        )
                     }
                 }
             },

@@ -8,12 +8,12 @@ import com.jotadev.aiapaec.domain.models.QuizzesPage
 fun QuizDto.toDomain(): Quiz {
     return Quiz(
         id = id,
-        title = title,
         bimesterId = bimester_id,
         unidadId = unidad_id,
         sedeId = sede_id,
         gradoId = grado_id,
         seccionId = seccion_id,
+        weekNumber = week_number,
         fecha = fecha,
         numQuestions = num_questions,
         detalle = detalle,

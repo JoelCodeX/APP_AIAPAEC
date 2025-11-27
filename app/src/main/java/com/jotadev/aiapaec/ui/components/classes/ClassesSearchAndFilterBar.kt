@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.classes
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background

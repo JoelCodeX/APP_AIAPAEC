@@ -6,6 +6,8 @@ import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
 import com.jotadev.aiapaec.data.repository.ClassesRepositoryImpl
 import com.jotadev.aiapaec.data.repository.BimestersRepositoryImpl
 import com.jotadev.aiapaec.data.repository.QuizzesRepositoryImpl
+import com.jotadev.aiapaec.data.repository.UnitsRepositoryImpl
+import com.jotadev.aiapaec.data.repository.WeeksRepositoryImpl
 import com.jotadev.aiapaec.data.api.RetrofitClient
 import com.jotadev.aiapaec.domain.repository.AuthRepository
 import com.jotadev.aiapaec.domain.repository.UserRepository
@@ -13,12 +15,16 @@ import com.jotadev.aiapaec.domain.repository.StudentRepository
 import com.jotadev.aiapaec.domain.repository.ClassesRepository
 import com.jotadev.aiapaec.domain.repository.BimestersRepository
 import com.jotadev.aiapaec.domain.repository.QuizzesRepository
+import com.jotadev.aiapaec.domain.repository.UnitsRepository
+import com.jotadev.aiapaec.domain.repository.WeeksRepository
 import com.jotadev.aiapaec.domain.usecases.CheckAuthStatusUseCase
 import com.jotadev.aiapaec.domain.usecases.GetCurrentUserUseCase
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
 import com.jotadev.aiapaec.domain.usecases.GetClassesUseCase
 import com.jotadev.aiapaec.domain.usecases.GetBimestersUseCase
 import com.jotadev.aiapaec.domain.usecases.GetQuizzesUseCase
+import com.jotadev.aiapaec.domain.usecases.GetUnitsUseCase
+import com.jotadev.aiapaec.domain.usecases.GetWeeksUseCase
 import com.jotadev.aiapaec.domain.usecases.CreateQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.UpdateQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.DeleteQuizUseCase
@@ -69,6 +75,18 @@ object AppModule {
         return BimestersRepositoryImpl(RetrofitClient.apiService)
     }
 
+    // @Provides
+    // @Singleton
+    fun provideUnitsRepository(): UnitsRepository {
+        return UnitsRepositoryImpl(RetrofitClient.apiService)
+    }
+
+    // @Provides
+    // @Singleton
+    fun provideWeeksRepository(): WeeksRepository {
+        return WeeksRepositoryImpl(RetrofitClient.apiService)
+    }
+
     // Quizzes
     fun provideQuizzesRepository(): QuizzesRepository {
         return QuizzesRepositoryImpl()
@@ -110,6 +128,14 @@ object AppModule {
     // @Provides
     fun provideGetBimestersUseCase(bimestersRepository: BimestersRepository): GetBimestersUseCase {
         return GetBimestersUseCase(bimestersRepository)
+    }
+
+    fun provideGetUnitsUseCase(unitsRepository: UnitsRepository): GetUnitsUseCase {
+        return GetUnitsUseCase(unitsRepository)
+    }
+
+    fun provideGetWeeksUseCase(weeksRepository: WeeksRepository): GetWeeksUseCase {
+        return GetWeeksUseCase(weeksRepository)
     }
 
     fun provideGetQuizzesUseCase(quizzesRepository: QuizzesRepository): GetQuizzesUseCase {

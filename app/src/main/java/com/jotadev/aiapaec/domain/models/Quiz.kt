@@ -2,12 +2,12 @@ package com.jotadev.aiapaec.domain.models
 
 data class Quiz(
     val id: Int,
-    val title: String,
     val bimesterId: Int?,
     val unidadId: Int?,
     val sedeId: Int?,
     val gradoId: Int?,
     val seccionId: Int?,
+    val weekNumber: Int?,
     val fecha: String,
     val numQuestions: Int?,
     val detalle: String?,

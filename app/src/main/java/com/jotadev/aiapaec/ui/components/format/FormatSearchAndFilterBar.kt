@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.format
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.jotadev.aiapaec.ui.components.FilterDropdown
 
 @Composable
 fun FormatSearchAndFilterBar(
@@ -112,8 +113,11 @@ fun FormatSearchAndFilterBar(
                         selectedValue = selectedSection ?: "Todas",
                         options = listOf("Todas") + sectionOptions,
                         onValueChange = { onSectionChange(if (it == "Todas") null else it) },
-                        placeholder = if (isMetaLoading) "Cargando…" else if ((selectedGrade ?: "").isBlank()) "Selecciona grado primero" else if (sectionOptions.isEmpty()) "Sin datos" else null,
-                        enabled = !isMetaLoading && sectionOptions.isNotEmpty() && !(selectedGrade ?: "").isBlank()
+                        placeholder = if (isMetaLoading) "Cargando…" else if ((selectedGrade
+                                ?: "").isBlank()
+                        ) "Selecciona grado primero" else if (sectionOptions.isEmpty()) "Sin datos" else null,
+                        enabled = !isMetaLoading && sectionOptions.isNotEmpty() && !(selectedGrade
+                            ?: "").isBlank()
                     )
                 }
 

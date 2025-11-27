@@ -23,8 +23,8 @@ import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import com.jotadev.aiapaec.navigation.NavigationRoutes
-import com.jotadev.aiapaec.ui.components.StudentsList
-import com.jotadev.aiapaec.ui.components.StudentsSearchAndFilterBar
+import com.jotadev.aiapaec.ui.components.students.StudentsList
+import com.jotadev.aiapaec.ui.components.students.StudentsSearchAndFilterBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable

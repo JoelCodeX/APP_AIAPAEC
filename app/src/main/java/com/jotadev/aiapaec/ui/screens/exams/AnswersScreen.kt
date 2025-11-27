@@ -149,7 +149,7 @@ fun AnswersScreen(navController: NavController, examId: String) {
             val quiz = state.quiz
             if (quiz != null && !editMode) {
                 ExamSummaryCard(
-                    title = quiz.title,
+                    title = (quiz.detalle ?: "QUIZ SEMANAL"),
                     className = listOfNotNull(quiz.gradoNombre, quiz.seccionNombre).joinToString(" ").ifBlank { "—" },
                     numQuestions = quiz.numQuestions ?: 0,
                     pointsPerQuestion = state.pointsPerQuestion

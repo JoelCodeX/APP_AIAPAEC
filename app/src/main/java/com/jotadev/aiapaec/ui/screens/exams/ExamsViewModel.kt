@@ -9,7 +9,7 @@ import com.jotadev.aiapaec.domain.usecases.CreateQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.DeleteQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.GetQuizzesUseCase
 import com.jotadev.aiapaec.domain.usecases.UpdateQuizUseCase
-import com.jotadev.aiapaec.ui.components.Exam as UiExam
+import com.jotadev.aiapaec.ui.components.exam.Exam as UiExam
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,17 +58,16 @@ class ExamsViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(searchQuery = query)
     }
 
-    fun createExam(title: String, classId: Int, bimesterId: Int) {
+    fun createExam(classId: Int, bimesterId: Int, detalle: String?) {
         viewModelScope.launch {
             when (val result = createQuiz(
-                title = title,
                 bimesterId = bimesterId,
                 unidadId = null,
                 gradoId = null,
                 seccionId = null,
                 fecha = "",
                 numQuestions = null,
-                detalle = null,
+                detalle = detalle,
                 asignacionId = null
             )) {
                 is Result.Loading -> {
@@ -85,18 +84,17 @@ class ExamsViewModel : ViewModel() {
         }
     }
 
-    fun updateExam(id: Int, title: String, classId: Int, bimesterId: Int) {
+    fun updateExam(id: Int, classId: Int, bimesterId: Int, detalle: String?) {
         viewModelScope.launch {
             when (val result = updateQuiz(
                 id = id,
-                title = title,
                 bimesterId = bimesterId,
                 unidadId = null,
                 gradoId = null,
                 seccionId = null,
                 fecha = null,
                 numQuestions = null,
-                detalle = null,
+                detalle = detalle,
                 asignacionId = null
             )) {
                 is Result.Loading -> {
@@ -144,7 +142,7 @@ class ExamsViewModel : ViewModel() {
         val fechaStr = this.fecha.ifEmpty { this.createdAt ?: "" }
         return UiExam(
             id = this.id.toString(),
-            name = this.title,
+            name = this.detalle ?: "Examen",
             className = gradoSeccion,
             bimester = this.bimesterName ?: "",
             type = "Sin asignar",

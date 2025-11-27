@@ -154,11 +154,11 @@ class QuizzesRepositoryImpl : QuizzesRepository {
     }
 
     override suspend fun createQuiz(
-        title: String,
         bimesterId: Int?,
         unidadId: Int?,
         gradoId: Int?,
         seccionId: Int?,
+        weekNumber: Int?,
         fecha: String,
         numQuestions: Int?,
         detalle: String?,
@@ -166,11 +166,11 @@ class QuizzesRepositoryImpl : QuizzesRepository {
     ): Result<Quiz> {
         return try {
             val request = CreateQuizRequest(
-                title = title,
                 bimester_id = bimesterId,
                 unidad_id = unidadId,
                 grado_id = gradoId,
                 seccion_id = seccionId,
+                week_number = weekNumber,
                 fecha = fecha,
                 num_questions = numQuestions,
                 detalle = detalle,
@@ -202,11 +202,11 @@ class QuizzesRepositoryImpl : QuizzesRepository {
 
     override suspend fun updateQuiz(
         id: Int,
-        title: String?,
         bimesterId: Int?,
         unidadId: Int?,
         gradoId: Int?,
         seccionId: Int?,
+        weekNumber: Int?,
         fecha: String?,
         numQuestions: Int?,
         detalle: String?,
@@ -214,11 +214,11 @@ class QuizzesRepositoryImpl : QuizzesRepository {
     ): Result<Quiz> {
         return try {
             val request = UpdateQuizRequest(
-                title = title,
                 bimester_id = bimesterId,
                 unidad_id = unidadId,
                 grado_id = gradoId,
                 seccion_id = seccionId,
+                week_number = weekNumber,
                 fecha = fecha,
                 num_questions = numQuestions,
                 detalle = detalle,

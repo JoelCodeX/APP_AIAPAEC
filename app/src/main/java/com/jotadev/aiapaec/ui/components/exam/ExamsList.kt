@@ -1,11 +1,10 @@
-package com.jotadev.aiapaec.ui.components
+package com.jotadev.aiapaec.ui.components.exam
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +21,7 @@ fun ExamsList(
     modifier: Modifier = Modifier
 ) {
     var expandedExamId by remember { mutableStateOf<String?>(null) }
+    val sortedExams = exams.sortedBy { it.id.toIntOrNull() ?: Int.MAX_VALUE }
     if (exams.isEmpty()) {
         // ESTADO VACIO
         Box(
@@ -61,7 +61,7 @@ fun ExamsList(
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(exams) { exam ->
+            items(sortedExams) { exam ->
                 ExamCard(
                     exam = exam,
                     onEditClick = onEditExam,

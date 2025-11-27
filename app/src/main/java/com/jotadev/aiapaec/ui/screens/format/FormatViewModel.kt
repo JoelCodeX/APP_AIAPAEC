@@ -15,6 +15,8 @@ data class FormatItem(
     val createdAt: String,
     val grade: String = "",
     val section: String = "",
+    val gradeId: Int? = null,
+    val sectionId: Int? = null,
     val numQuestions: Int = 0,
     val formatType: String = "",
     val scoreFormat: String = ""
@@ -59,6 +61,8 @@ class FormatViewModel : ViewModel() {
                         createdAt = "",
                         grade = dto.grado_nombre ?: "",
                         section = dto.seccion_nombre ?: "",
+                        gradeId = dto.grado_id,
+                        sectionId = dto.seccion_id,
                         numQuestions = dto.numero_preguntas,
                         formatType = dto.formato_nombre ?: "",
                         scoreFormat = (dto.puntaje ?: 0.0).toString()
