@@ -7,6 +7,7 @@ data class Quiz(
     val sedeId: Int?,
     val gradoId: Int?,
     val seccionId: Int?,
+    val weekId: Int?,
     val weekNumber: Int?,
     val fecha: String,
     val numQuestions: Int?,

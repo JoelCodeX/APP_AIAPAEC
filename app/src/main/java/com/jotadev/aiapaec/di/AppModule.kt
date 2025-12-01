@@ -3,7 +3,8 @@ package com.jotadev.aiapaec.di
 import com.jotadev.aiapaec.data.repository.AuthRepositoryImpl
 import com.jotadev.aiapaec.data.repository.UserRepositoryImpl
 import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
-import com.jotadev.aiapaec.data.repository.ClassesRepositoryImpl
+// Eliminado ClassesRepositoryImpl
+import com.jotadev.aiapaec.data.repository.GradesRepositoryImpl
 import com.jotadev.aiapaec.data.repository.BimestersRepositoryImpl
 import com.jotadev.aiapaec.data.repository.QuizzesRepositoryImpl
 import com.jotadev.aiapaec.data.repository.UnitsRepositoryImpl
@@ -12,7 +13,8 @@ import com.jotadev.aiapaec.data.api.RetrofitClient
 import com.jotadev.aiapaec.domain.repository.AuthRepository
 import com.jotadev.aiapaec.domain.repository.UserRepository
 import com.jotadev.aiapaec.domain.repository.StudentRepository
-import com.jotadev.aiapaec.domain.repository.ClassesRepository
+// Eliminado ClassesRepository
+import com.jotadev.aiapaec.domain.repository.GradesRepository
 import com.jotadev.aiapaec.domain.repository.BimestersRepository
 import com.jotadev.aiapaec.domain.repository.QuizzesRepository
 import com.jotadev.aiapaec.domain.repository.UnitsRepository
@@ -20,7 +22,8 @@ import com.jotadev.aiapaec.domain.repository.WeeksRepository
 import com.jotadev.aiapaec.domain.usecases.CheckAuthStatusUseCase
 import com.jotadev.aiapaec.domain.usecases.GetCurrentUserUseCase
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
-import com.jotadev.aiapaec.domain.usecases.GetClassesUseCase
+// Eliminado GetClassesUseCase
+import com.jotadev.aiapaec.domain.usecases.GetGradesByBranchUseCase
 import com.jotadev.aiapaec.domain.usecases.GetBimestersUseCase
 import com.jotadev.aiapaec.domain.usecases.GetQuizzesUseCase
 import com.jotadev.aiapaec.domain.usecases.GetUnitsUseCase
@@ -33,7 +36,7 @@ import com.jotadev.aiapaec.domain.usecases.LogoutUseCase
 import com.jotadev.aiapaec.domain.usecases.UploadAnswerKeyUseCase
 import com.jotadev.aiapaec.domain.usecases.ListAnswerKeysUseCase
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
-import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
+// Eliminado ClassesViewModel
 import com.jotadev.aiapaec.presentation.BimestersViewModel
 // import dagger.Module
 // import dagger.Provides
@@ -63,10 +66,10 @@ object AppModule {
         return StudentRepositoryImpl()
     }
     
-    // @Provides
-    // @Singleton
-    fun provideClassesRepository(): ClassesRepository {
-        return ClassesRepositoryImpl()
+    // Eliminado provideClassesRepository
+
+    fun provideGradesRepository(): GradesRepository {
+        return GradesRepositoryImpl()
     }
     
     // @Provides
@@ -120,9 +123,10 @@ object AppModule {
         return GetStudentsUseCase(studentRepository)
     }
     
-    // @Provides
-    fun provideGetClassesUseCase(classesRepository: ClassesRepository): GetClassesUseCase {
-        return GetClassesUseCase(classesRepository)
+    // Eliminado provideGetClassesUseCase
+
+    fun provideGetGradesByBranchUseCase(gradesRepository: GradesRepository): GetGradesByBranchUseCase {
+        return GetGradesByBranchUseCase(gradesRepository)
     }
     
     // @Provides
@@ -167,13 +171,11 @@ object AppModule {
         return StudentsViewModel(getStudentsUseCase)
     }
     
-    // @Provides
-    fun provideClassesViewModel(getClassesUseCase: GetClassesUseCase): ClassesViewModel {
-        return ClassesViewModel(getClassesUseCase)
-    }
+    // Eliminado provideClassesViewModel
+}
     
     // @Provides
     fun provideBimestersViewModel(): BimestersViewModel {
         return BimestersViewModel()
     }
-}
+

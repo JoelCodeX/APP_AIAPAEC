@@ -13,6 +13,7 @@ fun QuizDto.toDomain(): Quiz {
         sedeId = sede_id,
         gradoId = grado_id,
         seccionId = seccion_id,
+        weekId = week_id,
         weekNumber = week_number,
         fecha = fecha,
         numQuestions = num_questions,

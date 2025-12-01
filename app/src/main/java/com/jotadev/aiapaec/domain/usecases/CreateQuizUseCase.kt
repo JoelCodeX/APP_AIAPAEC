@@ -10,12 +10,12 @@ class CreateQuizUseCase(private val repository: QuizzesRepository) {
         unidadId: Int?,
         gradoId: Int?,
         seccionId: Int?,
-        weekNumber: Int?,
+        weekId: Int?,
         fecha: String,
         numQuestions: Int?,
         detalle: String?,
         asignacionId: Int?
     ): Result<Quiz> {
-        return repository.createQuiz(bimesterId, unidadId, gradoId, seccionId, weekNumber, fecha, numQuestions, detalle, asignacionId)
+        return repository.createQuiz(bimesterId, unidadId, gradoId, seccionId, weekId, fecha, numQuestions, detalle, asignacionId)
     }
 }

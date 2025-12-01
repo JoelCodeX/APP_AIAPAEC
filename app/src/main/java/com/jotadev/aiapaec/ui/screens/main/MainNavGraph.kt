@@ -7,8 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jotadev.aiapaec.navigation.NavigationRoutes
-import com.jotadev.aiapaec.ui.screens.classes.ClassesScreen
-import com.jotadev.aiapaec.ui.screens.classes.DetailsClasses
+import com.jotadev.aiapaec.ui.screens.grades.GradesScreen
 import com.jotadev.aiapaec.ui.screens.exams.AnswersScreen
 import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
 import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
@@ -37,8 +36,8 @@ fun MainNavGraph(
         composable(NavigationRoutes.EXAMS) {
             ExamsScreen(navController = navController)
         }
-        composable(NavigationRoutes.CLASSES) {
-            ClassesScreen(navController = navController)
+        composable(NavigationRoutes.GRADES) {
+            GradesScreen(navController = navController)
         }
         composable(NavigationRoutes.STUDENTS) {
             StudentsScreen(navController = navController)
@@ -92,9 +91,6 @@ fun MainNavGraph(
             DetailsStudent(navController = navController, studentId = idInt)
         }
 
-        composable(NavigationRoutes.DETAILS_CLASS) { backStackEntry ->
-            val classId = backStackEntry.arguments?.getString("classId") ?: ""
-            DetailsClasses(navController = navController, classId = classId)
-        }
+        // Ruta DETAILS_CLASS eliminada al remover funcionalidad de clases
     }
 }

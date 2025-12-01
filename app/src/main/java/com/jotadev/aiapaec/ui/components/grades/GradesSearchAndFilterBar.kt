@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components.classes
+package com.jotadev.aiapaec.ui.components.grades
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -13,14 +13,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.jotadev.aiapaec.ui.components.FilterDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClassesSearchAndFilterBar(
+fun GradesSearchAndFilterBar(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     selectedLevel: String,
     onLevelChange: (String) -> Unit,
+    selectedGrade: String,
+    onGradeChange: (String) -> Unit,
+    gradeOptions: List<String>,
     modifier: Modifier = Modifier
 ) {
     var showFilters by remember { mutableStateOf(false) }
@@ -41,7 +45,7 @@ fun ClassesSearchAndFilterBar(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
                 modifier = Modifier.weight(1f), // <- AQUÍ USAMOS weight
-                placeholder = { Text("Buscar clases...",
+                placeholder = { Text("Buscar grados disponibles...",
                     color = MaterialTheme.colorScheme.primary) },
                 leadingIcon = {
                     Icon(
@@ -73,16 +77,26 @@ fun ClassesSearchAndFilterBar(
         }
         // FILTROS EXPANDIBLES
         AnimatedVisibility(visible = showFilters) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // FILTRO NIVEL EDUCATIVO
                 LevelFilterDropdown(
                     selectedLevel = selectedLevel,
-                    onLevelChange = onLevelChange
+                    onLevelChange = onLevelChange,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // FILTRO GRADO
+                FilterDropdown(
+                    modifier = Modifier.weight(1f),
+                    label = "Grado",
+                    selectedValue = selectedGrade,
+                    options = gradeOptions,
+                    onValueChange = onGradeChange
                 )
             }
         }
@@ -93,12 +107,14 @@ fun ClassesSearchAndFilterBar(
 @Composable
 private fun LevelFilterDropdown(
     selectedLevel: String,
-    onLevelChange: (String) -> Unit
+    onLevelChange: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
     val levelOptions = listOf("Todos los niveles", "Primaria", "Secundaria")
 
     ExposedDropdownMenuBox(
+        modifier = modifier,
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {

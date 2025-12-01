@@ -20,8 +20,8 @@ sealed class BottomNavItem(
         iconOutlined = R.drawable.assignment_outline,
         label = "Semanales"
     )
-    data object Classes : BottomNavItem(
-        route = NavigationRoutes.CLASSES,
+    data object Grades : BottomNavItem(
+        route = NavigationRoutes.GRADES,
         iconFilled = R.drawable.group_filled,
         iconOutlined = R.drawable.group_outline,
         label = "Grados"
@@ -39,6 +39,6 @@ sealed class BottomNavItem(
         label = "Formatos"
     )
     companion object {
-        fun getAllItems() = listOf(Home, Formats, Exams, Classes, Students)
+        fun getAllItems() = listOf(Home, Formats, Exams, Grades, Students)
     }
 }

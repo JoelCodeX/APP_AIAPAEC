@@ -9,7 +9,7 @@ object NavigationRoutes {
     const val HOME = "home"
     const val FORMATS = "formats"
     const val EXAMS = "exams"
-    const val CLASSES = "classes"
+    const val GRADES = "grades"
     const val STUDENTS = "students"
     const val SETTINGS = "settings"
 

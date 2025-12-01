@@ -42,6 +42,7 @@ class WeeklyViewModel : ViewModel() {
     private val getWeeks = GetWeeksUseCase(WeeksRepositoryImpl(RetrofitClient.apiService))
     private var unitLabelToId: Map<String, Int> = emptyMap()
     private var weeksByNumber: Map<Int, Week> = emptyMap()
+    private var weeksById: Map<Int, Week> = emptyMap()
     private val weekNumberByQuizId: MutableMap<Int, Int> = mutableMapOf()
 
     init {
@@ -62,12 +63,13 @@ class WeeklyViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, message = null)
+            val weekId = weekNumber?.let { weeksByNumber[it]?.id }
             val res = repo.createQuiz(
                 bimesterId = bimesterId,
                 unidadId = unidadId,
                 gradoId = gradoId,
                 seccionId = seccionId,
-                weekNumber = weekNumber,
+                weekId = weekId,
                 fecha = fecha,
                 numQuestions = numQuestions,
                 detalle = detalle,
@@ -250,6 +252,7 @@ class WeeklyViewModel : ViewModel() {
                 is Result.Success -> {
                     val weeks = result.data.items
                     weeksByNumber = weeks.associateBy { it.weekNumber }
+                    weeksById = weeks.associateBy { it.id }
                     _uiState.value = _uiState.value.copy(isWeeksLoading = false, weekOptions = weeks.map { it.weekNumber }.sorted())
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isWeeksLoading = false, message = result.message)
@@ -271,7 +274,9 @@ class WeeklyViewModel : ViewModel() {
     }
 
     fun getStoredWeekNumberForItem(quiz: Quiz): Int? {
-        return quiz.weekNumber ?: weekNumberByQuizId[quiz.id] ?: parseWeekNumberFromDetalle(quiz.detalle)
+        val direct = quiz.weekNumber
+        val fromId = quiz.weekId?.let { weeksById[it]?.weekNumber }
+        return direct ?: fromId ?: weekNumberByQuizId[quiz.id] ?: parseWeekNumberFromDetalle(quiz.detalle)
     }
 
     private fun parseWeekNumberFromDetalle(detalle: String?): Int? {
@@ -310,13 +315,14 @@ class WeeklyViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
+            val weekId = weekNumber?.let { weeksByNumber[it]?.id }
             when (val res = repo.updateQuiz(
                 id = id,
                 bimesterId = bimesterId,
                 unidadId = unidadId,
                 gradoId = gradoId,
                 seccionId = seccionId,
-                weekNumber = weekNumber,
+                weekId = weekId,
                 fecha = fecha,
                 numQuestions = numQuestions,
                 detalle = detalle,
@@ -325,7 +331,10 @@ class WeeklyViewModel : ViewModel() {
                 is Result.Success -> {
                     val updatedItem = res.data
                     val newList = _uiState.value.quizzes.map { if (it.id == id) updatedItem else it }
-                    weekNumber?.let { wn -> weekNumberByQuizId[id] = wn }
+                    val resolvedWeekNumber = weekNumber
+                        ?: updatedItem.weekId?.let { wkId -> weeksById[wkId]?.weekNumber }
+                        ?: parseWeekNumberFromDetalle(updatedItem.detalle)
+                    resolvedWeekNumber?.let { wn -> weekNumberByQuizId[id] = wn }
                     _uiState.value = _uiState.value.copy(isLoading = false, quizzes = newList, allQuizzes = newList, message = "Semanal actualizado")
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isLoading = false, message = res.message)

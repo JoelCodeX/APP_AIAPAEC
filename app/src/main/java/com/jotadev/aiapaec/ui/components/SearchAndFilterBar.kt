@@ -44,6 +44,7 @@ fun SearchAndFilterBar(
     onBimesterChange: (String) -> Unit,
     selectedClass: String,
     onClassChange: (String) -> Unit,
+    showClassFilter: Boolean = true,
     bimesters: List<String> = listOf(
         "Todos",
         "I Bimestre",
@@ -127,13 +128,15 @@ fun SearchAndFilterBar(
                     )
 
                     // FILTRO CLASE
-                    FilterDropdown(
-                        modifier = Modifier.weight(1f),
-                        label = "Clase",
-                        selectedValue = selectedClass,
-                        options = classes,
-                        onValueChange = onClassChange
-                    )
+                    if (showClassFilter && classes.isNotEmpty()) {
+                        FilterDropdown(
+                            modifier = Modifier.weight(1f),
+                            label = "Grado",
+                            selectedValue = selectedClass,
+                            options = classes,
+                            onValueChange = onClassChange
+                        )
+                    }
                 }
             }
         }

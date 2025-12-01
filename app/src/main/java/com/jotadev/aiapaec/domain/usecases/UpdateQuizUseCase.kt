@@ -11,11 +11,12 @@ class UpdateQuizUseCase(private val repository: QuizzesRepository) {
         unidadId: Int?,
         gradoId: Int?,
         seccionId: Int?,
+        weekId: Int?,
         fecha: String?,
         numQuestions: Int?,
         detalle: String?,
         asignacionId: Int?
     ): Result<Quiz> {
-        return repository.updateQuiz(id, bimesterId, unidadId, gradoId, seccionId, fecha, numQuestions, detalle, asignacionId)
+        return repository.updateQuiz(id, bimesterId, unidadId, gradoId, seccionId, weekId, fecha, numQuestions, detalle, asignacionId)
     }
 }

@@ -51,7 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.presentation.BimestersViewModel
-import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
+import com.jotadev.aiapaec.ui.screens.grades.GradesViewModel
 import com.jotadev.aiapaec.ui.screens.exams.ExamResult
 import com.jotadev.aiapaec.ui.screens.exams.ResultsViewModel
 import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
@@ -69,8 +69,8 @@ fun HomeScreen(
     settingsUiState.userProfile?.institution ?: "AIAPAEC"
     val studentsVm: StudentsViewModel = viewModel()
     val studentsState by studentsVm.uiState.collectAsState()
-    val classesVm: ClassesViewModel = viewModel()
-    val classesState by classesVm.uiState.collectAsState()
+    val gradesVm: GradesViewModel = viewModel()
+    val gradesState by gradesVm.uiState.collectAsState()
     val bimestersVm: BimestersViewModel = viewModel()
     val bimestersState by bimestersVm.uiState.collectAsState()
     val resultsVm: ResultsViewModel = viewModel()
@@ -115,8 +115,8 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f)
                     )
                     MetricCard(
-                        label = "Clases",
-                        value = classesState.total.toString(),
+                        label = "Grados",
+                        value = gradesState.grades.size.toString(),
                         icon = Icons.Rounded.School,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.tertiary,
@@ -164,11 +164,11 @@ private fun CategoryGridSection(
             route = NavigationRoutes.EXAMS
         ),
         CategoryItem(
-            title = "Clases",
+            title = "Grados",
             subtitle = "Organiza contenidos",
             icon = Icons.Rounded.Groups,
             color = MaterialTheme.colorScheme.secondary,
-            route = NavigationRoutes.CLASSES
+            route = NavigationRoutes.GRADES
         ),
         CategoryItem(
             title = "Alumnos",

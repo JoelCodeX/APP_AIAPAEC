@@ -20,7 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jotadev.aiapaec.presentation.BimestersViewModel
 import com.jotadev.aiapaec.ui.components.exam.CreateExamDialog
 import com.jotadev.aiapaec.ui.components.exam.ExamsList
-import com.jotadev.aiapaec.ui.screens.classes.ClassesViewModel
+// Eliminado uso de ClassesViewModel
 import com.jotadev.aiapaec.ui.components.exam.Exam as UiExam
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
@@ -29,9 +29,6 @@ fun ExamsScreen(navController: NavController) {
     // ViewModel for dynamic bimesters
     val bimestersVm: BimestersViewModel = viewModel()
     val bimestersState by bimestersVm.uiState.collectAsStateWithLifecycle()
-    // ViewModel for dynamic classes
-    val classesVm: ClassesViewModel = viewModel()
-    val classesState by classesVm.uiState.collectAsStateWithLifecycle()
     // ViewModel for quizzes-backed exams
     val examsVm: ExamsViewModel = viewModel()
     val examsState by examsVm.uiState.collectAsStateWithLifecycle()
@@ -58,9 +55,7 @@ fun ExamsScreen(navController: NavController) {
     val bimesterOptions = remember(bimestersState.bimesters) {
         listOf("Todos") + bimestersState.bimesters.map { it.name }
     }
-    val classOptions = remember(classesState.classes) {
-        listOf("Todas") + classesState.classes.map { it.name }
-    }
+    val classOptions = remember { listOf("Todas") }
     // LISTA DE EXÁMENES DESDE EL VIEWMODEL (filtrado en backend)
     val filteredExams = examsState.exams
 
@@ -109,11 +104,8 @@ fun ExamsScreen(navController: NavController) {
                         examsVm.loadExams(query = searchText.ifBlank { null }, gradoId = null, seccionId = null, bimesterId = bimesterId)
                     },
                     selectedClass = selectedClass,
-                    onClassChange = {
-                        selectedClass = it
-                        val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == selectedBimester }?.id
-                        examsVm.loadExams(query = if (searchText.isBlank()) null else searchText, gradoId = null, seccionId = null, bimesterId = bimesterId)
-                    },
+                    onClassChange = { selectedClass = it },
+                    showClassFilter = false,
                     bimesters = bimesterOptions,
                     classes = classOptions
                 )
@@ -147,17 +139,16 @@ fun ExamsScreen(navController: NavController) {
         CreateExamDialog(
             isVisible = showDialog,
             onDismiss = { showDialog = false },
-            onSaveExam = { name, className, bimester ->
-                val classId = classesState.classes.firstOrNull { it.name == className }?.id
+            onSaveExam = { name, _, bimester ->
                 val bimesterId = bimestersState.bimesters.firstOrNull { it.name == bimester }?.id
-                if (classId != null && bimesterId != null) {
+                if (bimesterId != null) {
                     val editingIdInt = editingExam?.id?.toIntOrNull()
                     if (editingExam == null) {
-                        examsVm.createExam(classId, bimesterId, name)
+                        examsVm.createExam(0, bimesterId, name)
                     } else if (editingIdInt != null) {
                         examsVm.updateExam(
                             id = editingIdInt,
-                            classId = classId,
+                            classId = 0,
                             bimesterId = bimesterId,
                             detalle = name
                         )
@@ -165,9 +156,9 @@ fun ExamsScreen(navController: NavController) {
                 }
             },
             bimesters = bimestersState.bimesters.map { it.name },
-            classes = classesState.classes.map { it.name },
+            classes = listOf("General"),
             initialName = editingExam?.name ?: "",
-            initialClass = editingExam?.className ?: "",
+            initialClass = editingExam?.className ?: "General",
             initialBimester = editingExam?.bimester ?: "",
             title = if (editingExam == null) "Crear Nuevo Examen" else "Editar Examen"
         )
