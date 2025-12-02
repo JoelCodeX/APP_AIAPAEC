@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -19,9 +19,13 @@ import com.jotadev.aiapaec.domain.models.Grade
 @Composable
 fun GradesList(
     grades: List<Grade>,
-    onGradeClick: (Grade) -> Unit,
+    onSectionAClick: (Grade) -> Unit,
+    onSectionBClick: (Grade) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Estado para controlar qué tarjeta está expandida
+    var expandedGradeId by remember { mutableStateOf<Int?>(null) }
+
     if (grades.isEmpty()) {
         Box(
             modifier = modifier.fillMaxSize(),
@@ -65,8 +69,20 @@ fun GradesList(
         items(grades) { grade ->
             GradeCard(
                 grade = grade,
-                onClick = { onGradeClick(grade) }
+                isExpanded = expandedGradeId == grade.id,
+                onCardClick = {
+                    // Si ya está expandida, la contraemos
+                    // Si no está expandida, expandimos esta y cerramos cualquier otra
+                    expandedGradeId = if (expandedGradeId == grade.id) {
+                        null
+                    } else {
+                        grade.id
+                    }
+                },
+                onSectionAClick = { onSectionAClick(grade) },
+                onSectionBClick = { onSectionBClick(grade) }
             )
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }
