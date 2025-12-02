@@ -13,6 +13,7 @@ import com.jotadev.aiapaec.domain.models.AnswerKey
 import com.jotadev.aiapaec.domain.models.AnswerKeysPage
 import com.jotadev.aiapaec.domain.models.QuizAnswersPage
 import com.jotadev.aiapaec.domain.repository.QuizzesRepository
+import kotlinx.coroutines.CancellationException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -21,9 +22,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 class QuizzesRepositoryImpl : QuizzesRepository {
     private val api = RetrofitClient.apiService
 
-    override suspend fun getQuizzes(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?): Result<QuizzesPage> {
+    override suspend fun getQuizzes(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?, asignacionId: Int?): Result<QuizzesPage> {
         return try {
-            val response = api.getQuizzes(page = page, perPage = perPage, query = query, gradoId = gradoId, seccionId = seccionId, bimesterId = bimesterId)
+            val response = api.getQuizzes(page = page, perPage = perPage, query = query, gradoId = gradoId, seccionId = seccionId, bimesterId = bimesterId, asignacionId = asignacionId)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.data != null) {
@@ -42,6 +43,12 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
@@ -70,6 +77,12 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
@@ -96,6 +109,14 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
@@ -122,6 +143,10 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
@@ -148,6 +173,10 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
@@ -195,6 +224,8 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
@@ -243,6 +274,8 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
@@ -321,6 +354,8 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                 }
                 Result.Error(errorMessage)
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }

@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.screens.exams
+package com.jotadev.aiapaec.ui.screens.exams.answers
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -50,6 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.jotadev.aiapaec.domain.models.QuizAnswer
+import kotlinx.coroutines.delay
+
 // import eliminado: NavigationRoutes no se utiliza
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,7 +101,7 @@ fun AnswersScreen(navController: NavController, examId: String) {
                     navController.popBackStack()
                 }
             }
-            kotlinx.coroutines.delay(100)
+            delay(100)
         }
     }
 
@@ -322,7 +324,7 @@ private fun EmptyState() {
 
 @Composable
 private fun AnswerItem(
-    answer: com.jotadev.aiapaec.domain.models.QuizAnswer,
+    answer: QuizAnswer,
     pointsPerQuestion: Double,
     isEditable: Boolean,
     onOptionChange: (Int, String) -> Unit

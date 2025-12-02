@@ -8,9 +8,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.screens.grades.GradesScreen
-import com.jotadev.aiapaec.ui.screens.exams.AnswersScreen
-import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
-import com.jotadev.aiapaec.ui.screens.exams.ExamsScreen
+import com.jotadev.aiapaec.ui.screens.exams.answers.AnswersScreen
+import com.jotadev.aiapaec.ui.screens.exams.applyexam.ApplyExam
+import com.jotadev.aiapaec.ui.screens.exams.general_exams.ExamsScreen
 import com.jotadev.aiapaec.ui.screens.home.HomeScreen
 import com.jotadev.aiapaec.ui.screens.format.FormatScreen
 import com.jotadev.aiapaec.ui.screens.format.weekly.WeeklyScreen
@@ -45,8 +45,9 @@ fun MainNavGraph(
         composable(NavigationRoutes.FORMATS) {
             FormatScreen(navController = navController)
         }
-        composable("${NavigationRoutes.WEEKLY}?title={title}") {
-            WeeklyScreen(navController = navController)
+        composable("${NavigationRoutes.WEEKLY}?title={title}&assignmentId={assignmentId}") { backStackEntry ->
+            val assignmentIdArg = backStackEntry.arguments?.getString("assignmentId")?.toIntOrNull()
+            WeeklyScreen(navController = navController, assignmentId = assignmentIdArg)
         }
         // La configuración se abre como panel lateral, no navegamos a una ruta aparte
 

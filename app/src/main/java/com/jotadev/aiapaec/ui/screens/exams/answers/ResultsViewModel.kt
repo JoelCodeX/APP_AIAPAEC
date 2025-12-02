@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.screens.exams
+package com.jotadev.aiapaec.ui.screens.exams.answers
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

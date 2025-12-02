@@ -52,8 +52,8 @@ import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.presentation.BimestersViewModel
 import com.jotadev.aiapaec.ui.screens.grades.GradesViewModel
-import com.jotadev.aiapaec.ui.screens.exams.ExamResult
-import com.jotadev.aiapaec.ui.screens.exams.ResultsViewModel
+import com.jotadev.aiapaec.ui.screens.exams.answers.ExamResult
+import com.jotadev.aiapaec.ui.screens.exams.answers.ResultsViewModel
 import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
 import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
 

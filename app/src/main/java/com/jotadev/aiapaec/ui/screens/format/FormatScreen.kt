@@ -161,7 +161,7 @@ fun FormatScreen(navController: NavController) {
                         handle?.set("weekly_section_name", item.section)
                         handle?.set("weekly_section_id", item.sectionId)
                         handle?.set("weekly_num_questions", item.numQuestions)
-                        navController.navigate(NavigationRoutes.weekly(item.formatType))
+                        navController.navigate(NavigationRoutes.weekly(item.formatType, item.id.toInt()))
                     },
                     modifier = Modifier.fillMaxSize()
                 )

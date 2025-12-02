@@ -84,7 +84,8 @@ interface ApiService {
         @Query("q") query: String? = null,
         @Query("grado_id") gradoId: Int? = null,
         @Query("seccion_id") seccionId: Int? = null,
-        @Query("bimester_id") bimesterId: Int? = null
+        @Query("bimester_id") bimesterId: Int? = null,
+        @Query("asignacion_id") asignacionId: Int? = null
     ): Response<QuizzesListResponse>
 
     @GET("quizzes/{id}")
@@ -505,6 +506,7 @@ data class QuizDto(
     @SerializedName("detalle") val detalle: String?,
     @SerializedName("created_at") val created_at: String?,
     @SerializedName("updated_at") val updated_at: String?,
+    @SerializedName("asignacion_id") val asignacion_id: Int?,
     @SerializedName("grado_nombre") val grado_nombre: String?,
     @SerializedName("seccion_nombre") val seccion_nombre: String?,
     @SerializedName("bimester_name") val bimester_name: String?

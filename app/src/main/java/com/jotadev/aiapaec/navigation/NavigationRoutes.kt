@@ -42,5 +42,5 @@ object NavigationRoutes {
     fun detailsClass(classId: Int) = "class_detail/$classId"
     fun cropPreview(path: String) = "${CROP_PREVIEW}?path=$path"
     fun scanResult(runId: String, overlayUrl: String, tipo: Int) = "${SCAN_RESULT}?run_id=$runId&overlay=$overlayUrl&tipo=$tipo"
-    fun weekly(title: String) = "${WEEKLY}?title=${Uri.encode(title)}"
+    fun weekly(title: String, assignmentId: Int) = "${WEEKLY}?title=${Uri.encode(title)}&assignmentId=$assignmentId"
 }

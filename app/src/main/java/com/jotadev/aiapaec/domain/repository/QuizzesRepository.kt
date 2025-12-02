@@ -8,7 +8,7 @@ import com.jotadev.aiapaec.domain.models.AnswerKeysPage
 import com.jotadev.aiapaec.domain.models.QuizAnswersPage
 
 interface QuizzesRepository {
-    suspend fun getQuizzes(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?): Result<QuizzesPage>
+    suspend fun getQuizzes(page: Int, perPage: Int, query: String?, gradoId: Int?, seccionId: Int?, bimesterId: Int?, asignacionId: Int? = null): Result<QuizzesPage>
     suspend fun getQuiz(id: Int): Result<Quiz>
     suspend fun createQuiz(
         bimesterId: Int?,

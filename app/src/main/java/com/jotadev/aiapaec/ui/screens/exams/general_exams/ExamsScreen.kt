@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.screens.exams
+package com.jotadev.aiapaec.ui.screens.exams.general_exams
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

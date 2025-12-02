@@ -69,6 +69,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.FilterDropdown
 import com.jotadev.aiapaec.ui.components.format.InfoChip
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -76,7 +77,7 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun WeeklyScreen(navController: NavController) {
+fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
     val vm: WeeklyViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
     var isRefreshing by remember { mutableStateOf(false) }
@@ -87,7 +88,6 @@ fun WeeklyScreen(navController: NavController) {
     val weeklyCreateRequest by weeklyCreateFlow.collectAsStateWithLifecycle()
 
     val prevHandle = navController.previousBackStackEntry?.savedStateHandle
-    val assignmentId = prevHandle?.get<Int>("weekly_assignment_id")
     val gradeName = prevHandle?.get<String>("weekly_grade_name") ?: ""
     val sectionName = prevHandle?.get<String>("weekly_section_name") ?: ""
     val numQuestions = prevHandle?.get<Int>("weekly_num_questions") ?: 0
@@ -152,7 +152,8 @@ fun WeeklyScreen(navController: NavController) {
                         vm.loadQuizzes(
                             query = it.ifBlank { null },
                             bimesterLabel = selectedBimesterLabel,
-                            unidadLabel = selectedUnidadLabel
+                            unidadLabel = selectedUnidadLabel,
+                            assignmentId = assignmentId
                         )
                     },
                     bimesterOptions = bimesterOptions,
@@ -164,7 +165,8 @@ fun WeeklyScreen(navController: NavController) {
                         vm.loadQuizzes(
                             query = searchText.ifBlank { null },
                             bimesterLabel = it,
-                            unidadLabel = selectedUnidadLabel
+                            unidadLabel = selectedUnidadLabel,
+                            assignmentId = assignmentId
                         )
                     },
                     selectedUnidad = selectedUnidadLabel,
@@ -173,7 +175,8 @@ fun WeeklyScreen(navController: NavController) {
                         vm.loadQuizzes(
                             query = searchText.ifBlank { null },
                             bimesterLabel = selectedBimesterLabel,
-                            unidadLabel = it
+                            unidadLabel = it,
+                            assignmentId = assignmentId
                         )
                     },
                     unidadOptions = unidades,
@@ -182,7 +185,9 @@ fun WeeklyScreen(navController: NavController) {
 
                 WeeklyList(
                     items = state.quizzes,
-                    onClick = {},
+                    onClick = { quiz ->
+                        navController.navigate(NavigationRoutes.applyExam(quiz.id.toString()))
+                    },
                     modifier = Modifier.fillMaxSize(),
                     getWeekNumberForItem = vm::getStoredWeekNumberForItem,
                     onDelete = { vm.deleteWeekly(it.id) },
@@ -208,6 +213,10 @@ fun WeeklyScreen(navController: NavController) {
                 contentColor = MaterialTheme.colorScheme.primary
             )
         }
+    }
+
+    LaunchedEffect(assignmentId) {
+        vm.loadQuizzes(assignmentId = assignmentId)
     }
 
     if (showCreateDialog) {

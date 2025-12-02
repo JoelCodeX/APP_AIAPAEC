@@ -20,6 +20,7 @@ fun QuizDto.toDomain(): Quiz {
         detalle = detalle,
         createdAt = created_at,
         updatedAt = updated_at,
+        asignacionId = asignacion_id,
         gradoNombre = grado_nombre,
         seccionNombre = seccion_nombre,
         bimesterName = bimester_name

@@ -1,7 +1,8 @@
-package com.jotadev.aiapaec.ui.screens.exams
+package com.jotadev.aiapaec.ui.screens.exams.answers
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jotadev.aiapaec.data.api.UpdateAnswerItem
 import com.jotadev.aiapaec.domain.models.Quiz
 import com.jotadev.aiapaec.domain.models.QuizAnswer
 import com.jotadev.aiapaec.domain.models.Result
@@ -154,7 +155,7 @@ class AnswersViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val payload = _uiState.value.answers.map {
-                com.jotadev.aiapaec.data.api.UpdateAnswerItem(
+                UpdateAnswerItem(
                     question_number = it.questionNumber,
                     correct_option = it.correctOption,
                     points_value = it.pointsValue

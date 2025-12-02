@@ -18,7 +18,7 @@ sealed class BottomNavItem(
         route = NavigationRoutes.EXAMS,
         iconFilled = R.drawable.assignment_filled,
         iconOutlined = R.drawable.assignment_outline,
-        label = "Semanales"
+        label = "Admisión"
     )
     data object Grades : BottomNavItem(
         route = NavigationRoutes.GRADES,
@@ -36,9 +36,9 @@ sealed class BottomNavItem(
         route = NavigationRoutes.FORMATS,
         iconFilled = R.drawable.format_filled,
         iconOutlined = R.drawable.format_outline,
-        label = "Formatos"
+        label = "Semanales"
     )
     companion object {
-        fun getAllItems() = listOf(Home, Formats, Exams, Grades, Students)
+        fun getAllItems() = listOf(Home, Formats, Grades, Students, Exams)
     }
 }

@@ -3,7 +3,6 @@ package com.jotadev.aiapaec
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -13,7 +12,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.jotadev.aiapaec.navigation.AppNavigation
-import com.jotadev.aiapaec.ui.screens.exams.ApplyExam
 import com.jotadev.aiapaec.ui.theme.AIAPAECTheme
 
 @Suppress("DEPRECATION")

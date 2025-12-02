@@ -1,5 +1,7 @@
-package com.jotadev.aiapaec.ui.screens.exams
+package com.jotadev.aiapaec.ui.screens.exams.applyexam
 
+import android.content.ContentResolver
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -113,7 +115,7 @@ class ApplyExamViewModel(
         )
     }
 
-    fun uploadAnswerKeyFromUri(quizId: Int, uri: android.net.Uri, contentResolver: android.content.ContentResolver) {
+    fun uploadAnswerKeyFromUri(quizId: Int, uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {

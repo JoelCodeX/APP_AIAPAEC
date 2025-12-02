@@ -1,5 +1,6 @@
-package com.jotadev.aiapaec.ui.screens.exams
+package com.jotadev.aiapaec.ui.screens.exams.applyexam
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,7 +32,6 @@ import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -84,7 +84,7 @@ fun ApplyExam(navController: NavController, examId: String) {
             try {
                 context.contentResolver.takePersistableUriPermission(
                     uri,
-                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
             } catch (_: Exception) { /* Ignorar si no aplica */ }
             if (state.quiz != null) {

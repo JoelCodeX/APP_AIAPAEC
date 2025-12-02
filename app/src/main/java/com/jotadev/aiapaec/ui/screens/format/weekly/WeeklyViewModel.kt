@@ -2,6 +2,7 @@ package com.jotadev.aiapaec.ui.screens.format.weekly
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import com.jotadev.aiapaec.data.api.RetrofitClient
 import com.jotadev.aiapaec.data.repository.QuizzesRepositoryImpl
 import com.jotadev.aiapaec.data.repository.UnitsRepositoryImpl
@@ -44,6 +45,7 @@ class WeeklyViewModel : ViewModel() {
     private var weeksByNumber: Map<Int, Week> = emptyMap()
     private var weeksById: Map<Int, Week> = emptyMap()
     private val weekNumberByQuizId: MutableMap<Int, Int> = mutableMapOf()
+    private var loadJob: Job? = null
 
     init {
         loadQuizzes()
@@ -142,9 +144,11 @@ class WeeklyViewModel : ViewModel() {
         grade: String? = null,
         section: String? = null,
         bimesterLabel: String? = null,
-        unidadLabel: String? = null
+        unidadLabel: String? = null,
+        assignmentId: Int? = null
     ) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             val gradeId = grade?.let { gradeNameToId[it] }
             val bimesterId = bimesterLabel?.let { label ->
@@ -156,7 +160,7 @@ class WeeklyViewModel : ViewModel() {
                     else -> null
                 }
             }
-            val res = repo.getQuizzes(page = 1, perPage = 50, query = query, gradoId = gradeId, seccionId = null, bimesterId = bimesterId)
+            val res = repo.getQuizzes(page = 1, perPage = 50, query = query, gradoId = gradeId, seccionId = null, bimesterId = bimesterId, asignacionId = assignmentId)
             when (res) {
                 is Result.Success -> {
                     var items = res.data.items

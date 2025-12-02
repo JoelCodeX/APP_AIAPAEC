@@ -14,6 +14,7 @@ data class Quiz(
     val detalle: String?,
     val createdAt: String?,
     val updatedAt: String?,
+    val asignacionId: Int?,
     val gradoNombre: String?,
     val seccionNombre: String?,
     val bimesterName: String?
