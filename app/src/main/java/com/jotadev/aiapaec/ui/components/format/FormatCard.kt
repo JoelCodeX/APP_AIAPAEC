@@ -74,7 +74,7 @@ fun FormatCard(
             .clickable { onClick(item) },
         border = BorderStroke(
             width = 0.5.dp,
-            color = MaterialTheme.colorScheme.primary
+            color = Color.Gray
         ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

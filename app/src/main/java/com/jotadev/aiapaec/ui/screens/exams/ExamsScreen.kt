@@ -20,7 +20,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jotadev.aiapaec.presentation.BimestersViewModel
 import com.jotadev.aiapaec.ui.components.exam.CreateExamDialog
 import com.jotadev.aiapaec.ui.components.exam.ExamsList
-// Eliminado uso de ClassesViewModel
 import com.jotadev.aiapaec.ui.components.exam.Exam as UiExam
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)

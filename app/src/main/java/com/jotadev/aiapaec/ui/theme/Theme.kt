@@ -62,7 +62,7 @@ fun AIAPAECTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) {
-        AiapaecDarkColorScheme
+        AiapaecLightColorScheme
     } else {
         AiapaecLightColorScheme
     }
