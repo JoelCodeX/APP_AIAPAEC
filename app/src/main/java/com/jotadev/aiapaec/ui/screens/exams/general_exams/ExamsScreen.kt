@@ -18,9 +18,9 @@ import kotlinx.coroutines.isActive
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jotadev.aiapaec.presentation.BimestersViewModel
-import com.jotadev.aiapaec.ui.components.exam.CreateExamDialog
-import com.jotadev.aiapaec.ui.components.exam.ExamsList
-import com.jotadev.aiapaec.ui.components.exam.Exam as UiExam
+import com.jotadev.aiapaec.ui.components.admission.CreateExamDialog
+import com.jotadev.aiapaec.ui.components.admission.ExamsList
+import com.jotadev.aiapaec.ui.components.admission.Exam as UiExam
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable

@@ -186,6 +186,11 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
                 WeeklyList(
                     items = state.quizzes,
                     onClick = { quiz ->
+                        val handle = navController.currentBackStackEntry?.savedStateHandle
+                        handle?.set("apply_grade_id", gradeId)
+                        handle?.set("apply_section_id", sectionId)
+                        handle?.set("apply_grade_name", gradeName)
+                        handle?.set("apply_section_name", sectionName)
                         navController.navigate(NavigationRoutes.applyExam(quiz.id.toString()))
                     },
                     modifier = Modifier.fillMaxSize(),

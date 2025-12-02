@@ -49,7 +49,7 @@ class ApplyExamViewModel(
     private val _uiState = MutableStateFlow(ApplyExamUiState())
     val uiState: StateFlow<ApplyExamUiState> = _uiState
 
-    fun load(examId: String) {
+    fun load(examId: String, gradeId: Int? = null, sectionId: Int? = null) {
         val id = examId.toIntOrNull()
         if (id == null) {
             _uiState.update { it.copy(errorMessage = "ID de evaluación inválido") }
@@ -68,8 +68,8 @@ class ApplyExamViewModel(
                         is Result.Success -> _uiState.update { it.copy(hasKey = keys.data.items.isNotEmpty()) }
                         else -> { /* no-op, mantener valor actual */ }
                     }
-                    // Cargar estudiantes (filtrar por classId si existe)
-                    val pageResult = getStudents(page = 1, perPage = 100, query = null)
+                    // Cargar estudiantes filtrando por grado/sección si se proporcionan
+                    val pageResult = getStudents(page = 1, perPage = 100, query = null, gradeId = gradeId, sectionId = sectionId)
                     when (pageResult) {
                         is Result.Success -> {
                             val items = pageResult.data.items

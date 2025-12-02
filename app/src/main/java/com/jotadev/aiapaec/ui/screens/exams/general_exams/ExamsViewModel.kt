@@ -9,7 +9,7 @@ import com.jotadev.aiapaec.domain.usecases.CreateQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.DeleteQuizUseCase
 import com.jotadev.aiapaec.domain.usecases.GetQuizzesUseCase
 import com.jotadev.aiapaec.domain.usecases.UpdateQuizUseCase
-import com.jotadev.aiapaec.ui.components.exam.Exam as UiExam
+import com.jotadev.aiapaec.ui.components.admission.Exam as UiExam
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

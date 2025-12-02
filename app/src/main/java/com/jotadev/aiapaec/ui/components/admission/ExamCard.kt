@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components.exam
+package com.jotadev.aiapaec.ui.components.admission
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically

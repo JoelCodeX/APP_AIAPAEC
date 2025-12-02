@@ -1,4 +1,4 @@
-package com.jotadev.aiapaec.ui.components.exam
+package com.jotadev.aiapaec.ui.components.admission
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
