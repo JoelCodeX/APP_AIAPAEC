@@ -82,70 +82,98 @@ fun FormatCard(
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
-                    )
-                    .padding(horizontal = 16.dp)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${item.formatType}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondary,
-                            modifier = Modifier.weight(1f)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                         )
-                        IconButton(
-                            onClick = { onToggleExpand() },
-                            modifier = Modifier.size(36.dp, 30.dp).padding(vertical = 4.dp),
-                            colors = iconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.primary,
-                                containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
-                            ),
-                            shape = RoundedCornerShape(4.dp)
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.MoreHoriz,
-                                contentDescription = "Más acciones",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
+                            Text(
+                                text = "${item.formatType}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondary,
+                                modifier = Modifier.weight(1f)
                             )
+                            IconButton(
+                                onClick = { onToggleExpand() },
+                                modifier = Modifier.size(36.dp, 30.dp).padding(vertical = 4.dp),
+                                colors = iconButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.primary,
+                                    containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
+                                ),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreHoriz,
+                                    contentDescription = "Más acciones",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    InfoChip(label = "Grado", value = item.grade, icon = Icons.Default.School, modifier = Modifier.weight(1f), centered = false)
-                    InfoChip(label = "Sección", value = item.section, icon = Icons.Default.Group, modifier = Modifier.weight(1f), centered = true)
-                    InfoChip(label = "Preguntas", value = item.numQuestions.toString(), icon = Icons.AutoMirrored.Filled.Assignment, modifier = Modifier.weight(1f), centered = true)
+                Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        InfoChip(
+                            label = "Grado",
+                            value = item.grade,
+                            icon = Icons.Default.School,
+                            modifier = Modifier.weight(1f),
+                            centered = false
+                        )
+                        InfoChip(
+                            label = "Sección",
+                            value = item.section,
+                            icon = Icons.Default.Group,
+                            modifier = Modifier.weight(1f),
+                            centered = true
+                        )
+                        InfoChip(
+                            label = "Preguntas",
+                            value = item.numQuestions.toString(),
+                            icon = Icons.AutoMirrored.Filled.Assignment,
+                            modifier = Modifier.weight(1f),
+                            centered = true
+                        )
+                        InfoChip(
+                            label = "Puntaje",
+                            value = item.scoreFormat,
+                            icon = Icons.Default.Star,
+                            modifier = Modifier.weight(1f),
+                            centered = true
+                        )
+                    }
+//                Spacer(modifier = Modifier.height(8.dp))
+//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+////                    InfoChip(label = "Formato", value = item.formatType, icon = Icons.Default.Extension, modifier = Modifier.weight(1f), centered = false)
+//
+//                    Spacer(modifier = Modifier.weight(1f))
+//                }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    InfoChip(label = "Formato", value = item.formatType, icon = Icons.Default.Extension, modifier = Modifier.weight(1f), centered = false)
-                    InfoChip(label = "Puntaje", value = item.scoreFormat, icon = Icons.Default.Star, modifier = Modifier.weight(1f), centered = true)
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
             }
             Surface(
                 shape = RoundedCornerShape(topStart = 8.dp),
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                 shadowElevation = 0.dp,
                 modifier = Modifier.align(Alignment.BottomEnd)
             ) {
                 Text(
-                    text = "# ${item.id}",
+                    text = "ID ${item.id}",
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -200,7 +228,14 @@ fun FormatCard(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Confirmar eliminación", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) },
+            title = {
+                Text(
+                    "Confirmar eliminación",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
             text = { Text("¿Eliminar formato \"${item.name}\"?") },
             confirmButton = {
                 TextButton(onClick = { onDeleteClick(item); showDeleteDialog = false }) {
@@ -215,22 +250,41 @@ fun FormatCard(
 }
 
 @Composable
-fun InfoChip(label: String, value: String, icon: ImageVector, modifier: Modifier = Modifier, centered: Boolean = true) {
-    Column(modifier = modifier, horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start) {
+fun InfoChip(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    centered: Boolean = true
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = if (centered) Arrangement.Center else Arrangement.Start,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(imageVector = icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         Text(
             text = value,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Bold,
             textAlign = if (centered) TextAlign.Center else TextAlign.Start,
             modifier = if (centered) Modifier.fillMaxWidth() else Modifier
         )

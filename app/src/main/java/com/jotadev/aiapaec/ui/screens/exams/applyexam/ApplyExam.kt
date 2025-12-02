@@ -82,6 +82,15 @@ fun ApplyExam(navController: NavController, examId: String) {
         vm.load(examId, applyGradeId, applySectionId)
     }
 
+    // NAVEGACIÓN AUTOMÁTICA A RESPUESTAS TRAS SUBIR SOLUCIONARIO
+    var navigatedToAnswers by remember { mutableStateOf(false) }
+    LaunchedEffect(state.hasKey, state.answers.size) {
+        if (!navigatedToAnswers && state.hasKey && state.answers.isNotEmpty()) {
+            navigatedToAnswers = true
+            navController.navigate(NavigationRoutes.quizAnswers(examId))
+        }
+    }
+
     // Lanzador para seleccionar PDF del solucionario
     var selectedPdfUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
