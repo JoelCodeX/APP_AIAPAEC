@@ -20,26 +20,22 @@ import com.jotadev.aiapaec.ui.components.FilterDropdown
 fun StudentsSearchAndFilterBar(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    // Filtros por grado y sección
+    selectedGrade: String?,
+    onGradeChange: (String?) -> Unit,
+    gradeOptions: List<String>,
+    selectedSection: String?,
+    onSectionChange: (String?) -> Unit,
+    sectionOptions: List<String>,
+    isMetaLoading: Boolean,
+    // Filtro por clase
     selectedClass: String,
     onClassChange: (String) -> Unit,
+    classOptions: List<String>,
     modifier: Modifier = Modifier
 ) {
     var isFilterExpanded by remember { mutableStateOf(false) }
 
-    val classOptions = listOf(
-        "Todas las clases",
-        "1° Primaria",
-        "2° Primaria",
-        "3° Primaria",
-        "4° Primaria",
-        "5° Primaria",
-        "6° Primaria",
-        "1° Secundaria",
-        "2° Secundaria",
-        "3° Secundaria",
-        "4° Secundaria",
-        "5° Secundaria"
-    )
 
     Column(
         modifier = modifier
@@ -92,14 +88,34 @@ fun StudentsSearchAndFilterBar(
         Spacer(modifier = Modifier.height(8.dp))
         // FILTROS EXPANDIBLES
         AnimatedVisibility(visible = isFilterExpanded) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // FILTRO POR GRADO
+                FilterDropdown(
+                    label = "Grado",
+                    selectedValue = selectedGrade ?: "Todos",
+                    options = listOf("Todos") + gradeOptions,
+                    onValueChange = { v -> onGradeChange(if (v == "Todos") null else v) },
+                    placeholder = if (isMetaLoading) "Cargando grados..." else "Selecciona grado"
+                )
+
+                // FILTRO POR SECCIÓN
+                FilterDropdown(
+                    label = "Sección",
+                    selectedValue = selectedSection ?: "Todas",
+                    options = listOf("Todas") + sectionOptions,
+                    onValueChange = { v -> onSectionChange(if (v == "Todas") null else v) },
+                    placeholder = if (isMetaLoading) "Cargando secciones..." else "Selecciona sección",
+                    enabled = sectionOptions.isNotEmpty()
+                )
+
                 // FILTRO POR CLASE
-            FilterDropdown(
-                label = "Clase",
-                selectedValue = selectedClass,
-                options = classOptions,
-                onValueChange = onClassChange
-            )
-            
+                FilterDropdown(
+                    label = "Clase",
+                    selectedValue = selectedClass,
+                    options = listOf("Todas") + classOptions,
+                    onValueChange = onClassChange
+                )
+            }
         }
     }
 }

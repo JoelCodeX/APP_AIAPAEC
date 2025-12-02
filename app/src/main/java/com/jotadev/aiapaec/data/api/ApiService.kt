@@ -47,7 +47,9 @@ interface ApiService {
     suspend fun getStudents(
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 20,
-        @Query("q") query: String? = null
+        @Query("q") query: String? = null,
+        @Query("grade_id") gradeId: Int? = null,
+        @Query("section_id") sectionId: Int? = null
     ): Response<StudentsResponse>
 
     // STUDENT DETAIL

@@ -12,6 +12,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.runtime.setValue
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.students.StudentsList
 import com.jotadev.aiapaec.ui.components.students.StudentsSearchAndFilterBar
@@ -47,6 +49,16 @@ fun StudentsScreen(navController: NavController) {
                 .padding(paddingValues)
                 .pullRefresh(pullState)
         ) {
+            var selectedClass by remember { androidx.compose.runtime.mutableStateOf("Todas") }
+            val classOptions = state.students.mapNotNull { it.className }.distinct().sorted()
+            val sectionOptions = state.selectedGrade?.let { g -> state.sectionsByGrade[g] ?: emptyList() } ?: emptyList()
+            val filteredByClass = if (selectedClass == "Todas") state.students else state.students.filter { (it.className ?: "").equals(selectedClass, true) }
+            val filteredByGrade = state.selectedGrade?.let { g ->
+                filteredByClass.filter { (it.className ?: "").contains(g, true) }
+            } ?: filteredByClass
+            val filteredStudents = state.selectedSection?.let { s ->
+                filteredByGrade.filter { (it.className ?: "").contains(s, true) }
+            } ?: filteredByGrade
             Column(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -58,13 +70,21 @@ fun StudentsScreen(navController: NavController) {
                         vm.onQueryChange(it)
                         vm.fetchStudents(page = 1)
                     },
-                    selectedClass = "Todas las clases",
-                    onClassChange = { /* TODO: conectar filtro por clase cuando API lo soporte */ }
+                    selectedGrade = state.selectedGrade,
+                    onGradeChange = { vm.onGradeSelected(it) },
+                    gradeOptions = state.gradesOptions,
+                    selectedSection = state.selectedSection,
+                    onSectionChange = { vm.onSectionSelected(it) },
+                    sectionOptions = sectionOptions,
+                    isMetaLoading = state.isMetaLoading,
+                    selectedClass = selectedClass,
+                    onClassChange = { selectedClass = it },
+                    classOptions = classOptions
                 )
                 
                 // LISTA DE ESTUDIANTES
                 StudentsList(
-                    students = state.students,
+                    students = filteredStudents,
                     modifier = Modifier.weight(1f),
                     onStudentClick = { student ->
                         navController.navigate(NavigationRoutes.detailsStudent(student.id))

@@ -5,6 +5,12 @@ import com.jotadev.aiapaec.domain.models.StudentsPage
 import com.jotadev.aiapaec.domain.models.Student
 
 interface StudentRepository {
-    suspend fun getStudents(page: Int = 1, perPage: Int = 20, query: String? = null): Result<StudentsPage>
+    suspend fun getStudents(
+        page: Int = 1,
+        perPage: Int = 20,
+        query: String? = null,
+        gradeId: Int? = null,
+        sectionId: Int? = null
+    ): Result<StudentsPage>
     suspend fun getStudent(id: Int): Result<Student>
 }

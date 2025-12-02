@@ -10,9 +10,21 @@ import com.jotadev.aiapaec.domain.repository.StudentRepository
 class StudentRepositoryImpl : StudentRepository {
     private val api = RetrofitClient.apiService
 
-    override suspend fun getStudents(page: Int, perPage: Int, query: String?): Result<StudentsPage> {
+    override suspend fun getStudents(
+        page: Int,
+        perPage: Int,
+        query: String?,
+        gradeId: Int?,
+        sectionId: Int?
+    ): Result<StudentsPage> {
         return try {
-            val response = api.getStudents(page = page, perPage = perPage, query = query)
+            val response = api.getStudents(
+                page = page,
+                perPage = perPage,
+                query = query,
+                gradeId = gradeId,
+                sectionId = sectionId
+            )
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.data != null) {
@@ -29,7 +41,8 @@ class StudentRepositoryImpl : StudentRepository {
                     500 -> "ERROR DEL SERVIDOR"
                     else -> "ERROR DEL SERVIDOR: ${response.code()}"
                 }
-                Result.Error(errorMessage)
+                val backendMessage = try { response.errorBody()?.string() } catch (e: Exception) { null }
+                Result.Error(backendMessage?.ifBlank { null } ?: errorMessage)
             }
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
@@ -55,7 +68,8 @@ class StudentRepositoryImpl : StudentRepository {
                     500 -> "ERROR DEL SERVIDOR"
                     else -> "ERROR DEL SERVIDOR: ${response.code()}"
                 }
-                Result.Error(errorMessage)
+                val backendMessage = try { response.errorBody()?.string() } catch (e: Exception) { null }
+                Result.Error(backendMessage?.ifBlank { null } ?: errorMessage)
             }
         } catch (e: Exception) {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
