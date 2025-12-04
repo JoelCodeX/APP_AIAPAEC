@@ -64,13 +64,14 @@ class ApplyExamViewModel(
                     _uiState.update { it.copy(quiz = quiz) }
                     // Cargar respuestas del quiz si existen
                     loadAnswers(quiz.id)
-                    // Verificar si existen solucionarios subidos
                     when (val keys = quizzesRepository.listAnswerKeys(quiz.id, page = 1, pageSize = 10)) {
                         is Result.Success -> _uiState.update { it.copy(hasKey = keys.data.items.isNotEmpty()) }
-                        else -> { /* no-op, mantener valor actual */ }
+                        else -> { }
                     }
-                    // Cargar estudiantes filtrando por grado/sección si se proporcionan
-                    val pageResult = getStudents(page = 1, perPage = 100, query = null, gradeId = gradeId, sectionId = sectionId)
+                    val effectiveGradeId = gradeId ?: quiz.gradoId
+                    val effectiveSectionId = sectionId ?: quiz.seccionId
+                    val gradeParam = if (effectiveSectionId != null) null else effectiveGradeId
+                    val pageResult = getStudents(page = 1, perPage = 100, query = null, gradeId = gradeParam, sectionId = effectiveSectionId)
                     when (pageResult) {
                         is Result.Success -> {
                             val items = pageResult.data.items
@@ -120,6 +121,18 @@ class ApplyExamViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
+                when (val chk = quizzesRepository.getQuiz(quizId)) {
+                    is Result.Error -> {
+                        _uiState.update { it.copy(isLoading = false, errorMessage = chk.message) }
+                        return@launch
+                    }
+                    is Result.Loading -> {
+                        _uiState.update { it.copy(isLoading = true) }
+                    }
+                    is Result.Success -> {
+                        _uiState.update { it.copy(quiz = chk.data) }
+                    }
+                }
                 val name = "solucionario.pdf"
                 val mime = "application/pdf"
                 val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)

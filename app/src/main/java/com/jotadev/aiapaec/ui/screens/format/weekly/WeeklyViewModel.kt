@@ -203,7 +203,7 @@ class WeeklyViewModel : ViewModel() {
             when (val result = getUnits(page = 1, perPage = 50, bimesterId = bimId)) {
                 is Result.Success -> {
                     val units = result.data.items
-                    val map = units.associate { unit ->
+                    val pairs = units.sortedBy { it.unitNumber }.map { unit ->
                         val label = when (unit.unitNumber) {
                             1 -> "I UNIDAD"
                             2 -> "II UNIDAD"
@@ -213,8 +213,8 @@ class WeeklyViewModel : ViewModel() {
                         }
                         label to unit.id
                     }
-                    unitLabelToId = map
-                    _uiState.value = _uiState.value.copy(isUnitsLoading = false, unitOptions = map.keys.toList().sorted())
+                    unitLabelToId = pairs.toMap()
+                    _uiState.value = _uiState.value.copy(isUnitsLoading = false, unitOptions = pairs.map { it.first })
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isUnitsLoading = false, message = result.message)
                 is Result.Loading -> _uiState.value = _uiState.value.copy(isUnitsLoading = true)
@@ -229,7 +229,7 @@ class WeeklyViewModel : ViewModel() {
             when (val result = getUnits(page = 1, perPage = 50, bimesterId = bimId)) {
                 is Result.Success -> {
                     val units = result.data.items
-                    val map = units.associate { unit ->
+                    val pairs = units.sortedBy { it.unitNumber }.map { unit ->
                         val label = when (unit.unitNumber) {
                             1 -> "I UNIDAD"
                             2 -> "II UNIDAD"
@@ -239,8 +239,8 @@ class WeeklyViewModel : ViewModel() {
                         }
                         label to unit.id
                     }
-                    unitLabelToId = map
-                    _uiState.value = _uiState.value.copy(isUnitsLoading = false, unitOptions = map.keys.toList().sorted())
+                    unitLabelToId = pairs.toMap()
+                    _uiState.value = _uiState.value.copy(isUnitsLoading = false, unitOptions = pairs.map { it.first })
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isUnitsLoading = false, message = result.message)
                 is Result.Loading -> _uiState.value = _uiState.value.copy(isUnitsLoading = true)

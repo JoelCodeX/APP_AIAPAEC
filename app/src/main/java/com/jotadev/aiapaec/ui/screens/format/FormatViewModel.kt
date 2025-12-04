@@ -181,6 +181,8 @@ class FormatViewModel : ViewModel() {
                         createdAt = java.time.LocalDate.now().toString(),
                         grade = dto.grado_nombre ?: grade,
                         section = dto.seccion_nombre ?: section,
+                        gradeId = dto.grado_id,
+                        sectionId = dto.seccion_id,
                         numQuestions = dto.numero_preguntas,
                         formatType = dto.formato_nombre ?: formatType,
                         scoreFormat = (dto.puntaje ?: 0.0).toString()
