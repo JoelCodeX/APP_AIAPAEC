@@ -82,11 +82,10 @@ fun ApplyExam(navController: NavController, examId: String) {
         vm.load(examId, applyGradeId, applySectionId)
     }
 
-    // NAVEGACIÓN AUTOMÁTICA A RESPUESTAS TRAS SUBIR SOLUCIONARIO
-    var navigatedToAnswers by remember { mutableStateOf(false) }
-    LaunchedEffect(state.hasKey, state.answers.size) {
-        if (!navigatedToAnswers && state.hasKey && state.answers.isNotEmpty()) {
-            navigatedToAnswers = true
+    // REDIRIGE SOLO TRAS SUBIDA EXITOSA DEL SOLUCIONARIO
+    LaunchedEffect(state.justUploaded, state.answers.size) {
+        if (state.justUploaded && state.answers.isNotEmpty()) {
+            vm.ackJustUploaded()
             navController.navigate(NavigationRoutes.quizAnswers(examId))
         }
     }

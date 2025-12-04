@@ -37,6 +37,7 @@ data class ApplyExamUiState(
     val studentStatuses: Map<Int, String> = emptyMap(),
     val answers: List<QuizAnswer> = emptyList(),
     val hasKey: Boolean = false,
+    val justUploaded: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -126,7 +127,7 @@ class ApplyExamViewModel(
                     is Result.Success -> {
                         // Refresh quiz to reflect new answer key
                         when (val q = quizzesRepository.getQuiz(quizId)) {
-                            is Result.Success -> _uiState.update { it.copy(quiz = q.data, isLoading = false, hasKey = true) }
+                            is Result.Success -> _uiState.update { it.copy(quiz = q.data, isLoading = false, hasKey = true, justUploaded = true) }
                             is Result.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = q.message) }
                             is Result.Loading -> _uiState.update { it.copy(isLoading = true) }
                         }
@@ -161,6 +162,10 @@ class ApplyExamViewModel(
                 }
             }
         }
+    }
+
+    fun ackJustUploaded() {
+        _uiState.update { it.copy(justUploaded = false) }
     }
 }
 
