@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -164,16 +165,20 @@ fun ApplyExam(navController: NavController, examId: String) {
                                 navController.navigate(NavigationRoutes.quizAnswers(examId))
                             }
                         }
-                    }
+                    },
+                    showDistribution = state.showDistribution,
+                    onToggleDistributionClick = { vm.toggleDistribution() }
                 )
             }
 
             // GRAFICO DE BARRAS DE RENDIMIENTO
             item {
-                PerformanceBarChart(
-                    title = "Distribución de Puntajes",
-                    bars = state.performanceBars
-                )
+                if (state.showDistribution) {
+                    PerformanceBarChart(
+                        title = "Distribución de Puntajes",
+                        bars = state.performanceBars
+                    )
+                }
             }
             // BARRA DE BÚSQUEDA (ESTILO COPIADO) Y LISTADO DE ESTUDIANTES
             val filteredStudents =
@@ -239,7 +244,9 @@ private fun ExamInfoCard(
     studentCount: Int,
     hasKey: Boolean,
     numQuestions: Int?,
-    onActionClick: () -> Unit
+    onActionClick: () -> Unit,
+    showDistribution: Boolean,
+    onToggleDistributionClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -290,22 +297,47 @@ private fun ExamInfoCard(
         Spacer(modifier = Modifier.height(10.dp))
         val actionText = if (hasKey) "Ver respuestas" else "Subir solucionario"
         val actionIcon = if (hasKey) Icons.AutoMirrored.Filled.Assignment else Icons.Filled.Key
-        Button(
-            onClick = onActionClick,
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.onSecondary
-            ),
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                imageVector = actionIcon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = actionText, fontWeight = FontWeight.SemiBold)
+            Button(
+                onClick = onActionClick,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = actionIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = actionText, fontWeight = FontWeight.SemiBold)
+            }
+            Button(
+                onClick = onToggleDistributionClick,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFD3CECE),
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.PieChart,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text =  " % de puntajes",
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
