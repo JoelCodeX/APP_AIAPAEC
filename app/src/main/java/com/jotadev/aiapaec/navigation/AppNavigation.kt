@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jotadev.aiapaec.ui.screens.login.LoginScreen
 import com.jotadev.aiapaec.ui.screens.main.MainScreen
+import com.jotadev.aiapaec.ui.screens.password.ForgotPasswordScreen
 
 @Composable
 fun AppNavigation(
@@ -23,12 +24,19 @@ fun AppNavigation(
                     navController.navigate(NavigationRoutes.MAIN) {
                         popUpTo(NavigationRoutes.LOGIN) { inclusive = true }
                     }
+                },
+                onForgotPassword = {
+                    navController.navigate(NavigationRoutes.FORGOT_PASSWORD)
                 }
             )
         }
         
         composable(NavigationRoutes.MAIN) {
             MainScreen()
+        }
+
+        composable(NavigationRoutes.FORGOT_PASSWORD) {
+            ForgotPasswordScreen(onBack = { navController.popBackStack() })
         }
     }
 }

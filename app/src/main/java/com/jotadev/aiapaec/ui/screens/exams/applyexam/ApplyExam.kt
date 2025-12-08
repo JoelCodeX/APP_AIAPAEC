@@ -9,8 +9,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Assignment
@@ -56,8 +59,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -164,7 +171,7 @@ fun ApplyExam(navController: NavController, examId: String) {
             // GRAFICO DE BARRAS DE RENDIMIENTO
             item {
                 PerformanceBarChart(
-                    title = "Rendimiento de estudiantes",
+                    title = "Distribución de Puntajes",
                     bars = state.performanceBars
                 )
             }
@@ -259,7 +266,7 @@ private fun ExamInfoCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            InfoChip(label = "Bimestre", value = bimester, icon = Icons.Filled.Assignment)
+            InfoChip(label = "Bimestre", value = bimester, icon = Icons.AutoMirrored.Filled.Assignment)
             InfoChip(label = "Clase", value = className, icon = Icons.Filled.School)
             InfoChip(label = "Fecha", value = date, icon = Icons.Filled.CalendarToday)
 
@@ -361,7 +368,8 @@ private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = nul
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
             .background(color.copy(alpha = 0.3f))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .widthIn(max = 120.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
@@ -369,7 +377,7 @@ private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = nul
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
             }
@@ -377,7 +385,9 @@ private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = nul
                 text = label,
                 color = MaterialTheme.colorScheme.onSecondary,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -425,15 +435,20 @@ private fun StudentStatusRow(student: Student, status: String, onScanClick: () -
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
-            val cls = student.className ?: "—"
-            Text(text = cls, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+            val clsRaw = student.className ?: "—"
+            val cls = clsRaw.replace(" - ", " \u00A0- \u00A0")
+            Text(
+                text = cls,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp
+            )
         }
         val isCorrected = status.equals("Corregido", ignoreCase = true)
         val icon = if (isCorrected) Icons.Default.CheckCircle else Icons.Default.Cancel
         val tint = if (isCorrected) Color(0xFF2E7D32) else Color(0xFFC62828)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             StatusPillExam(
                 label = if (isCorrected) "Corregido" else "Por corregir",
@@ -447,19 +462,47 @@ private fun StudentStatusRow(student: Student, status: String, onScanClick: () -
                     colors = ButtonDefaults.outlinedButtonColors(
                         containerColor = MaterialTheme.colorScheme.onPrimary,
                         contentColor = MaterialTheme.colorScheme.onSecondary
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                    modifier = Modifier
+                        .widthIn(max = 120.dp)
+                        .defaultMinSize(minWidth = 0.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.QrCodeScanner,
                         contentDescription = "Escanear",
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Escanear")
+                    Text(
+                        "Escanear",
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun buildStudentInlineLabel(student: Student): AnnotatedString {
+    val name = "${student.firstName} ${student.lastName}".trim()
+    val cls = (student.className ?: "—").trim()
+    return AnnotatedString.Builder().apply {
+        append(name)
+        append(" ")
+        pushStyle(
+            SpanStyle(
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal
+            )
+        )
+        append(cls)
+        pop()
+    }.toAnnotatedString()
 }
 
 private fun formatDate(value: String?): String {

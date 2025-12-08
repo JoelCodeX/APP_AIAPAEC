@@ -3,7 +3,17 @@ package com.jotadev.aiapaec.ui.screens.exams.applyexam
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -11,16 +21,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jotadev.aiapaec.domain.models.Quiz
-import com.jotadev.aiapaec.domain.models.QuizAnswer
-import com.jotadev.aiapaec.domain.models.Student
-import com.jotadev.aiapaec.domain.models.Result
 import com.jotadev.aiapaec.data.repository.QuizzesRepositoryImpl
 import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
+import com.jotadev.aiapaec.domain.models.Quiz
+import com.jotadev.aiapaec.domain.models.QuizAnswer
+import com.jotadev.aiapaec.domain.models.Result
+import com.jotadev.aiapaec.domain.models.Student
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
 import com.jotadev.aiapaec.domain.usecases.UploadAnswerKeyUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,14 +119,10 @@ class ApplyExamViewModel(
     }
 
     private fun buildPerformanceBars(students: List<Student>): List<PerformanceBar> {
-        if (students.isEmpty()) return emptyList()
-        val total = students.size.toFloat()
-        val corrected = 0f
-        val pending = total
-        return listOf(
-            PerformanceBar(label = "Corregidos", value = corrected),
-            PerformanceBar(label = "Por corregir", value = pending)
-        )
+        // Datos de ejemplo mientras no exista distribución real
+        val bins = (10..100 step 10).map { it }
+        val sampleCounts = intArrayOf(0, 1, 0, 1, 4, 3, 2, 0, 0, 0)
+        return bins.mapIndexed { idx, p -> PerformanceBar(label = "$p%", value = sampleCounts[idx].toFloat()) }
     }
 
     fun uploadAnswerKeyFromUri(quizId: Int, uri: Uri, contentResolver: ContentResolver) {
@@ -187,58 +195,174 @@ fun PerformanceBarChart(title: String, bars: List<PerformanceBar>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(
+                elevation = 2.dp,
+                shape = RoundedCornerShape(12.dp),
+                clip = false
+            )
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.onPrimary)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         if (bars.isEmpty()) {
-            Text(
-                text = "Sin datos aún",
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(text = "Sin datos aún", color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             val maxValue = bars.maxOf { it.value }.coerceAtLeast(1f)
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                bars.forEach { bar ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            val axisColor = MaterialTheme.colorScheme.outline
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    // Texto vertical del eje Y
+                    Box(
+                        modifier = Modifier
+                            .width(14.dp)
+                            .fillMaxHeight(),
+                        contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = bar.label,
-                            modifier = Modifier.width(100.dp),
+                            text = "Estudiantes",
+                            modifier = Modifier.rotate(-90f),
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
+                            softWrap = false,
+                            maxLines = 1,
+                            overflow = TextOverflow.Visible
                         )
-                        Box(
-                            modifier = Modifier
-                                .height(18.dp)
-                                .weight(1f)
-                                .clip(RoundedCornerShape(9.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            val barColor = if (bar.label == "Corregidos") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .fillMaxWidth(bar.value / maxValue)
-                                    .clip(RoundedCornerShape(9.dp))
-                                    .background(barColor)
+                    }
+                    Spacer(modifier = Modifier.width(0.dp))
+                    // Números del eje Y (1–5) fuera del área, de abajo a arriba
+                    val yTicks = (1..5).toList()
+                    Column(
+                        modifier = Modifier
+                            .width(16.dp)
+                            .fillMaxHeight()
+                            .padding(top = 6.dp, bottom = 10.dp),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        yTicks.reversed().forEach { t ->
+                            Text(
+                                text = t.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    }
+                    // Contenedor del gráfico y ejes
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    ) {
+                        // Eje Y
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(1.dp)
+                                .background(axisColor)
+                                .align(Alignment.BottomStart)
+                        )
+                        // Ticks del eje Y dentro del área, alineados a la línea
+                        Column(
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .fillMaxHeight()
+                                .padding(top = 6.dp, bottom = 10.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            yTicks.forEach { _ ->
+                                Box(
+                                    modifier = Modifier
+                                        .width(8.dp)
+                                        .height(1.dp)
+                                        .background(axisColor)
+                                )
+                            }
+                        }
+                        // Eje X
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(axisColor)
+                                .align(Alignment.BottomStart)
+                        )
+                        // Ticks sobre el eje X (uno por barra)
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .fillMaxWidth()
+                                .height(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            bars.forEach { _ ->
+                                Box(
+                                    modifier = Modifier
+                                        .width(1.dp)
+                                        .fillMaxHeight()
+                                        .background(axisColor)
+                                )
+                            }
+                        }
+                        // Barras
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(start = 2.dp),
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            bars.forEach { bar ->
+                                val fraction = (bar.value / maxValue).coerceIn(0f, 1f)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .padding(horizontal = 2.dp)
+                                        .clip(RoundedCornerShape(6.dp)),
+                                    contentAlignment = Alignment.BottomCenter
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .fillMaxHeight(fraction)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.colorScheme.secondary)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                // Etiquetas eje X con 0 al inicio
+                val xLabels = listOf("0") + bars.map { it.label.replace("%", "") }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 30.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    xLabels.forEach { label ->
                         Text(
-                            text = "${bar.value.toInt()}",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 12.sp
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
+                // Etiquetas 1–5 movidas al eje Y
             }
         }
     }

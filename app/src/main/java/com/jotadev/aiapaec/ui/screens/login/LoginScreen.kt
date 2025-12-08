@@ -80,6 +80,7 @@ import com.jotadev.aiapaec.R
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
+    onForgotPassword: () -> Unit = {},
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -209,7 +210,7 @@ fun LoginScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable {
-                                // TODO: Implementar funcionalidad de recuperar contraseña
+                                onForgotPassword()
                             }
                         )
                     }
@@ -626,4 +627,3 @@ private fun showWelcomeToast(
     toast.setGravity(Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL, 0, (100 * context.resources.displayMetrics.density).toInt())
     toast.show()
 }
-

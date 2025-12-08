@@ -4,6 +4,7 @@ import android.net.Uri
 object NavigationRoutes {
     const val LOGIN = "login"
     const val MAIN = "main"
+    const val FORGOT_PASSWORD = "forgot_password"
     
     // Bottom Navigation Routes
     const val HOME = "home"

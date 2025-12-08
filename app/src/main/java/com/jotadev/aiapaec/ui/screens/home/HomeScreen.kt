@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
@@ -202,7 +203,7 @@ private fun CategoryGridSection(
     )
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = rememberCategoryGridCells(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp, start = 4.dp, end = 4.dp),
@@ -247,15 +248,29 @@ private fun CategoryCard(
             }
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Text(
                 text = item.subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }
+}
+
+@Composable
+private fun rememberCategoryGridCells(): GridCells {
+    val widthDp = LocalConfiguration.current.screenWidthDp
+    val columns = when {
+        widthDp <= 360 -> 2
+        else -> 3
+    }
+    return GridCells.Fixed(columns)
 }
 
 private data class CategoryItem(
