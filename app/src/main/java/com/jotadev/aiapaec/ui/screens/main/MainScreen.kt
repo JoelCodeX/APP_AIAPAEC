@@ -70,6 +70,7 @@ fun MainScreen(
         NavigationRoutes.CREATE_EXAM,
         NavigationRoutes.SCAN_CARD,
         NavigationRoutes.SCAN_UPLOAD,
+        NavigationRoutes.SCAN_RESULT,
         NavigationRoutes.APPLY_EXAM,
         NavigationRoutes.QUIZ_ANSWERS,
         NavigationRoutes.DETAILS_STUDENT,
@@ -217,6 +218,38 @@ private fun MainTopBar(
             // Subpantalla: usar un único TopBar global con botón de regresar
             CustomTopAppBar(
                 title = "Aplicar evaluación",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            )
+        }
+        currentRoute?.startsWith(NavigationRoutes.SCAN_UPLOAD) == true -> {
+            CustomTopAppBar(
+                title = "Capturar",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar",
+                            tint = MaterialTheme.colorScheme.onTertiary
+                        )
+                    }
+                }
+            )
+        }
+        currentRoute?.startsWith(NavigationRoutes.SCAN_RESULT) == true -> {
+            CustomTopAppBar(
+                title = "Resultados",
                 backgroundColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 navigationIcon = {

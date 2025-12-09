@@ -19,14 +19,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,6 +50,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -74,26 +82,6 @@ fun ScanUploadScreen(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Capturar", maxLines = 1, overflow = TextOverflow.Ellipsis)
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Regresar",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
     ) { paddingValues ->
         val context = androidx.compose.ui.platform.LocalContext.current
         val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -102,9 +90,10 @@ fun ScanUploadScreen(navController: NavController) {
         var statusText by remember { mutableStateOf("") }
         var roi by remember { mutableStateOf<FloatArray?>(null) }
 
-        val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            hasPermission = granted
-        }
+        val permissionLauncher =
+            rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                hasPermission = granted
+            }
 
         val imageCapture = remember {
             ImageCapture.Builder()
@@ -131,8 +120,14 @@ fun ScanUploadScreen(navController: NavController) {
                     val selector = CameraSelector.DEFAULT_BACK_CAMERA
                     try {
                         cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
-                    } catch (_: Exception) { }
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            selector,
+                            preview,
+                            imageCapture
+                        )
+                    } catch (_: Exception) {
+                    }
                 }, ContextCompat.getMainExecutor(context))
             }
         }
@@ -198,7 +193,13 @@ fun ScanUploadScreen(navController: NavController) {
                         fillType = android.graphics.Path.FillType.EVEN_ODD
                         addRect(0f, 0f, boxWpx, boxHpx, android.graphics.Path.Direction.CW)
                         transparentAreas.forEach { rect ->
-                            addRect(rect.left, rect.top, rect.right, rect.bottom, android.graphics.Path.Direction.CW)
+                            addRect(
+                                rect.left,
+                                rect.top,
+                                rect.right,
+                                rect.bottom,
+                                android.graphics.Path.Direction.CW
+                            )
                         }
                     }
                     drawPath(
@@ -245,43 +246,66 @@ fun ScanUploadScreen(navController: NavController) {
                 roi = floatArrayOf(rxPad, ryPad, rwPad, rhPad)
             }
 
-            Box(
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium)
-                    .clickable(enabled = hasPermission) {
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                CaptureInstructionsCard(
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                FloatingActionButton(
+                    onClick = {
+                        if (!hasPermission) return@FloatingActionButton
                         statusText = "Capturando..."
                         val out = createTempFile()
                         val outputOptions = ImageCapture.OutputFileOptions.Builder(out).build()
-                        imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(context), object : ImageCapture.OnImageSavedCallback {
-                            override fun onError(exception: ImageCaptureException) {
-                                statusText = "Error de captura"
-                            }
-                            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                statusText = "Enviando..."
-                                val sendFile = centerCropForPreview(out, previewView!!, roi)
-                                Thread {
-                                    val result = uploadAndProcess(sendFile, roi)
-                                    android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                        if (result != null) {
-                                            statusText = "Procesado"
-                                            val runId = result.first
-                                            val overlayUrl = result.second
-                                            val tipo = result.third
-                                            val encOverlay = android.net.Uri.encode(overlayUrl)
-                                            navController.navigate(com.jotadev.aiapaec.navigation.NavigationRoutes.scanResult(runId, encOverlay, tipo))
-                                        } else {
-                                            statusText = "Fallo al procesar"
+                        imageCapture.takePicture(
+                            outputOptions,
+                            ContextCompat.getMainExecutor(context),
+                            object : ImageCapture.OnImageSavedCallback {
+                                override fun onError(exception: ImageCaptureException) {
+                                    statusText = "Error de captura"
+                                }
+
+                                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                                    statusText = "Enviando..."
+                                    val sendFile = centerCropForPreview(out, previewView!!, roi)
+                                    Thread {
+                                        val result = uploadAndProcess(sendFile, roi)
+                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                            if (result != null) {
+                                                statusText = "Procesado"
+                                                val runId = result.first
+                                                val overlayUrl = result.second
+                                                val tipo = result.third
+                                                val encOverlay = android.net.Uri.encode(overlayUrl)
+                                                navController.navigate(
+                                                    com.jotadev.aiapaec.navigation.NavigationRoutes.scanResult(
+                                                        runId,
+                                                        encOverlay,
+                                                        tipo
+                                                    )
+                                                )
+                                            } else {
+                                                statusText = "Fallo al procesar"
+                                            }
                                         }
-                                    }
-                                }.start()
-                            }
-                        })
-                    }
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-            ) {
-                Text(text = "Capturar y enviar", color = MaterialTheme.colorScheme.onPrimary)
+                                    }.start()
+                                }
+                            })
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.PhotoCamera,
+                        contentDescription = "Capturar"
+                    )
+                }
             }
 
             if (statusText.isNotEmpty()) {
@@ -295,6 +319,45 @@ fun ScanUploadScreen(navController: NavController) {
                     Text(text = statusText, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CaptureInstructionsCard(modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Recomendaciones para mejorar la captura
+            Text(
+                text = "✅ Iluminación: Evita sombras, usa luz uniforme.",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "✅ Perspectiva: Mantén la cámara paralela al documento.",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "✅ Enfoque: Asegúrate de que el texto esté nítido.",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = "✅ Encuadre: Coloca el documento dentro de los visores.",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
@@ -329,7 +392,10 @@ private fun centerCropForPreview(file: File, previewView: PreviewView, roi: Floa
         finalBmp = Bitmap.createBitmap(cropped, rx, ry, rw, rhAdj)
     }
 
-    val out = File(file.parentFile ?: File("/sdcard/Pictures"), "upload_cropped_${System.currentTimeMillis()}.jpg")
+    val out = File(
+        file.parentFile ?: File("/sdcard/Pictures"),
+        "upload_cropped_${System.currentTimeMillis()}.jpg"
+    )
     FileOutputStream(out).use { fos ->
         finalBmp.compress(Bitmap.CompressFormat.JPEG, 85, fos)
     }
@@ -353,23 +419,38 @@ private fun decodeBitmapWithExif(file: File, reqW: Int, reqH: Int): Bitmap {
     opts2.inSampleSize = inSample
     val src = BitmapFactory.decodeFile(file.absolutePath, opts2)
     val exif = ExifInterface(file.absolutePath)
-    val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+    val orientation =
+        exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
     val matrix = Matrix()
     when (orientation) {
         ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
         ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
         ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
-        ExifInterface.ORIENTATION_TRANSPOSE -> { matrix.postRotate(90f); matrix.postScale(1f, -1f) }
-        ExifInterface.ORIENTATION_TRANSVERSE -> { matrix.postRotate(270f); matrix.postScale(1f, -1f) }
+        ExifInterface.ORIENTATION_TRANSPOSE -> {
+            matrix.postRotate(90f); matrix.postScale(1f, -1f)
+        }
+
+        ExifInterface.ORIENTATION_TRANSVERSE -> {
+            matrix.postRotate(270f); matrix.postScale(1f, -1f)
+        }
+
         ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
         ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
-        else -> { }
+        else -> {}
     }
-    return if (!matrix.isIdentity) Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true) else src
+    return if (!matrix.isIdentity) Bitmap.createBitmap(
+        src,
+        0,
+        0,
+        src.width,
+        src.height,
+        matrix,
+        true
+    ) else src
 }
 
 private fun uploadForCorners(file: File, roi: FloatArray?): Boolean {
-val url = "${NetworkConfig.baseRoot}/scan/upload"
+    val url = "${NetworkConfig.baseRoot}/scan/upload"
     val client = OkHttpClient.Builder().build()
     val media = "image/jpeg".toMediaType()
     val body = file.asRequestBody(media)
@@ -407,14 +488,16 @@ private fun uploadAndProcess(file: File, roi: FloatArray?): Triple<String, Strin
         val roiJson = "[" + roi.joinToString(",") { it.toString() } + "]"
         builder.addFormDataPart("roi", roiJson)
     }
-    val uploadReq = Request.Builder().url("${NetworkConfig.baseRoot}/scan/upload").post(builder.build()).build()
+    val uploadReq =
+        Request.Builder().url("${NetworkConfig.baseRoot}/scan/upload").post(builder.build()).build()
     client.newCall(uploadReq).execute().use { up ->
         val txt = up.body?.string() ?: return null
         val j = runCatching { JSONObject(txt) }.getOrNull() ?: return null
         val runId = j.optString("run_id", "")
         if (runId.isEmpty()) return null
         val payload = JSONObject().put("run_id", runId).toString()
-        val procReq = Request.Builder().url("${NetworkConfig.baseRoot}/scan/process-auto").post(payload.toRequestBody("application/json".toMediaType())).build()
+        val procReq = Request.Builder().url("${NetworkConfig.baseRoot}/scan/process-auto")
+            .post(payload.toRequestBody("application/json".toMediaType())).build()
         client.newCall(procReq).execute().use { pr ->
             val ptxt = pr.body?.string() ?: return null
             val pj = runCatching { JSONObject(ptxt) }.getOrNull() ?: return null
