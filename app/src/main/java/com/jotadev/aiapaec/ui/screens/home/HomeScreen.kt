@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Assignment
+import androidx.compose.material.icons.rounded.Apartment
 import androidx.compose.material.icons.rounded.Assessment
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Leaderboard
@@ -26,10 +27,12 @@ import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
@@ -67,6 +71,7 @@ fun HomeScreen(
     val settingsViewModel: SettingsViewModel = viewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsState()
     val userName = settingsUiState.userProfile?.name ?: "Usuario"
+    val branchName = settingsUiState.userProfile?.branchName ?: "Sede"
     settingsUiState.userProfile?.institution ?: "AIAPAEC"
     val studentsVm: StudentsViewModel = viewModel()
     val studentsState by studentsVm.uiState.collectAsState()
@@ -81,27 +86,15 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize(),
             containerColor = MaterialTheme.colorScheme.background,
-    
-        ) { paddingValues ->
+
+            ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
-                Text(
-                    text = "Hola, $userName",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
-                Text(
-                    text = "¿Que deseas hacer hoy?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 22.sp,
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
+                GreetingCard(userName = userName, branchName = branchName)
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -152,6 +145,87 @@ fun HomeScreen(
 }
 
 @Composable
+private fun GreetingCard(userName: String, branchName: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = Brush.horizontalGradient(
+                        listOf(
+                            Color(0xFFFDC400),
+                            Color(0xFFE3B719),
+                            Color(0xFFCC9E18)
+                        )
+                    )
+                )
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                    Text(
+                        text = "Hola, $userName",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
+                    Text(
+                        text = "¿Qué deseas hacer hoy?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        IconButton(
+                            onClick = { /* Acción del botón */ },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.4f),
+                                    shape = MaterialTheme.shapes.small
+                                )
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Top
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Apartment,
+                                    contentDescription = "Ícono de usuario",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = branchName,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun CategoryGridSection(
     onNavigate: (String) -> Unit,
     onOpenSettings: () -> Unit
@@ -190,7 +264,7 @@ private fun CategoryGridSection(
             subtitle = "Tarjeta QR",
             icon = Icons.Rounded.QrCodeScanner,
             color = MaterialTheme.colorScheme.primary,
-        route = NavigationRoutes.SCAN_UPLOAD
+            route = NavigationRoutes.SCAN_UPLOAD
         ),
         CategoryItem(
             title = "Ajustes",
@@ -281,6 +355,7 @@ private data class CategoryItem(
     val route: String,
     val isSettingsAction: Boolean = false
 )
+
 @Composable
 private fun MetricCard(
     label: String,
@@ -433,7 +508,8 @@ private fun buildMonthlyAverage(
     results: List<ExamResult>,
     months: Int
 ): Pair<List<String>, List<Float>> {
-    val monthNames = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+    val monthNames =
+        listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
     val byMonth = results.groupBy { it.date.substring(5, 7).toIntOrNull() ?: 1 }
     val monthsSorted = byMonth.keys.sorted().takeLast(months)
     val labels = monthsSorted.map { monthNames[(it - 1).coerceIn(0, 11)] }

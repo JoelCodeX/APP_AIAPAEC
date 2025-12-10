@@ -10,6 +10,7 @@ object UserStorage {
     private const val KEY_INSTITUTION = "user_institution"
     private const val KEY_ROLE = "user_role"
     private const val KEY_BRANCH_ID = "user_branch_id"
+    private const val KEY_BRANCH_NAME = "user_branch_name"
     private const val KEY_REMEMBER_EMAIL = "remember_email" // Email para login recordado
     private const val KEY_REMEMBER_FLAG = "remember_flag" // Estado del checkbox Recordar
 
@@ -26,7 +27,8 @@ object UserStorage {
         email: String?,
         institution: String?,
         role: String?,
-        branchId: Int?
+        branchId: Int?,
+        branchName: String?
     ) {
         prefs?.edit()?.apply {
             putString(KEY_NAME, name ?: "")
@@ -34,6 +36,7 @@ object UserStorage {
             putString(KEY_INSTITUTION, institution ?: "")
             putString(KEY_ROLE, role ?: "")
             putInt(KEY_BRANCH_ID, branchId ?: 0)
+            putString(KEY_BRANCH_NAME, branchName ?: "")
             apply()
         }
     }
@@ -43,6 +46,7 @@ object UserStorage {
     fun getInstitution(): String? = prefs?.getString(KEY_INSTITUTION, null)
     fun getRole(): String? = prefs?.getString(KEY_ROLE, null)
     fun getBranchId(): Int? = prefs?.getInt(KEY_BRANCH_ID, 0)
+    fun getBranchName(): String? = prefs?.getString(KEY_BRANCH_NAME, null)
 
     fun clear() {
         prefs?.edit()?.clear()?.apply()

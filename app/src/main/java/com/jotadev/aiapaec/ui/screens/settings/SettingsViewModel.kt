@@ -25,7 +25,8 @@ data class UserProfile(
     val name: String,
     val email: String,
     val institution: String,
-    val role: String
+    val role: String,
+    val branchName: String?
 )
 
 data class SettingsUiState(
@@ -55,11 +56,13 @@ class SettingsViewModel : ViewModel() {
                 val storedEmail = UserStorage.getEmail() ?: "usuario@aiapaec.edu.pe"
                 val storedInstitution = UserStorage.getInstitution() ?: "AIAPAEC"
                 val storedRole = UserStorage.getRole() ?: "Docente"
+                val storedBranchName = UserStorage.getBranchName()
                 val userProfile = UserProfile(
                     name = storedName,
                     email = storedEmail,
                     institution = storedInstitution,
-                    role = storedRole
+                    role = storedRole,
+                    branchName = storedBranchName
                 )
                 
                 val generalSettings = listOf(

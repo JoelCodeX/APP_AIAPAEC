@@ -33,6 +33,7 @@ data class UserData(
     val role: String,
     val status: String,
     val branch_id: Int?,
+    val branch_name: String?,
     val last_login: String?,
     val created_at: String,
     val updated_at: String

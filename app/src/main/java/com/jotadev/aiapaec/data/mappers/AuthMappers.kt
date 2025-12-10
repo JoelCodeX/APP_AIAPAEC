@@ -33,6 +33,7 @@ fun UserData.toDomainUser(): DomainUser {
         role = this.role,
         status = this.status,
         branchId = this.branch_id,
+        branchName = this.branch_name,
         lastLogin = this.last_login,
         createdAt = this.created_at,
         updatedAt = this.updated_at

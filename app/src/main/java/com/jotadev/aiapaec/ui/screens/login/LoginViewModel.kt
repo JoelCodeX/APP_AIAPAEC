@@ -87,7 +87,8 @@ class LoginViewModel(
                         email = u?.email,
                         institution = "AIAPAEC",
                         role = u?.role,
-                        branchId = u?.branchId
+                        branchId = u?.branchId,
+                        branchName = u?.branchName
                     )
                     // Guardar email ingresado SOLO para login si el usuario eligió recordar
                     if (currentState.recordarUsuario) {

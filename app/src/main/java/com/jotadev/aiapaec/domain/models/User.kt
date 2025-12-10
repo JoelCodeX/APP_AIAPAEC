@@ -8,6 +8,7 @@ data class User(
     val role: String,
     val status: String,
     val branchId: Int?,
+    val branchName: String?,
     val lastLogin: String?,
     val createdAt: String,
     val updatedAt: String
