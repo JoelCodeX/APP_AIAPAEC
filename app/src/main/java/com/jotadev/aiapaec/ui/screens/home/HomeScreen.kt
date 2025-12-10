@@ -32,7 +32,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -52,6 +51,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.widthIn
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
@@ -181,47 +183,40 @@ private fun GreetingCard(userName: String, branchName: String) {
                         color = MaterialTheme.colorScheme.onSecondary
                     )
                 }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        IconButton(
-                            onClick = { /* Acción del botón */ },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.4f),
-                                    shape = MaterialTheme.shapes.small
-                                )
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Top
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Apartment,
-                                    contentDescription = "Ícono de usuario",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Text(
-                                    text = branchName,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondary,
-                                    modifier = Modifier
-                                        .align(Alignment.CenterHorizontally)
-                                )
-                            }
-                        }
-                    }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                    BranchChip(branchName = branchName)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BranchChip(branchName: String) {
+    Row(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f))
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .widthIn(min = 96.dp, max = 140.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Apartment,
+            contentDescription = "Sede",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = branchName,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

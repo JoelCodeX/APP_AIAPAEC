@@ -27,19 +27,19 @@ fun BottomNavigationBar(
     val currentRoute = navBackStackEntry?.destination?.route
 
     Surface(
-        shape = RoundedCornerShape(20.dp),
-        tonalElevation = 8.dp,
-        shadowElevation = 12.dp,
-        color = MaterialTheme.colorScheme.primary.copy(0.95f),
+        shape = RoundedCornerShape(24.dp),
+        tonalElevation = 12.dp,
+        shadowElevation = 16.dp,
+        color = MaterialTheme.colorScheme.primary.copy(0.98f),
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(75.dp)
-                .padding(vertical = 4.dp),
+                .height(72.dp)
+                .padding(vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
