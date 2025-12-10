@@ -162,12 +162,13 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
                     selectedBimester = selectedBimesterLabel,
                     onBimesterChange = {
                         selectedBimesterLabel = it
+                        selectedUnidadLabel = null
                         val bimesterId = bimestersState.bimesters.firstOrNull { b -> b.name == it }?.id
                         vm.loadUnitsForBimesterById(bimesterId)
                         vm.loadQuizzes(
                             query = searchText.ifBlank { null },
                             bimesterLabel = it,
-                            unidadLabel = selectedUnidadLabel,
+                            unidadLabel = null,
                             assignmentId = assignmentId
                         )
                     },
@@ -197,13 +198,14 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
                     },
                     modifier = Modifier.fillMaxSize(),
                     getWeekNumberForItem = vm::getStoredWeekNumberForItem,
+                    getUnitLabelById = vm::getUnitLabelById,
                     onDelete = { vm.deleteWeekly(it.id) },
                     onEdit = {
                         editingItem = it
                         selectedBimesterLabel = it.bimesterId?.let { id -> bimesterLabel(id) }
                         val bimId = it.bimesterId
                         vm.loadUnitsForBimesterById(bimId)
-                        selectedUnidadLabel = it.unidadId?.let { uid -> unidadLabel(uid) }
+                        selectedUnidadLabel = it.unidadId?.let { uid -> vm.getUnitLabelById(uid) }
                         selectedUnidadLabel?.let { label -> vm.loadWeeksForUnit(label) }
                         selectedSemana = vm.getStoredWeekNumberForItem(it)
                         selectedDate = it.fecha
@@ -456,6 +458,7 @@ private fun WeeklyList(
     onClick: (com.jotadev.aiapaec.domain.models.Quiz) -> Unit,
     modifier: Modifier = Modifier,
     getWeekNumberForItem: (com.jotadev.aiapaec.domain.models.Quiz) -> Int?,
+    getUnitLabelById: (Int?) -> String?,
     onDelete: (com.jotadev.aiapaec.domain.models.Quiz) -> Unit,
     onEdit: (com.jotadev.aiapaec.domain.models.Quiz) -> Unit
 ) {
@@ -480,6 +483,7 @@ private fun WeeklyList(
                     item = item,
                     onClick = onClick,
                     weekNumberProvider = getWeekNumberForItem,
+                    unitLabelProvider = getUnitLabelById,
                     isExpanded = expandedWeeklyId == item.id,
                     onToggleExpand = { expandedWeeklyId = if (expandedWeeklyId == item.id) null else item.id },
                     onDelete = { onDelete(item) },
@@ -496,6 +500,7 @@ private fun WeeklyCard(
     item: com.jotadev.aiapaec.domain.models.Quiz,
     onClick: (com.jotadev.aiapaec.domain.models.Quiz) -> Unit,
     weekNumberProvider: (com.jotadev.aiapaec.domain.models.Quiz) -> Int?,
+    unitLabelProvider: (Int?) -> String?,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
     onDelete: () -> Unit,
@@ -561,7 +566,7 @@ private fun WeeklyCard(
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         InfoChip(label = "Bimestre", value = bimesterLabel(item.bimesterId), icon = Icons.Default.AcUnit, modifier = Modifier.weight(1f), centered = false)
-                        InfoChip(label = "Unidad", value = unidadLabel(item.unidadId), icon = Icons.Default.HourglassTop, modifier = Modifier.weight(1f), centered = true)
+                        InfoChip(label = "Unidad", value = unitLabelProvider(item.unidadId) ?: "-", icon = Icons.Default.HourglassTop, modifier = Modifier.weight(1f), centered = true)
                         InfoChip(label = "Fecha", value = item.fecha ?: "-", icon = Icons.Default.DateRange, modifier = Modifier.weight(1f), centered = true)
                     }
                     Spacer(modifier = Modifier.size(8.dp))
@@ -710,7 +715,7 @@ private fun CreateWeeklyQuizDialog(
                         label = "Bimestre",
                         selectedValue = selectedBimester ?: "",
                         options = bimesters,
-                        onValueChange = { onChange(it, selectedUnidad, selectedSemana, selectedDate, detalle) },
+                        onValueChange = { newBim -> onChange(newBim, null, null, null, detalle) },
                         placeholder = "Selecciona bimestre",
                         modifier = Modifier.fillMaxWidth()
                     )

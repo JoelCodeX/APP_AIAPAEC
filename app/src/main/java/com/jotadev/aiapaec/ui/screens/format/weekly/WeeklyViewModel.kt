@@ -42,6 +42,7 @@ class WeeklyViewModel : ViewModel() {
     private val getUnits = GetUnitsUseCase(UnitsRepositoryImpl(RetrofitClient.apiService))
     private val getWeeks = GetWeeksUseCase(WeeksRepositoryImpl(RetrofitClient.apiService))
     private var unitLabelToId: Map<String, Int> = emptyMap()
+    private var unitIdToLabel: Map<Int, String> = emptyMap()
     private var weeksByNumber: Map<Int, Week> = emptyMap()
     private var weeksById: Map<Int, Week> = emptyMap()
     private val weekNumberByQuizId: MutableMap<Int, Int> = mutableMapOf()
@@ -160,7 +161,7 @@ class WeeklyViewModel : ViewModel() {
                     else -> null
                 }
             }
-            val res = repo.getQuizzes(page = 1, perPage = 50, query = query, gradoId = gradeId, seccionId = null, bimesterId = bimesterId, asignacionId = assignmentId)
+            val res = repo.getQuizzes(page = 1, perPage = 50, query = null, gradoId = gradeId, seccionId = null, bimesterId = bimesterId, asignacionId = assignmentId)
             when (res) {
                 is Result.Success -> {
                     var items = res.data.items
@@ -175,7 +176,7 @@ class WeeklyViewModel : ViewModel() {
                         }
                         uId?.let { uid -> items = items.filter { it.unidadId == uid } }
                     }
-                    query?.let { q -> items = items.filter { (it.detalle ?: "").contains(q, true) } }
+                    query?.let { q -> items = items.filter { matchesQuery(it, q) } }
                     _uiState.value = _uiState.value.copy(isLoading = false, quizzes = items, allQuizzes = items)
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isLoading = false, message = res.message)
@@ -204,16 +205,12 @@ class WeeklyViewModel : ViewModel() {
                 is Result.Success -> {
                     val units = result.data.items
                     val pairs = units.sortedBy { it.unitNumber }.map { unit ->
-                        val label = when (unit.unitNumber) {
-                            1 -> "I UNIDAD"
-                            2 -> "II UNIDAD"
-                            3 -> "III UNIDAD"
-                            4 -> "IV UNIDAD"
-                            else -> "UNIDAD ${unit.unitNumber}"
-                        }
+                        val ordinal = ((unit.bimesterId - 1) * 2) + unit.unitNumber
+                        val label = unitLabelFromOrdinal(ordinal)
                         label to unit.id
                     }
                     unitLabelToId = pairs.toMap()
+                    unitIdToLabel = pairs.associate { it.second to it.first }
                     _uiState.value = _uiState.value.copy(isUnitsLoading = false, unitOptions = pairs.map { it.first })
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isUnitsLoading = false, message = result.message)
@@ -230,16 +227,12 @@ class WeeklyViewModel : ViewModel() {
                 is Result.Success -> {
                     val units = result.data.items
                     val pairs = units.sortedBy { it.unitNumber }.map { unit ->
-                        val label = when (unit.unitNumber) {
-                            1 -> "I UNIDAD"
-                            2 -> "II UNIDAD"
-                            3 -> "III UNIDAD"
-                            4 -> "IV UNIDAD"
-                            else -> "UNIDAD ${unit.unitNumber}"
-                        }
+                        val ordinal = ((unit.bimesterId - 1) * 2) + unit.unitNumber
+                        val label = unitLabelFromOrdinal(ordinal)
                         label to unit.id
                     }
                     unitLabelToId = pairs.toMap()
+                    unitIdToLabel = pairs.associate { it.second to it.first }
                     _uiState.value = _uiState.value.copy(isUnitsLoading = false, unitOptions = pairs.map { it.first })
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isUnitsLoading = false, message = result.message)
@@ -277,10 +270,37 @@ class WeeklyViewModel : ViewModel() {
         return label?.let { unitLabelToId[it] }
     }
 
+    fun getUnitLabelById(id: Int?): String? {
+        return id?.let { unitIdToLabel[it] }
+    }
+
     fun getStoredWeekNumberForItem(quiz: Quiz): Int? {
         val direct = quiz.weekNumber
         val fromId = quiz.weekId?.let { weeksById[it]?.weekNumber }
         return direct ?: fromId ?: weekNumberByQuizId[quiz.id] ?: parseWeekNumberFromDetalle(quiz.detalle)
+    }
+
+    private fun matchesQuery(quiz: Quiz, q: String): Boolean {
+        val wn = getStoredWeekNumberForItem(quiz) ?: return false
+        val expected = normalizeWeeklyName("Semanal N° $wn")
+        val given = normalizeWeeklyName(q)
+        if (expected == given) return true
+        if (expected.contains(given)) return true
+        val fromSemanal = parseWeekNumberFromSemanalQuery(q)
+        return fromSemanal != null && wn == fromSemanal
+    }
+
+    private fun normalizeWeeklyName(s: String): String {
+        val lower = s.lowercase()
+        val normN = lower.replace(Regex("n[°ºo]\\s*(\\d+)"), "n° $1")
+        val collapsed = normN.replace(Regex("\\s+"), " ").trim()
+        return collapsed
+    }
+
+    private fun parseWeekNumberFromSemanalQuery(s: String): Int? {
+        val re = Regex("(?i)semanal\\s*[:#]?\\s*(?:n[°ºo])?\\s*(\\d{1,2})")
+        val m = re.find(s) ?: return null
+        return m.groupValues.getOrNull(1)?.toIntOrNull()
     }
 
     private fun parseWeekNumberFromDetalle(detalle: String?): Int? {
@@ -288,6 +308,20 @@ class WeeklyViewModel : ViewModel() {
         val re = Regex("(Semana|Semanal|N°|No)\\s*[:#]?\\s*(\\d{1,2})", RegexOption.IGNORE_CASE)
         val m = re.find(text) ?: return null
         return m.groupValues.getOrNull(2)?.toIntOrNull()
+    }
+
+    private fun unitLabelFromOrdinal(n: Int): String {
+        return when (n) {
+            1 -> "I UNIDAD"
+            2 -> "II UNIDAD"
+            3 -> "III UNIDAD"
+            4 -> "IV UNIDAD"
+            5 -> "V UNIDAD"
+            6 -> "VI UNIDAD"
+            7 -> "VII UNIDAD"
+            8 -> "VIII UNIDAD"
+            else -> "UNIDAD $n"
+        }
     }
 
     fun deleteWeekly(id: Int) {
