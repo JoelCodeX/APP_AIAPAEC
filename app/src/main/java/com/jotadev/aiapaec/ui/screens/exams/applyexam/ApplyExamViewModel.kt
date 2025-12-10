@@ -56,7 +56,8 @@ data class ApplyExamUiState(
     val justUploaded: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val showDistribution: Boolean = false
+    val showDistribution: Boolean = false,
+    val expectedNumQuestions: Int? = null
 )
 
 class ApplyExamViewModel(
@@ -78,7 +79,7 @@ class ApplyExamViewModel(
             when (val result = quizzesRepository.getQuiz(id)) {
                 is Result.Success -> {
                     val quiz = result.data
-                    _uiState.update { it.copy(quiz = quiz) }
+                    _uiState.update { it.copy(quiz = quiz, expectedNumQuestions = quiz.numQuestions) }
                     // Cargar respuestas del quiz si existen
                     loadAnswers(quiz.id)
                     when (val keys = quizzesRepository.listAnswerKeys(quiz.id, page = 1, pageSize = 10)) {
@@ -151,14 +152,44 @@ class ApplyExamViewModel(
                 val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: ByteArray(0)
                 when (val result = uploadAnswerKey(quizId, name, mime, bytes)) {
                     is Result.Success -> {
-                        // Refresh quiz to reflect new answer key
-                        when (val q = quizzesRepository.getQuiz(quizId)) {
-                            is Result.Success -> _uiState.update { it.copy(quiz = q.data, isLoading = false, hasKey = true, justUploaded = true) }
-                            is Result.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = q.message) }
-                            is Result.Loading -> _uiState.update { it.copy(isLoading = true) }
+                        var extractedCount: Int? = null
+                        when (val answersRes = quizzesRepository.getQuizAnswers(quizId)) {
+                            is Result.Success -> {
+                                extractedCount = answersRes.data.items.size
+                            }
+                            else -> {}
                         }
-                        // Cargar respuestas extraídas
-                        loadAnswers(quizId)
+                        if ((extractedCount ?: 0) == 0) {
+                            when (val keysRes = quizzesRepository.listAnswerKeys(quizId, page = 1, pageSize = 10)) {
+                                is Result.Success -> {
+                                    val latest = keysRes.data.items.maxByOrNull { it.version }
+                                    extractedCount = latest?.parsedKeys?.size
+                                }
+                                else -> {}
+                            }
+                        }
+                        val expected = _uiState.value.expectedNumQuestions ?: _uiState.value.quiz?.numQuestions
+                        val matches = (extractedCount != null && expected != null && extractedCount == expected)
+                        if (matches) {
+                            when (val q = quizzesRepository.getQuiz(quizId)) {
+                                is Result.Success -> _uiState.update { it.copy(quiz = q.data, isLoading = false, hasKey = true, justUploaded = true) }
+                                is Result.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = q.message) }
+                                is Result.Loading -> _uiState.update { it.copy(isLoading = true) }
+                            }
+                            loadAnswers(quizId)
+                        } else {
+                            when (quizzesRepository.deleteLatestAnswerKey(quizId)) {
+                                is Result.Success -> {
+                                    _uiState.update { it.copy(isLoading = false, hasKey = false, errorMessage = "Solucionario no compatible") }
+                                }
+                                is Result.Error -> {
+                                    _uiState.update { it.copy(isLoading = false, hasKey = false, errorMessage = "Solucionario no compatible") }
+                                }
+                                is Result.Loading -> {
+                                    _uiState.update { it.copy(isLoading = true) }
+                                }
+                            }
+                        }
                     }
                     is Result.Error -> {
                         _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }

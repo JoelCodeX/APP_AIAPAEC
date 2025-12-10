@@ -85,9 +85,17 @@ fun ApplyExam(navController: NavController, examId: String) {
     val applySectionId = prevHandle?.get<Int>("apply_section_id")
     val applyGradeName = prevHandle?.get<String>("apply_grade_name")
     val applySectionName = prevHandle?.get<String>("apply_section_name")
+    val context = LocalContext.current
 
     LaunchedEffect(examId, applyGradeId, applySectionId) {
         vm.load(examId, applyGradeId, applySectionId)
+    }
+
+    LaunchedEffect(state.errorMessage) {
+        val msg = state.errorMessage
+        if (!msg.isNullOrBlank()) {
+            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 
     // REDIRIGE SOLO TRAS SUBIDA EXITOSA DEL SOLUCIONARIO
@@ -100,7 +108,7 @@ fun ApplyExam(navController: NavController, examId: String) {
 
     // Lanzador para seleccionar PDF del solucionario
     var selectedPdfUri by remember { mutableStateOf<Uri?>(null) }
-    val context = LocalContext.current
+    
     val pdfPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -117,6 +125,13 @@ fun ApplyExam(navController: NavController, examId: String) {
             if (state.quiz != null) {
                 vm.uploadAnswerKeyFromUri(state.quiz!!.id, uri, context.contentResolver)
             }
+        }
+    }
+
+    LaunchedEffect(state.errorMessage) {
+        val msg = state.errorMessage
+        if (!msg.isNullOrBlank() && msg.contains("Solucionario no compatible", ignoreCase = true)) {
+            selectedPdfUri = null
         }
     }
 
@@ -148,7 +163,7 @@ fun ApplyExam(navController: NavController, examId: String) {
                     date = formatDate(state.quiz?.fecha),
                     studentCount = state.students.size,
                     hasKey = state.hasKey,
-                    numQuestions = state.quiz?.numQuestions,
+                    numQuestions = state.expectedNumQuestions,
                     onActionClick = {
                         state.quiz?.let { quiz ->
                             if (!state.hasKey) {
