@@ -44,6 +44,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -151,8 +153,10 @@ fun AnswersScreen(navController: NavController, examId: String) {
             val quiz = state.quiz
             if (quiz != null && !editMode) {
                 ExamSummaryCard(
-                    title = (quiz.detalle ?: "QUIZ SEMANAL"),
-                    className = listOfNotNull(quiz.gradoNombre, quiz.seccionNombre).joinToString(" ").ifBlank { "—" },
+                    className = listOfNotNull(
+                        quiz.gradoNombre,
+                        quiz.seccionNombre
+                    ).joinToString(" ").ifBlank { "—" },
                     numQuestions = quiz.numQuestions ?: 0,
                     pointsPerQuestion = state.pointsPerQuestion
                 )
@@ -167,7 +171,12 @@ fun AnswersScreen(navController: NavController, examId: String) {
                             answer = answer,
                             pointsPerQuestion = state.pointsPerQuestion,
                             isEditable = editMode,
-                            onOptionChange = { q, opt -> if (editMode) vm.updateAnswerOption(q, opt) }
+                            onOptionChange = { q, opt ->
+                                if (editMode) vm.updateAnswerOption(
+                                    q,
+                                    opt
+                                )
+                            }
                         )
                     }
                 }
@@ -256,7 +265,6 @@ fun AnswersScreen(navController: NavController, examId: String) {
 
 @Composable
 private fun ExamSummaryCard(
-    title: String,
     className: String,
     numQuestions: Int,
     pointsPerQuestion: Double
@@ -265,40 +273,86 @@ private fun ExamSummaryCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(imageVector = Icons.Default.Info, contentDescription = "Info", tint = MaterialTheme.colorScheme.primary)
-                Text(text = title, style = MaterialTheme.typography.titleMedium)
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(imageVector = Icons.Default.School, contentDescription = "Clase", tint = MaterialTheme.colorScheme.primary)
-                Text(text = "Clase: $className", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = "Preguntas", tint = MaterialTheme.colorScheme.primary)
-                Text(text = "Preguntas: $numQuestions", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            val ptsText = if (pointsPerQuestion % 1.0 == 0.0) pointsPerQuestion.toInt().toString() else "%.2f".format(pointsPerQuestion)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(imageVector = Icons.Default.Edit, contentDescription = "Puntos", tint = MaterialTheme.colorScheme.primary)
-                Text(text = "Puntos por pregunta:", color = MaterialTheme.colorScheme.onSecondary)
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(100))
-                        .background(MaterialTheme.colorScheme.secondary.copy(0.6f))
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "$ptsText pts",
-                        color = MaterialTheme.colorScheme.onSecondary,
-                        fontWeight = FontWeight.Medium
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.20f)
+                        )
                     )
+                )
+        ) {
+            Column(modifier = Modifier.padding(8.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = "Clase",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = className,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.List,
+                        contentDescription = "Preguntas",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "$numQuestions preguntas",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                val ptsText = if (pointsPerQuestion % 1.0 == 0.0) pointsPerQuestion.toInt()
+                    .toString() else "%.2f".format(pointsPerQuestion)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Puntos",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Puntos por pregunta:",
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(100))
+                            .background(MaterialTheme.colorScheme.secondary.copy(0.6f))
+                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "$ptsText pts",
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -342,17 +396,22 @@ private fun AnswerItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Resolución ${answer.questionNumber.toString().padStart(2, '0')}",
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = "Pregunta ${answer.questionNumber.toString().padStart(2, '0')}",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     listOf("A", "B", "C", "D", "E").forEach { option ->
                         val selected = option == answer.correctOption.uppercase()
-                        val bg = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
-                        val fg = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        val bg =
+                            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+                        val fg =
+                            if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                         val base = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
@@ -373,7 +432,8 @@ private fun AnswerItem(
                     }
                 }
             }
-            val pointsText = if (pointsPerQuestion % 1.0 == 0.0) pointsPerQuestion.toInt().toString() else "%.2f".format(pointsPerQuestion)
+            val pointsText = if (pointsPerQuestion % 1.0 == 0.0) pointsPerQuestion.toInt()
+                .toString() else "%.2f".format(pointsPerQuestion)
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(100))
@@ -384,7 +444,7 @@ private fun AnswerItem(
                     text = "$pointsText pts",
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Light
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
