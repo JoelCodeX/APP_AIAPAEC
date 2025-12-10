@@ -38,6 +38,7 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                     403 -> "ACCESO DENEGADO"
                     404 -> "RECURSO NO ENCONTRADO"
                     400 -> "SOLICITUD INVÁLIDA"
+                    422 -> "Solucionario no compatible"
                     500 -> "ERROR DEL SERVIDOR"
                     else -> "ERROR DEL SERVIDOR: ${response.code()}"
                 }
@@ -72,6 +73,7 @@ class QuizzesRepositoryImpl : QuizzesRepository {
                     403 -> "ACCESO DENEGADO"
                     404 -> "RECURSO NO ENCONTRADO"
                     400 -> "SOLICITUD INVÁLIDA"
+                    422 -> "Solucionario no compatible"
                     500 -> "ERROR DEL SERVIDOR"
                     else -> "ERROR DEL SERVIDOR: ${response.code()}"
                 }
