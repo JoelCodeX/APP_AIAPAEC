@@ -11,6 +11,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +58,24 @@ fun CustomTopAppBar(
             titleContentColor = contentColor
         ),
     )
+}
+
+@Composable
+fun ActionIconButton(
+    onClick: () -> Unit,
+    icon: ImageVector,
+    contentDescription: String,
+    tint: Color = MaterialTheme.colorScheme.primary,
+    backgroundColor: Color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f)
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(40.dp)
+            .background(backgroundColor, shape = RoundedCornerShape(12.dp))
+    ) {
+        Icon(imageVector = icon, contentDescription = contentDescription, tint = tint)
+    }
 }
 
 @Composable

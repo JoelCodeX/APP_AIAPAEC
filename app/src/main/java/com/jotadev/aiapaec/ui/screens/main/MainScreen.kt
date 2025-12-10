@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -50,6 +52,7 @@ import com.jotadev.aiapaec.navigation.BottomNavItem
 import com.jotadev.aiapaec.navigation.BottomNavigationBar
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.CustomTopAppBar
+import com.jotadev.aiapaec.ui.components.ActionIconButton
 import com.jotadev.aiapaec.ui.components.ScreenTopAppBar
 import com.jotadev.aiapaec.ui.components.WelcomeTopAppBar
 import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
@@ -140,27 +143,15 @@ private fun MainTopBar(
             ScreenTopAppBar(
                 screenTitle = "Exámenes",
                 actions = {
-                    Box(modifier = Modifier.size(40.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f))
-                                .blur(12.dp)
-                        )
-                        IconButton(
-                            onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("exams_create_request", true)
-                            },
-                            modifier = Modifier.align(Alignment.Center)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Crear examen",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+                    ActionIconButton(
+                        onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("exams_create_request", true)
+                        },
+                        icon = Icons.Filled.Add,
+                        contentDescription = "Crear examen",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             )
         }
@@ -186,36 +177,36 @@ private fun MainTopBar(
                 },
                 actions = {
                     if (!isEditing) {
-                        IconButton(onClick = {
-                            navController.currentBackStackEntry?.savedStateHandle?.set("answers_edit_toggle", true)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
-                                contentDescription = "Editar respuestas",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
+                        ActionIconButton(
+                            onClick = {
+                                navController.currentBackStackEntry?.savedStateHandle?.set("answers_edit_toggle", true)
+                            },
+                            icon = Icons.Filled.Edit,
+                            contentDescription = "Editar respuestas",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
                     } else if (hasChanges) {
-                        IconButton(onClick = {
-                            navController.currentBackStackEntry?.savedStateHandle?.set("answers_save_request", true)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Save,
-                                contentDescription = "Guardar cambios",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
+                        ActionIconButton(
+                            onClick = {
+                                navController.currentBackStackEntry?.savedStateHandle?.set("answers_save_request", true)
+                            },
+                            icon = Icons.Filled.Save,
+                            contentDescription = "Guardar cambios",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
                     if (!isEditing && hasAny) {
-                        IconButton(onClick = {
-                            navController.currentBackStackEntry?.savedStateHandle?.set("answers_delete_request", true)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = "Eliminar solucionario",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
+                        ActionIconButton(
+                            onClick = {
+                                navController.currentBackStackEntry?.savedStateHandle?.set("answers_delete_request", true)
+                            },
+                            icon = Icons.Filled.Delete,
+                            contentDescription = "Eliminar solucionario",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
                     }
                 }
             )
@@ -270,36 +261,31 @@ private fun MainTopBar(
             )
         }
         currentRoute?.startsWith(NavigationRoutes.GRADES) == true -> {
-            ScreenTopAppBar(screenTitle = "Grados")
+            ScreenTopAppBar(
+                screenTitle = "Grados",
+                subtitle = "Gestiona grados y secciones de tu sede"
+            )
         }
         currentRoute?.startsWith(NavigationRoutes.STUDENTS) == true -> {
-            ScreenTopAppBar(screenTitle = "Estudiantes")
+            ScreenTopAppBar(
+                screenTitle = "Estudiantes",
+                subtitle = "Gestiona alumnos de la sede y sus grados asociados"
+            )
         }
         currentRoute?.startsWith(NavigationRoutes.FORMATS) == true -> {
             ScreenTopAppBar(
-                screenTitle = "Asiganción de Formatos",
+                screenTitle = "Asignación de formatos",
+                subtitle = "Configura formatos por grado para evaluaciones semanales",
                 actions = {
-                    Box(modifier = Modifier.size(40.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f))
-                                .blur(12.dp)
-                        )
-                        IconButton(
-                            onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("formats_create_request", true)
-                            },
-                            modifier = Modifier.align(Alignment.Center)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Asignar formato",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+                    ActionIconButton(
+                        onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("formats_create_request", true)
+                        },
+                        icon = Icons.Filled.Add,
+                        contentDescription = "Asignar formato",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             )
         }
@@ -327,27 +313,15 @@ private fun MainTopBar(
                     }
                 },
                 actions = {
-                    Box(modifier = Modifier.size(40.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f))
-                                .blur(12.dp)
-                        )
-                        IconButton(
-                            onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("weekly_create_request", true)
-                            },
-                            modifier = Modifier.align(Alignment.Center)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Crear quiz semanal",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+                    ActionIconButton(
+                        onClick = {
+                            navController.currentBackStackEntry?.savedStateHandle?.set("weekly_create_request", true)
+                        },
+                        icon = Icons.Filled.Add,
+                        contentDescription = "Crear quiz semanal",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             )
         }
