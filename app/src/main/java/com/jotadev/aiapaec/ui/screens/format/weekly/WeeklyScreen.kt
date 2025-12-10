@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -558,13 +560,12 @@ private fun WeeklyCard(
 
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        InfoChip(label = "Bimestre", value = bimesterLabel(item.bimesterId), icon = Icons.Default.Star, modifier = Modifier.weight(1f), centered = false)
-                        InfoChip(label = "Unidad", value = unidadLabel(item.unidadId), icon = Icons.Default.MoreHoriz, modifier = Modifier.weight(1f), centered = true)
+                        InfoChip(label = "Bimestre", value = bimesterLabel(item.bimesterId), icon = Icons.Default.AcUnit, modifier = Modifier.weight(1f), centered = false)
+                        InfoChip(label = "Unidad", value = unidadLabel(item.unidadId), icon = Icons.Default.HourglassTop, modifier = Modifier.weight(1f), centered = true)
                         InfoChip(label = "Fecha", value = item.fecha ?: "-", icon = Icons.Default.DateRange, modifier = Modifier.weight(1f), centered = true)
                     }
                     Spacer(modifier = Modifier.size(8.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        InfoChip(label = "Preguntas", value = (item.numQuestions ?: 0).toString(), icon = Icons.AutoMirrored.Filled.Assignment, modifier = Modifier.weight(1f), centered = true)
                         InfoChip(label = "Detalle", value = item.detalle ?: "-", icon = Icons.Default.Info, modifier = Modifier.weight(1f), centered = false)
                     }
                 }

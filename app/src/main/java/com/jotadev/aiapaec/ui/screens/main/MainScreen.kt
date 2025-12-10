@@ -294,7 +294,9 @@ private fun MainTopBar(
             val prevHandle = navController.previousBackStackEntry?.savedStateHandle
             val gradeName = prevHandle?.get<String>("weekly_grade_name") ?: ""
             val sectionName = prevHandle?.get<String>("weekly_section_name") ?: ""
+            val numQuestions = prevHandle?.get<Int>("weekly_num_questions") ?: 0
             val weeklySubtitle = when {
+                gradeName.isNotBlank() && sectionName.isNotBlank() && numQuestions > 0 -> "$gradeName | $sectionName | ${numQuestions} preguntas"
                 gradeName.isNotBlank() && sectionName.isNotBlank() -> "$gradeName | $sectionName"
                 else -> null
             }

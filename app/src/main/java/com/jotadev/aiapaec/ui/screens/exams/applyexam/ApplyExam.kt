@@ -145,7 +145,7 @@ fun ApplyExam(navController: NavController, examId: String) {
                         state.quiz?.gradoNombre,
                         state.quiz?.seccionNombre
                     ).joinToString(" ").ifBlank { "—" },
-                    date = formatDate(state.quiz?.createdAt),
+                    date = formatDate(state.quiz?.fecha),
                     studentCount = state.students.size,
                     hasKey = state.hasKey,
                     numQuestions = state.quiz?.numQuestions,
