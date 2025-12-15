@@ -30,7 +30,8 @@ data class WeeklyUiState(
     val unitOptions: List<String> = emptyList(),
     val weekOptions: List<Int> = emptyList(),
     val isUnitsLoading: Boolean = false,
-    val isWeeksLoading: Boolean = false
+    val isWeeksLoading: Boolean = false,
+    val unitLabelsVersion: Int = 0
 )
 
 class WeeklyViewModel : ViewModel() {
@@ -167,17 +168,15 @@ class WeeklyViewModel : ViewModel() {
                     var items = res.data.items
                     section?.let { s -> items = items.filter { (it.seccionNombre ?: "").equals(s, true) } }
                     unidadLabel?.let { uLabel ->
-                        val uId = when (uLabel.uppercase()) {
-                            "I UNIDAD" -> 1
-                            "II UNIDAD" -> 2
-                            "III UNIDAD" -> 3
-                            "IV UNIDAD" -> 4
-                            else -> null
-                        }
+                        val uId = getUnitIdFromLabel(uLabel)
                         uId?.let { uid -> items = items.filter { it.unidadId == uid } }
                     }
                     query?.let { q -> items = items.filter { matchesQuery(it, q) } }
                     _uiState.value = _uiState.value.copy(isLoading = false, quizzes = items, allQuizzes = items)
+                    val bimIds = items.mapNotNull { it.bimesterId }.toSet()
+                    val unitIds = preloadUnitsForBimesters(bimIds)
+                    preloadWeeksForUnits(unitIds)
+                    _uiState.value = _uiState.value.copy(unitLabelsVersion = _uiState.value.unitLabelsVersion + 1)
                 }
                 is Result.Error -> _uiState.value = _uiState.value.copy(isLoading = false, message = res.message)
                 Result.Loading -> _uiState.value = _uiState.value.copy(isLoading = true)
@@ -206,7 +205,7 @@ class WeeklyViewModel : ViewModel() {
                     val units = result.data.items
                     val pairs = units.sortedBy { it.unitNumber }.map { unit ->
                         val ordinal = ((unit.bimesterId - 1) * 2) + unit.unitNumber
-                        val label = unitLabelFromOrdinal(ordinal)
+                        val label = (unit.name ?: "").ifBlank { unitLabelFromOrdinal(ordinal) }
                         label to unit.id
                     }
                     unitLabelToId = pairs.toMap()
@@ -228,7 +227,7 @@ class WeeklyViewModel : ViewModel() {
                     val units = result.data.items
                     val pairs = units.sortedBy { it.unitNumber }.map { unit ->
                         val ordinal = ((unit.bimesterId - 1) * 2) + unit.unitNumber
-                        val label = unitLabelFromOrdinal(ordinal)
+                        val label = (unit.name ?: "").ifBlank { unitLabelFromOrdinal(ordinal) }
                         label to unit.id
                     }
                     unitLabelToId = pairs.toMap()
@@ -322,6 +321,47 @@ class WeeklyViewModel : ViewModel() {
             8 -> "VIII UNIDAD"
             else -> "UNIDAD $n"
         }
+    }
+
+    private suspend fun preloadUnitsForBimesters(bimesterIds: Set<Int>): Set<Int> {
+        val current = unitIdToLabel.toMutableMap()
+        val unitIds = mutableSetOf<Int>()
+        for (b in bimesterIds) {
+            when (val res = getUnits(page = 1, perPage = 50, bimesterId = b)) {
+                is Result.Success -> {
+                    val units = res.data.items
+                    units.forEach { u ->
+                        val ordinal = ((u.bimesterId - 1) * 2) + u.unitNumber
+                        val label = (u.name ?: "").ifBlank { unitLabelFromOrdinal(ordinal) }
+                        current[u.id] = label
+                        unitIds.add(u.id)
+                    }
+                }
+                else -> { }
+            }
+        }
+        unitIdToLabel = current.toMap()
+        return unitIds
+    }
+
+    private suspend fun preloadWeeksForUnits(unitIds: Set<Int>) {
+        val currentWeeksById = weeksById.toMutableMap()
+        for (uid in unitIds) {
+            when (val res = getWeeks(page = 1, perPage = 50, unitId = uid)) {
+                is Result.Success -> {
+                    res.data.items.forEach { w -> currentWeeksById[w.id] = w }
+                }
+                else -> { }
+            }
+        }
+        weeksById = currentWeeksById.toMap()
+    }
+
+    fun getUnitLabelForItem(quiz: Quiz): String? {
+        val fromUnit = quiz.unidadId?.let { unitIdToLabel[it] }
+        if (fromUnit != null) return fromUnit
+        val unitId = quiz.weekId?.let { weeksById[it]?.unitId }
+        return unitId?.let { unitIdToLabel[it] }
     }
 
     fun deleteWeekly(id: Int) {
