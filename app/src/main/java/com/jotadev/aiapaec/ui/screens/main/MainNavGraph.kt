@@ -65,13 +65,23 @@ fun MainNavGraph(
             val numQuestions = backStackEntry.arguments?.getString("numQuestions")?.toIntOrNull() ?: 0
             ScanUploadScreen(navController = navController, examId = examId, studentId = studentId, numQuestions = numQuestions)
         }
-        composable("${NavigationRoutes.SCAN_RESULT}?run_id={run_id}&overlay={overlay}&tipo={tipo}") { backStackEntry ->
+        composable("${NavigationRoutes.SCAN_RESULT}?run_id={run_id}&overlay={overlay}&tipo={tipo}&quiz_id={quiz_id}&student_id={student_id}&read_only={read_only}") { backStackEntry ->
             val runId = backStackEntry.arguments?.getString("run_id") ?: ""
             val rawOverlay = backStackEntry.arguments?.getString("overlay") ?: ""
             val overlayUrl = Uri.decode(rawOverlay)
             val tipoStr = backStackEntry.arguments?.getString("tipo") ?: "0"
             val tipoInit = tipoStr.toIntOrNull() ?: 0
-            ScanResultScreen(navController = navController, runId = runId, overlayUrl = overlayUrl, tipoInit = tipoInit)
+            val quizId = backStackEntry.arguments?.getString("quiz_id")?.toIntOrNull() ?: 0
+            val studentId = backStackEntry.arguments?.getString("student_id")?.toIntOrNull() ?: 0
+            val readOnly = backStackEntry.arguments?.getString("read_only")?.toBoolean() ?: false
+            ScanResultScreen(
+                navController = navController,
+                runId = runId,
+                overlayUrl = overlayUrl,
+                tipoInit = tipoInit,
+                quizId = quizId,
+                studentId = studentId
+            )
         }
         
         composable(NavigationRoutes.EXAM_DETAIL) { backStackEntry ->

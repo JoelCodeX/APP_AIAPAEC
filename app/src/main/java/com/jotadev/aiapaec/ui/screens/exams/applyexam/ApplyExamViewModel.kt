@@ -127,15 +127,22 @@ class ApplyExamViewModel(
     fun refreshStudentStatuses(quizId: Int? = null) {
         val qId = quizId ?: _uiState.value.quiz?.id ?: return
         viewModelScope.launch {
+            // Solo activar loading si no es una actualización silenciosa (opcional, pero para PullRefresh sirve)
+            // Podemos usar una bandera separada isRefreshing si no queremos bloquear toda la UI,
+            // pero isLoading está bien si PullRefreshIndicator lo usa.
+            _uiState.update { it.copy(isLoading = true) }
+            
             println("refreshStudentStatuses: Fetching status for quiz $qId")
             val statusResult = quizzesRepository.getQuizStatus(qId)
+            
             if (statusResult is Result.Success) {
                 val newStatuses = statusResult.data.mapKeys { it.key.toIntOrNull() ?: -1 }
                 println("refreshStudentStatuses: Success, received ${newStatuses.size} statuses")
-                _uiState.update { it.copy(studentStatuses = newStatuses) }
+                _uiState.update { it.copy(studentStatuses = newStatuses, isLoading = false) }
             } else {
                 val msg = (statusResult as? Result.Error)?.message ?: "Unknown error"
                 println("refreshStudentStatuses error: $msg")
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

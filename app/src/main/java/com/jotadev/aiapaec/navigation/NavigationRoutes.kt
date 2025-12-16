@@ -42,7 +42,7 @@ object NavigationRoutes {
     fun detailsStudent(studentId: Int) = "student_detail/$studentId"
     fun detailsClass(classId: Int) = "class_detail/$classId"
     fun cropPreview(path: String) = "${CROP_PREVIEW}?path=$path"
-    fun scanResult(runId: String, overlayUrl: String, tipo: Int) = "${SCAN_RESULT}?run_id=$runId&overlay=$overlayUrl&tipo=$tipo"
+    fun scanResult(runId: String, overlayUrl: String, tipo: Int, quizId: Int, studentId: Int, readOnly: Boolean = false) = "${SCAN_RESULT}?run_id=$runId&overlay=$overlayUrl&tipo=$tipo&quiz_id=$quizId&student_id=$studentId&read_only=$readOnly"
     fun scanUpload(examId: String, studentId: Int, numQuestions: Int) = "scan_upload/$examId/$studentId/$numQuestions"
     fun weekly(title: String, assignmentId: Int) = "${WEEKLY}?title=${Uri.encode(title)}&assignmentId=$assignmentId"
 }

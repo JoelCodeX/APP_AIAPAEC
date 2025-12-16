@@ -2,6 +2,7 @@ package com.jotadev.aiapaec.ui.screens.scan
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,13 +25,14 @@ import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,12 +44,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.data.api.NetworkConfig
+import com.jotadev.aiapaec.data.storage.TokenStorage
+import com.jotadev.aiapaec.navigation.NavigationRoutes
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -61,7 +66,7 @@ import kotlin.math.roundToInt
 data class AnswerItem(val q: Int, val r: Int, val letra: String, val correcta: String, val estado: String, val puntaje: Double)
 
 @Composable
-fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: String, tipoInit: Int) {
+fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: String, tipoInit: Int, quizId: Int, studentId: Int) {
     var overlay by remember { mutableStateOf<Bitmap?>(null) }
     var answers by remember { mutableStateOf(listOf<AnswerItem>()) }
     var tipoSel by remember { mutableStateOf(tipoInit) }
@@ -69,6 +74,29 @@ fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: St
     var studentName by remember { mutableStateOf(navController.previousBackStackEntry?.savedStateHandle?.get<String>("student_name") ?: "Estudiante") }
     val client = remember { OkHttpClient.Builder().build() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var isSaving by remember { mutableStateOf(false) }
+
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val saveRequest by (savedStateHandle?.getStateFlow("scan_save_request", false) ?: MutableStateFlow(false)).collectAsState()
+
+    LaunchedEffect(saveRequest) {
+        if (saveRequest) {
+            if (!isSaving) {
+                isSaving = true
+                Toast.makeText(context, "Guardando...", Toast.LENGTH_SHORT).show()
+                val result = saveScan(client, runId, quizId, studentId)
+                if (result.first) {
+                    Toast.makeText(context, "Guardado exitosamente", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack(NavigationRoutes.applyExam(quizId.toString()), inclusive = false)
+                } else {
+                    Toast.makeText(context, "Error: ${result.second}", Toast.LENGTH_LONG).show()
+                    isSaving = false
+                    savedStateHandle?.set("scan_save_request", false)
+                }
+            }
+        }
+    }
 
     LaunchedEffect(runId, overlayUrl) {
         withContext(Dispatchers.IO) {
@@ -123,29 +151,40 @@ fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: St
 
         ResultTabs(selectedTab = selectedTab, onSelect = { selectedTab = it })
 
-        when (selectedTab) {
-            0 -> AnswersTable(answers = answers, tipoSel = tipoSel)
-            1 -> {
-                if (overlay != null) {
-                    Image(
-                        bitmap = overlay!!.asImageBitmap(),
-                        contentDescription = "Imagen escaneada",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(360.dp)
-                            .padding(horizontal = 16.dp)
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "Sin imagen disponible")
+        Box(modifier = Modifier.weight(1f)) {
+            when (selectedTab) {
+                0 -> AnswersTable(answers = answers, tipoSel = tipoSel)
+                1 -> {
+                    if (overlay != null) {
+                        Image(
+                            bitmap = overlay!!.asImageBitmap(),
+                            contentDescription = "Imagen escaneada",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surface)
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Sin imagen disponible")
+                        }
                     }
+                }
+            }
+            if (isSaving) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f))
+                        .clickable(enabled = false) {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -249,7 +288,7 @@ private fun DonutPercentage(percent: Float, modifier: Modifier = Modifier) {
 private fun AnswersTable(answers: List<AnswerItem>, tipoSel: Int) {
     val headerBg = MaterialTheme.colorScheme.secondary
     val headerTextColor = MaterialTheme.colorScheme.onSecondary
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -263,7 +302,7 @@ private fun AnswersTable(answers: List<AnswerItem>, tipoSel: Int) {
                 Text(text = "Estado", modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold, color = headerTextColor, textAlign = TextAlign.Center)
             }
             Divider(color = MaterialTheme.colorScheme.outline)
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(answers) { a ->
                     Row(modifier = Modifier
                         .fillMaxWidth()
@@ -317,6 +356,36 @@ private suspend fun reprocess(client: OkHttpClient, runId: String, tipo: Int): P
                 }
             }
             bmp to tmp
+        }
+    }
+}
+
+private suspend fun saveScan(client: OkHttpClient, runId: String, quizId: Int, studentId: Int): Pair<Boolean, String> {
+    return withContext(Dispatchers.IO) {
+        try {
+            val url = "${NetworkConfig.baseRoot}/api/scan/save-scan"
+            val json = JSONObject().apply {
+                put("run_id", runId)
+                put("quiz_id", quizId)
+                put("student_id", studentId)
+            }
+            val body = json.toString().toRequestBody("application/json".toMediaType())
+            val requestBuilder = Request.Builder().url(url).post(body)
+            val token = TokenStorage.getToken()
+            if (!token.isNullOrBlank()) {
+                requestBuilder.addHeader("Authorization", "Bearer $token")
+            }
+            client.newCall(requestBuilder.build()).execute().use { response ->
+                if (response.isSuccessful) {
+                    true to "OK"
+                } else {
+                    val msg = response.body?.string() ?: "Error desconocido"
+                    false to "Error ${response.code}: $msg"
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false to "Excepción: ${e.message}"
         }
     }
 }

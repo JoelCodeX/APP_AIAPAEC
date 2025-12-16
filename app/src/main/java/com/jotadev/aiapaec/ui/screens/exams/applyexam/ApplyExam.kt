@@ -17,38 +17,43 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.PieChart
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,28 +66,25 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.jotadev.aiapaec.data.api.NetworkConfig
 import com.jotadev.aiapaec.domain.models.Student
 import com.jotadev.aiapaec.domain.models.StudentStatus
-import com.jotadev.aiapaec.data.api.NetworkConfig
 import com.jotadev.aiapaec.navigation.NavigationRoutes
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.compose.runtime.DisposableEffect
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun ApplyExam(navController: NavController, examId: String) {
     val vm: ApplyExamViewModel = viewModel()
@@ -94,11 +96,20 @@ fun ApplyExam(navController: NavController, examId: String) {
     val applySectionName = prevHandle?.get<String>("apply_section_name")
     val context = LocalContext.current
 
+    // Estado para indicador de carga local al escanear
+    var scanningStudentId by remember { mutableStateOf<Int?>(null) }
+
+    val pullState = rememberPullRefreshState(
+        refreshing = state.isLoading,
+        onRefresh = { vm.refreshStudentStatuses() }
+    )
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 vm.refreshStudentStatuses()
+                scanningStudentId = null
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -160,16 +171,22 @@ fun ApplyExam(navController: NavController, examId: String) {
         containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         var studentSearch by remember { mutableStateOf("") }
-        LazyColumn(
+        
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
-                .imePadding()
-                .navigationBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .pullRefresh(pullState)
         ) {
-            // INFO DE LA CARTILLA
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .imePadding()
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // INFO DE LA CARTILLA
             item {
                 val classLabelOverride =
                     listOfNotNull(applyGradeName, applySectionName).joinToString(" ")
@@ -253,18 +270,37 @@ fun ApplyExam(navController: NavController, examId: String) {
                 StudentStatusRow(
                     student = student,
                     status = statusObj,
-                    onScanClick = { navController.navigate(NavigationRoutes.scanUpload(examId, student.id, state.expectedNumQuestions ?: 0)) },
+                    isScanning = scanningStudentId == student.id,
+                    onScanClick = { 
+                        scanningStudentId = student.id
+                        navController.navigate(NavigationRoutes.scanUpload(examId, student.id, state.expectedNumQuestions ?: 0)) 
+                    },
                     onViewResultClick = { runId ->
                         // Corregido: Agregar /api al path para coincidir con el backend
                         val overlayUrl = "${NetworkConfig.baseRoot}/api/scan/results/overlay/$runId"
                         val encOverlay = Uri.encode(overlayUrl)
-                        navController.navigate(NavigationRoutes.scanResult(runId, encOverlay, state.expectedNumQuestions ?: 20))
+                        navController.navigate(
+                            NavigationRoutes.scanResult(
+                                runId, 
+                                encOverlay, 
+                                state.expectedNumQuestions ?: 20,
+                                examId.toIntOrNull() ?: 0,
+                                student.id,
+                                readOnly = true
+                            )
+                        )
                     }
                 )
             }
 
             if (state.isLoading) {
-                item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
+                // Si es carga inicial o pull-refresh, el indicador ya se muestra arriba o via PullRefreshIndicator.
+                // Podríamos dejar este LinearProgressIndicator solo si NO es pull refresh, pero state.isLoading es compartido.
+                // Para evitar duplicidad visual con PullRefresh, podemos ocultarlo si estamos en pull.
+                // Pero PullRefreshIndicator usa state.isLoading también.
+                // Dejémoslo, no hace daño tener doble indicador o podemos quitarlo si preferimos solo PullRefresh.
+                // El usuario pidió Pull-to-Refresh.
+                // item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) } 
             }
             if (state.errorMessage != null) {
                 item {
@@ -275,6 +311,13 @@ fun ApplyExam(navController: NavController, examId: String) {
                 }
             }
         }
+        
+        PullRefreshIndicator(
+            refreshing = state.isLoading,
+            state = pullState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+    }
     }
 }
 
@@ -471,6 +514,7 @@ private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = nul
 private fun StudentStatusRow(
     student: Student, 
     status: StudentStatus?, 
+    isScanning: Boolean = false,
     onScanClick: () -> Unit,
     onViewResultClick: (String) -> Unit
 ) {
@@ -538,30 +582,45 @@ private fun StudentStatusRow(
                 icon = icon
             )
             if (!isCorrected) {
-                OutlinedButton(
-                    onClick = onScanClick,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    ),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                    modifier = Modifier
-                        .widthIn(max = 120.dp)
-                        .defaultMinSize(minWidth = 0.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.QrCodeScanner,
-                        contentDescription = "Escanear",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        "Escanear",
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                if (isScanning) {
+                    Box(
+                        modifier = Modifier
+                            .widthIn(min = 80.dp)
+                            .height(36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = onScanClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.onPrimary,
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        modifier = Modifier
+                            .widthIn(max = 120.dp)
+                            .defaultMinSize(minWidth = 0.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = "Escanear",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            "Escanear",
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }

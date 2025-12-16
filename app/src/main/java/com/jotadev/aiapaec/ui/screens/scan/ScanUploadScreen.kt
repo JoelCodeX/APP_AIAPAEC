@@ -288,11 +288,11 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                                                     com.jotadev.aiapaec.navigation.NavigationRoutes.scanResult(
                                                         runId,
                                                         encOverlay,
-                                                        tipo
+                                                        tipo,
+                                                        examId.toIntOrNull() ?: 0,
+                                                        studentId
                                                     )
-                                                ) {
-                                                    popUpTo(com.jotadev.aiapaec.navigation.NavigationRoutes.scanUpload(examId, studentId, numQuestions)) { inclusive = true }
-                                                }
+                                                )
                                             } else {
                                                 statusText = "Fallo al procesar"
                                             }
@@ -511,6 +511,7 @@ private fun uploadAndProcess(file: File, roi: FloatArray?, quizId: Int? = null, 
         if (quizId != null) payloadObj.put("quiz_id", quizId)
         if (studentId != null) payloadObj.put("student_id", studentId)
         if (numPreguntas != null) payloadObj.put("num_preguntas", numPreguntas)
+        payloadObj.put("preview", true)
         val payload = payloadObj.toString()
         val procBuilder = Request.Builder().url("${NetworkConfig.baseRoot}/api/scan/process-omr")
             .post(payload.toRequestBody("application/json".toMediaType()))

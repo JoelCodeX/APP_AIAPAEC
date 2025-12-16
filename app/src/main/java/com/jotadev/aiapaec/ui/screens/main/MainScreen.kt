@@ -23,8 +23,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -245,6 +247,7 @@ private fun MainTopBar(
             )
         }
         currentRoute?.startsWith(NavigationRoutes.SCAN_RESULT) == true -> {
+            val readOnly = navController.currentBackStackEntry?.arguments?.getString("read_only")?.toBoolean() ?: false
             CustomTopAppBar(
                 title = "Resultados",
                 backgroundColor = MaterialTheme.colorScheme.primary,
@@ -256,6 +259,28 @@ private fun MainTopBar(
                             contentDescription = "Regresar",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
+                    }
+                },
+                actions = {
+                    if (!readOnly) {
+                        ActionIconButton(
+                            onClick = {
+                                navController.popBackStack()
+                            },
+                            icon = Icons.Filled.Refresh,
+                            contentDescription = "Reintentar",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        ActionIconButton(
+                            onClick = {
+                                navController.currentBackStackEntry?.savedStateHandle?.set("scan_save_request", true)
+                            },
+                            icon = Icons.Filled.Check,
+                            contentDescription = "Aceptar",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
             )
