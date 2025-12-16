@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation.layout)
     // SplashScreen API (Android 12+ con compatibilidad hacia atrás)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

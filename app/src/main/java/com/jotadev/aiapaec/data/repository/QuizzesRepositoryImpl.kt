@@ -362,4 +362,29 @@ class QuizzesRepositoryImpl : QuizzesRepository {
             Result.Error("ERROR DE CONEXIÓN: ${e.message}")
         }
     }
+
+    override suspend fun getQuizStatus(id: Int): Result<Map<String, com.jotadev.aiapaec.domain.models.StudentStatus>> {
+        return try {
+            val response = api.getQuizStatus(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    val map = body.mapValues { (_, v) ->
+                        com.jotadev.aiapaec.domain.models.StudentStatus(
+                            status = v.status,
+                            runId = v.run_id,
+                            score = v.score
+                        )
+                    }
+                    Result.Success(map)
+                } else {
+                    Result.Success(emptyMap())
+                }
+            } else {
+                Result.Error("ERROR DEL SERVIDOR: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error("ERROR DE CONEXIÓN: ${e.message}")
+        }
+    }
 }

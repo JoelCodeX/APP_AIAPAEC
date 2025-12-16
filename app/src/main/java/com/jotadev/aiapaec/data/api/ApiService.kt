@@ -154,6 +154,12 @@ interface ApiService {
         @Path("id") id: Int
     ): Response<QuizAnswersListResponse>
 
+    // SCAN STATUS
+    @GET("scan/status/{id}")
+    suspend fun getQuizStatus(
+        @Path("id") id: Int
+    ): Response<Map<String, StudentStatusDto>>
+
     // GRADES
     @GET("grades")
     suspend fun getGrades(
@@ -557,4 +563,10 @@ data class QuizAnswerDto(
     @SerializedName("points_value") val points_value: Double?,
     @SerializedName("created_at") val created_at: String?,
     @SerializedName("updated_at") val updated_at: String?
+)
+
+data class StudentStatusDto(
+    val status: String,
+    @SerializedName("run_id") val run_id: String?,
+    val score: Double?
 )

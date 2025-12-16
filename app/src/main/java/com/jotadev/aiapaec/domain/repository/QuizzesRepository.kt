@@ -57,4 +57,6 @@ interface QuizzesRepository {
         id: Int,
         answers: List<com.jotadev.aiapaec.data.api.UpdateAnswerItem>
     ): Result<Unit>
+
+    suspend fun getQuizStatus(id: Int): Result<Map<String, com.jotadev.aiapaec.domain.models.StudentStatus>>
 }

@@ -18,7 +18,7 @@ object NetworkConfig {
                 device.contains("ranchu", ignoreCase = true) || device.contains("goldfish", ignoreCase = true)
     }
 
-    private const val LOCAL_IP = "192.168.1.43"
+    private const val LOCAL_IP = "192.168.18.224"
     private const val PORT = 5000
 
     val baseRoot: String = if (isEmulator()) "http://10.0.2.2:$PORT" else "http://$LOCAL_IP:$PORT"
