@@ -37,6 +37,7 @@ import com.jotadev.aiapaec.domain.models.Quiz
 import com.jotadev.aiapaec.domain.models.QuizAnswer
 import com.jotadev.aiapaec.domain.models.Result
 import com.jotadev.aiapaec.domain.models.Student
+import com.jotadev.aiapaec.domain.models.StudentStatus
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
 import com.jotadev.aiapaec.domain.usecases.UploadAnswerKeyUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +51,7 @@ data class ApplyExamUiState(
     val quiz: Quiz? = null,
     val students: List<Student> = emptyList(),
     val performanceBars: List<PerformanceBar> = emptyList(),
-    val studentStatuses: Map<Int, String> = emptyMap(),
+    val studentStatuses: Map<Int, StudentStatus> = emptyMap(),
     val answers: List<QuizAnswer> = emptyList(),
     val hasKey: Boolean = false,
     val justUploaded: Boolean = false,
@@ -94,17 +95,16 @@ class ApplyExamViewModel(
                         is Result.Success -> {
                             val items = pageResult.data.items
                             val filtered = items
-                            val statuses = filtered.associate { it.id to "Por corregir" }
-                            val bars = buildPerformanceBars(filtered)
+                            
                             _uiState.update {
                                 it.copy(
                                     students = filtered,
-                                    studentStatuses = statuses,
-                                    performanceBars = bars,
                                     isLoading = false,
                                     errorMessage = null
                                 )
                             }
+                            // Cargar estados después de tener estudiantes
+                            refreshStudentStatuses(quiz.id)
                         }
                         is Result.Error -> {
                             _uiState.update { it.copy(isLoading = false, errorMessage = pageResult.message) }
@@ -120,6 +120,22 @@ class ApplyExamViewModel(
                 is Result.Loading -> {
                     _uiState.update { it.copy(isLoading = true) }
                 }
+            }
+        }
+    }
+
+    fun refreshStudentStatuses(quizId: Int? = null) {
+        val qId = quizId ?: _uiState.value.quiz?.id ?: return
+        viewModelScope.launch {
+            println("refreshStudentStatuses: Fetching status for quiz $qId")
+            val statusResult = quizzesRepository.getQuizStatus(qId)
+            if (statusResult is Result.Success) {
+                val newStatuses = statusResult.data.mapKeys { it.key.toIntOrNull() ?: -1 }
+                println("refreshStudentStatuses: Success, received ${newStatuses.size} statuses")
+                _uiState.update { it.copy(studentStatuses = newStatuses) }
+            } else {
+                val msg = (statusResult as? Result.Error)?.message ?: "Unknown error"
+                println("refreshStudentStatuses error: $msg")
             }
         }
     }

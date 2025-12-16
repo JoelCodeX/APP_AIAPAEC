@@ -59,8 +59,11 @@ fun MainNavGraph(
         composable(NavigationRoutes.CREATE_EXAM) {
             // CreateExamScreen(navController = navController)
         }
-        composable(NavigationRoutes.SCAN_UPLOAD) {
-            ScanUploadScreen(navController = navController)
+        composable(NavigationRoutes.SCAN_UPLOAD) { backStackEntry ->
+            val examId = backStackEntry.arguments?.getString("examId") ?: ""
+            val studentId = backStackEntry.arguments?.getString("studentId")?.toIntOrNull() ?: 0
+            val numQuestions = backStackEntry.arguments?.getString("numQuestions")?.toIntOrNull() ?: 0
+            ScanUploadScreen(navController = navController, examId = examId, studentId = studentId, numQuestions = numQuestions)
         }
         composable("${NavigationRoutes.SCAN_RESULT}?run_id={run_id}&overlay={overlay}&tipo={tipo}") { backStackEntry ->
             val runId = backStackEntry.arguments?.getString("run_id") ?: ""

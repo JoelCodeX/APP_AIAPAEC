@@ -69,6 +69,7 @@ import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.roundToInt
 import androidx.camera.core.Preview as CameraPreview
+import com.jotadev.aiapaec.data.storage.TokenStorage
 
 // PORCENTAJE DE RECORTE INFERIOR SOBRE LA ROI (0.0 a 0.5)
 private const val ROI_BOTTOM_TRIM: Float = 0.20f
@@ -78,7 +79,7 @@ private const val ROI_BOTTOM_TRIM: Float = 0.20f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScanUploadScreen(navController: NavController) {
+fun ScanUploadScreen(navController: NavController, examId: String, studentId: Int, numQuestions: Int) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -275,7 +276,7 @@ fun ScanUploadScreen(navController: NavController) {
                                     statusText = "Enviando..."
                                     val sendFile = centerCropForPreview(out, previewView!!, roi)
                                     Thread {
-                                        val result = uploadAndProcess(sendFile, roi)
+                                        val result = uploadAndProcess(sendFile, roi, examId.toIntOrNull(), studentId, numQuestions)
                                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                                             if (result != null) {
                                                 statusText = "Procesado"
@@ -289,7 +290,9 @@ fun ScanUploadScreen(navController: NavController) {
                                                         encOverlay,
                                                         tipo
                                                     )
-                                                )
+                                                ) {
+                                                    popUpTo(com.jotadev.aiapaec.navigation.NavigationRoutes.scanUpload(examId, studentId, numQuestions)) { inclusive = true }
+                                                }
                                             } else {
                                                 statusText = "Fallo al procesar"
                                             }
@@ -450,7 +453,7 @@ private fun decodeBitmapWithExif(file: File, reqW: Int, reqH: Int): Bitmap {
 }
 
 private fun uploadForCorners(file: File, roi: FloatArray?): Boolean {
-    val url = "${NetworkConfig.baseRoot}/scan/upload"
+    val url = "${NetworkConfig.baseRoot}/api/scan/upload"
     val client = OkHttpClient.Builder().build()
     val media = "image/jpeg".toMediaType()
     val body = file.asRequestBody(media)
@@ -462,7 +465,12 @@ private fun uploadForCorners(file: File, roi: FloatArray?): Boolean {
     }
     val form = builder.build()
     return try {
-        val req = Request.Builder().url(url).post(form).build()
+        val token = TokenStorage.getToken()
+        val reqBuilder = Request.Builder().url(url).post(form)
+        if (!token.isNullOrBlank()) {
+            reqBuilder.addHeader("Authorization", "Bearer $token")
+        }
+        val req = reqBuilder.build()
         client.newCall(req).execute().use { resp ->
             val code = resp.code
             val msg = resp.message
@@ -478,7 +486,7 @@ private fun uploadForCorners(file: File, roi: FloatArray?): Boolean {
     }
 }
 
-private fun uploadAndProcess(file: File, roi: FloatArray?): Triple<String, String, Int>? {
+private fun uploadAndProcess(file: File, roi: FloatArray?, quizId: Int? = null, studentId: Int? = null, numPreguntas: Int? = null): Triple<String, String, Int>? {
     val client = OkHttpClient.Builder().build()
     val media = "image/jpeg".toMediaType()
     val body = file.asRequestBody(media)
@@ -488,16 +496,28 @@ private fun uploadAndProcess(file: File, roi: FloatArray?): Triple<String, Strin
         val roiJson = "[" + roi.joinToString(",") { it.toString() } + "]"
         builder.addFormDataPart("roi", roiJson)
     }
-    val uploadReq =
-        Request.Builder().url("${NetworkConfig.baseRoot}/scan/upload").post(builder.build()).build()
+    val token = TokenStorage.getToken()
+    val uploadBuilder = Request.Builder().url("${NetworkConfig.baseRoot}/api/scan/upload").post(builder.build())
+    if (!token.isNullOrBlank()) {
+        uploadBuilder.addHeader("Authorization", "Bearer $token")
+    }
+    val uploadReq = uploadBuilder.build()
     client.newCall(uploadReq).execute().use { up ->
         val txt = up.body?.string() ?: return null
         val j = runCatching { JSONObject(txt) }.getOrNull() ?: return null
         val runId = j.optString("run_id", "")
         if (runId.isEmpty()) return null
-        val payload = JSONObject().put("run_id", runId).toString()
-        val procReq = Request.Builder().url("${NetworkConfig.baseRoot}/scan/process-auto")
-            .post(payload.toRequestBody("application/json".toMediaType())).build()
+        val payloadObj = JSONObject().put("run_id", runId)
+        if (quizId != null) payloadObj.put("quiz_id", quizId)
+        if (studentId != null) payloadObj.put("student_id", studentId)
+        if (numPreguntas != null) payloadObj.put("num_preguntas", numPreguntas)
+        val payload = payloadObj.toString()
+        val procBuilder = Request.Builder().url("${NetworkConfig.baseRoot}/api/scan/process-omr")
+            .post(payload.toRequestBody("application/json".toMediaType()))
+        if (!token.isNullOrBlank()) {
+            procBuilder.addHeader("Authorization", "Bearer $token")
+        }
+        val procReq = procBuilder.build()
         client.newCall(procReq).execute().use { pr ->
             val ptxt = pr.body?.string() ?: return null
             val pj = runCatching { JSONObject(ptxt) }.getOrNull() ?: return null

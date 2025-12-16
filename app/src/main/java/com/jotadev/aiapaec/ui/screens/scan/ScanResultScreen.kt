@@ -58,7 +58,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.roundToInt
 
-data class AnswerItem(val q: Int, val r: Int, val letra: String)
+data class AnswerItem(val q: Int, val r: Int, val letra: String, val correcta: String, val estado: String, val puntaje: Double)
 
 @Composable
 fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: String, tipoInit: Int) {
@@ -66,25 +66,41 @@ fun ScanResultScreen(navController: NavController, runId: String, overlayUrl: St
     var answers by remember { mutableStateOf(listOf<AnswerItem>()) }
     var tipoSel by remember { mutableStateOf(tipoInit) }
     var selectedTab by remember { mutableStateOf(0) } // 0: Respuestas, 1: Imagen escaneada
-    val studentName = navController.previousBackStackEntry?.savedStateHandle?.get<String>("student_name") ?: "Estudiante"
+    var studentName by remember { mutableStateOf(navController.previousBackStackEntry?.savedStateHandle?.get<String>("student_name") ?: "Estudiante") }
     val client = remember { OkHttpClient.Builder().build() }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(runId, overlayUrl) {
         withContext(Dispatchers.IO) {
-            val ansUrl = "${NetworkConfig.baseRoot}/scan/results/answers/$runId"
+            val ansUrl = "${NetworkConfig.baseRoot}/api/scan/results/answers/$runId"
+            // Forzar URL correcta usando NetworkConfig para evitar problemas si el backend devuelve una URL antigua o incorrecta
+            val finalOverlayUrl = "${NetworkConfig.baseRoot}/api/scan/results/overlay/$runId"
+            
             client.newCall(Request.Builder().url(ansUrl).get().build()).execute().use { resp ->
                 val body = resp.body?.string() ?: "{}"
                 val json = JSONObject(body)
+                
+                // Actualizar nombre del estudiante si viene en el JSON
+                if (json.has("student_name")) {
+                    studentName = json.getString("student_name")
+                }
+                
                 val arr: JSONArray = json.optJSONArray("answers") ?: JSONArray()
                 val tmp = mutableListOf<AnswerItem>()
                 for (i in 0 until arr.length()) {
                     val o = arr.getJSONObject(i)
-                    tmp.add(AnswerItem(o.optInt("q"), o.optInt("r"), o.optString("letra")))
+                    tmp.add(AnswerItem(
+                        o.optInt("q"), 
+                        o.optInt("r"), 
+                        o.optString("letra"),
+                        o.optString("correcta"), // Leer respuesta correcta
+                        o.optString("estado", "P"), // C, X, P
+                        o.optDouble("puntaje", 0.0)
+                    ))
                 }
                 answers = tmp
             }
-            client.newCall(Request.Builder().url(overlayUrl).get().build()).execute().use { resp ->
+            client.newCall(Request.Builder().url(finalOverlayUrl).get().build()).execute().use { resp ->
                 val bytes = resp.body?.bytes()
                 if (bytes != null) overlay = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             }
@@ -249,23 +265,17 @@ private fun AnswersTable(answers: List<AnswerItem>, tipoSel: Int) {
             Divider(color = MaterialTheme.colorScheme.outline)
             LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(answers) { a ->
-                    val estado = when {
-                        a.r > 0 -> 1
-                        a.r == 0 -> 0
-                        else -> -1
-                    }
-                    val punto = if (estado == 1) 1 else 0
                     Row(modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp, horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(text = a.q.toString(), modifier = Modifier.weight(0.8f), textAlign = TextAlign.Center)
-                        Text(text = "-", modifier = Modifier.weight(1.5f), textAlign = TextAlign.Center)
+                        Text(text = a.correcta.ifEmpty { "-" }, modifier = Modifier.weight(1.5f), textAlign = TextAlign.Center) // Mostrar correcta
                         Text(text = a.letra, modifier = Modifier.weight(1.5f), textAlign = TextAlign.Center)
-                        Text(text = punto.toString(), modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+                        Text(text = String.format("%.2f", a.puntaje), modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
                         Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            when (estado) {
-                                1 -> Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = "Correcta", tint = Color(0xFF2E7D32))
-                                0 -> Icon(imageVector = Icons.Filled.Cancel, contentDescription = "Incorrecta", tint = Color(0xFFC62828))
+                            when (a.estado) {
+                                "C" -> Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = "Correcta", tint = Color(0xFF2E7D32))
+                                "X" -> Icon(imageVector = Icons.Filled.Cancel, contentDescription = "Incorrecta", tint = Color(0xFFC62828))
                                 else -> Icon(imageVector = Icons.Filled.Warning, contentDescription = "No marcada", tint = Color(0xFFFF8F00))
                             }
                         }
@@ -279,8 +289,8 @@ private fun AnswersTable(answers: List<AnswerItem>, tipoSel: Int) {
 
 private suspend fun reprocess(client: OkHttpClient, runId: String, tipo: Int): Pair<Bitmap?, List<AnswerItem>> {
     return withContext(Dispatchers.IO) {
-        val endpoint = if (tipo == 20) "${NetworkConfig.baseRoot}/scan/process-20" else "${NetworkConfig.baseRoot}/scan/process-50"
-        val payload = JSONObject().put("run_id", runId).toString()
+        val endpoint = "${NetworkConfig.baseRoot}/api/scan/process-omr"
+        val payload = JSONObject().put("run_id", runId).put("num_preguntas", tipo).toString()
         val req = Request.Builder().url(endpoint).post(payload.toRequestBody("application/json".toMediaType())).build()
         client.newCall(req).execute().use { resp ->
             val body = resp.body?.string() ?: "{}"
@@ -290,7 +300,14 @@ private suspend fun reprocess(client: OkHttpClient, runId: String, tipo: Int): P
             val tmp = mutableListOf<AnswerItem>()
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
-                tmp.add(AnswerItem(o.optInt("q"), o.optInt("r"), o.optString("letra")))
+                tmp.add(AnswerItem(
+                    o.optInt("q"), 
+                    o.optInt("r"), 
+                    o.optString("letra"),
+                    o.optString("correcta"),
+                    o.optString("estado", "P"),
+                    o.optDouble("puntaje", 0.0)
+                ))
             }
             var bmp: Bitmap? = null
             if (overlayUrl.isNotEmpty()) {

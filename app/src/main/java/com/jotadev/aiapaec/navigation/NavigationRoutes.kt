@@ -26,7 +26,7 @@ object NavigationRoutes {
     const val EXAM_DETAIL = "exam_detail/{examId}"
     const val CREATE_EXAM = "create_exam"
     const val SCAN_CARD = "scan_card"
-    const val SCAN_UPLOAD = "scan_upload"
+    const val SCAN_UPLOAD = "scan_upload/{examId}/{studentId}/{numQuestions}"
     const val GROUP_CLASSES = "group_classes"
     const val CROP_PREVIEW = "crop_preview"
     const val SCAN_RESULT = "scan_result"
@@ -43,5 +43,6 @@ object NavigationRoutes {
     fun detailsClass(classId: Int) = "class_detail/$classId"
     fun cropPreview(path: String) = "${CROP_PREVIEW}?path=$path"
     fun scanResult(runId: String, overlayUrl: String, tipo: Int) = "${SCAN_RESULT}?run_id=$runId&overlay=$overlayUrl&tipo=$tipo"
+    fun scanUpload(examId: String, studentId: Int, numQuestions: Int) = "scan_upload/$examId/$studentId/$numQuestions"
     fun weekly(title: String, assignmentId: Int) = "${WEEKLY}?title=${Uri.encode(title)}&assignmentId=$assignmentId"
 }

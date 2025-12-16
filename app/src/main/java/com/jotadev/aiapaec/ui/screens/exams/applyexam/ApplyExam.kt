@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,8 +73,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.domain.models.Student
+import com.jotadev.aiapaec.domain.models.StudentStatus
+import com.jotadev.aiapaec.data.api.NetworkConfig
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.runtime.DisposableEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,6 +93,19 @@ fun ApplyExam(navController: NavController, examId: String) {
     val applyGradeName = prevHandle?.get<String>("apply_grade_name")
     val applySectionName = prevHandle?.get<String>("apply_section_name")
     val context = LocalContext.current
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                vm.refreshStudentStatuses()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(examId, applyGradeId, applySectionId) {
         vm.load(examId, applyGradeId, applySectionId)
@@ -229,10 +249,17 @@ fun ApplyExam(navController: NavController, examId: String) {
                 )
             }
             items(filteredStudents) { student ->
+                val statusObj = state.studentStatuses[student.id]
                 StudentStatusRow(
                     student = student,
-                    status = state.studentStatuses[student.id] ?: "Por corregir",
-                    onScanClick = { navController.navigate(NavigationRoutes.SCAN_UPLOAD) }
+                    status = statusObj,
+                    onScanClick = { navController.navigate(NavigationRoutes.scanUpload(examId, student.id, state.expectedNumQuestions ?: 0)) },
+                    onViewResultClick = { runId ->
+                        // Corregido: Agregar /api al path para coincidir con el backend
+                        val overlayUrl = "${NetworkConfig.baseRoot}/api/scan/results/overlay/$runId"
+                        val encOverlay = Uri.encode(overlayUrl)
+                        navController.navigate(NavigationRoutes.scanResult(runId, encOverlay, state.expectedNumQuestions ?: 20))
+                    }
                 )
             }
 
@@ -441,7 +468,12 @@ private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = nul
 }
 
 @Composable
-private fun StudentStatusRow(student: Student, status: String, onScanClick: () -> Unit) {
+private fun StudentStatusRow(
+    student: Student, 
+    status: StudentStatus?, 
+    onScanClick: () -> Unit,
+    onViewResultClick: (String) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -452,7 +484,10 @@ private fun StudentStatusRow(student: Student, status: String, onScanClick: () -
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(10.dp)
             )
-            .padding(12.dp),
+            .padding(12.dp)
+            .clickable(enabled = status?.runId != null) {
+                status?.runId?.let { onViewResultClick(it) }
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -490,7 +525,7 @@ private fun StudentStatusRow(student: Student, status: String, onScanClick: () -
                 fontSize = 12.sp
             )
         }
-        val isCorrected = status.equals("Corregido", ignoreCase = true)
+        val isCorrected = status?.status?.equals("Corregido", ignoreCase = true) == true
         val icon = if (isCorrected) Icons.Default.CheckCircle else Icons.Default.Cancel
         val tint = if (isCorrected) Color(0xFF2E7D32) else Color(0xFFC62828)
         Row(
