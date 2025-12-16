@@ -2,6 +2,7 @@ package com.jotadev.aiapaec.ui.screens.exams.applyexam
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -38,11 +39,14 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -223,6 +227,32 @@ fun ApplyExam(navController: NavController, examId: String) {
                 )
             }
 
+            // AVISO DE SOLUCIONARIO FALTANTE
+            if (!state.hasKey) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Filled.Warning, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Para comenzar a escanear, primero debes subir el solucionario.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
             // GRAFICO DE BARRAS DE RENDIMIENTO
             item {
                 if (state.showDistribution) {
@@ -272,8 +302,12 @@ fun ApplyExam(navController: NavController, examId: String) {
                     status = statusObj,
                     isScanning = scanningStudentId == student.id,
                     onScanClick = { 
-                        scanningStudentId = student.id
-                        navController.navigate(NavigationRoutes.scanUpload(examId, student.id, state.expectedNumQuestions ?: 0)) 
+                        if (!state.hasKey) {
+                            Toast.makeText(context, "Debes subir el solucionario antes de escanear.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            scanningStudentId = student.id
+                            navController.navigate(NavigationRoutes.scanUpload(examId, student.id, state.expectedNumQuestions ?: 0)) 
+                        }
                     },
                     onViewResultClick = { runId ->
                         // Corregido: Agregar /api al path para coincidir con el backend
@@ -294,13 +328,18 @@ fun ApplyExam(navController: NavController, examId: String) {
             }
 
             if (state.isLoading) {
-                // Si es carga inicial o pull-refresh, el indicador ya se muestra arriba o via PullRefreshIndicator.
-                // Podríamos dejar este LinearProgressIndicator solo si NO es pull refresh, pero state.isLoading es compartido.
-                // Para evitar duplicidad visual con PullRefresh, podemos ocultarlo si estamos en pull.
-                // Pero PullRefreshIndicator usa state.isLoading también.
-                // Dejémoslo, no hace daño tener doble indicador o podemos quitarlo si preferimos solo PullRefresh.
-                // El usuario pidió Pull-to-Refresh.
-                // item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) } 
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
             if (state.errorMessage != null) {
                 item {

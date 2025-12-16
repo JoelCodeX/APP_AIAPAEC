@@ -71,11 +71,8 @@ import kotlin.math.roundToInt
 import androidx.camera.core.Preview as CameraPreview
 import com.jotadev.aiapaec.data.storage.TokenStorage
 
-// PORCENTAJE DE RECORTE INFERIOR SOBRE LA ROI (0.0 a 0.5)
 private const val ROI_BOTTOM_TRIM: Float = 0.20f
 
-// HOST BACKEND EN DISPOSITIVO FÍSICO (AJUSTA SI CAMBIA LA IP)
-//
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
