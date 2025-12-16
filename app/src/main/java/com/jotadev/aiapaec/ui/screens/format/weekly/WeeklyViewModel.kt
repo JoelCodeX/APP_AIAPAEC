@@ -31,7 +31,9 @@ data class WeeklyUiState(
     val weekOptions: List<Int> = emptyList(),
     val isUnitsLoading: Boolean = false,
     val isWeeksLoading: Boolean = false,
-    val unitLabelsVersion: Int = 0
+    val unitLabelsVersion: Int = 0,
+    val scannedCountForOp: Int = 0,
+    val isUsageLoading: Boolean = false
 )
 
 class WeeklyViewModel : ViewModel() {
@@ -54,6 +56,15 @@ class WeeklyViewModel : ViewModel() {
         loadMetaOptions()
     }
 
+    fun checkQuizUsage(id: Int) {
+        _uiState.value = _uiState.value.copy(isUsageLoading = true, scannedCountForOp = 0)
+        viewModelScope.launch {
+            val res = repo.getQuizStatus(id)
+            val count = if (res is Result.Success) res.data.size else 0
+            _uiState.value = _uiState.value.copy(isUsageLoading = false, scannedCountForOp = count)
+        }
+    }
+
     fun createQuiz(
         bimesterId: Int?,
         unidadId: Int?,
@@ -67,6 +78,18 @@ class WeeklyViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, message = null)
+
+            // VALIDACIÓN DE DUPLICADOS
+            val alreadyExists = _uiState.value.allQuizzes.any { quiz ->
+                val qWeek = getStoredWeekNumberForItem(quiz)
+                quiz.bimesterId == bimesterId && quiz.unidadId == unidadId && qWeek == weekNumber
+            }
+
+            if (alreadyExists) {
+                _uiState.value = _uiState.value.copy(isLoading = false, message = "Ya existe un semanal con este Bimestre, Unidad y Semana.")
+                return@launch
+            }
+
             val weekId = weekNumber?.let { weeksByNumber[it]?.id }
             val res = repo.createQuiz(
                 bimesterId = bimesterId,
@@ -171,8 +194,9 @@ class WeeklyViewModel : ViewModel() {
                         val uId = getUnitIdFromLabel(uLabel)
                         uId?.let { uid -> items = items.filter { it.unidadId == uid } }
                     }
+                    val unfilteredByQuery = items
                     query?.let { q -> items = items.filter { matchesQuery(it, q) } }
-                    _uiState.value = _uiState.value.copy(isLoading = false, quizzes = items, allQuizzes = items)
+                    _uiState.value = _uiState.value.copy(isLoading = false, quizzes = items, allQuizzes = unfilteredByQuery)
                     val bimIds = items.mapNotNull { it.bimesterId }.toSet()
                     val unitIds = preloadUnitsForBimesters(bimIds)
                     preloadWeeksForUnits(unitIds)

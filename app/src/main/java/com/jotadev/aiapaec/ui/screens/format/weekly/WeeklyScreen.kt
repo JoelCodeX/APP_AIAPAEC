@@ -41,6 +41,7 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -108,6 +109,11 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
     // ESTADOS PARA EDICIÓN
     var showEditDialog by remember { mutableStateOf(false) }
     var editingItem by remember { mutableStateOf<com.jotadev.aiapaec.domain.models.Quiz?>(null) }
+    
+    // ESTADOS PARA VALIDACIÓN (DELETE/EDIT)
+    var itemToDelete by remember { mutableStateOf<com.jotadev.aiapaec.domain.models.Quiz?>(null) }
+    var showEditWarningDialog by remember { mutableStateOf(false) }
+    var pendingEditAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // Dynamic bimesters via ViewModel
     val bimestersVm: com.jotadev.aiapaec.presentation.BimestersViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
@@ -200,7 +206,10 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
                     getWeekNumberForItem = vm::getStoredWeekNumberForItem,
                     getUnitLabelForItem = vm::getUnitLabelForItem,
                     unitLabelsVersion = state.unitLabelsVersion,
-                    onDelete = { vm.deleteWeekly(it.id) },
+                    onDelete = {
+                        itemToDelete = it
+                        vm.checkQuizUsage(it.id)
+                    },
                     onEdit = {
                         editingItem = it
                         selectedBimesterLabel = it.bimesterId?.let { id -> bimesterLabel(id) }
@@ -251,23 +260,34 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
             onConfirm = { bimLabel, uniLabel, semanaSel, fechaSel, det ->
                 val bimId = vm.getBimesterIdFromLabel(bimLabel)
                 val uniId = vm.getUnitIdFromLabel(uniLabel)
-                vm.createQuiz(
-                    bimesterId = bimId,
-                    unidadId = uniId,
-                    fecha = fechaSel ?: vm.getWeekStartDate(semanaSel) ?: java.time.LocalDate.now().toString(),
-                    numQuestions = numQuestions,
-                    detalle = det,
-                    asignacionId = assignmentId,
-                    gradoId = gradeId,
-                    seccionId = sectionId,
-                    weekNumber = semanaSel
-                )
-                selectedBimesterLabel = null
-                selectedUnidadLabel = null
-                selectedSemana = null
-                selectedDate = null
-                detalle = ""
-                showCreateDialog = false
+
+                // VALIDACIÓN DE DUPLICADOS (UI SIDE)
+                val exists = state.allQuizzes.any { q ->
+                    val qWeek = vm.getStoredWeekNumberForItem(q)
+                    q.bimesterId == bimId && q.unidadId == uniId && qWeek == semanaSel
+                }
+
+                if (exists) {
+                    android.widget.Toast.makeText(ctx, "Ya existe un semanal con este Bimestre, Unidad y Semana.", android.widget.Toast.LENGTH_LONG).show()
+                } else {
+                    vm.createQuiz(
+                        bimesterId = bimId,
+                        unidadId = uniId,
+                        fecha = fechaSel ?: vm.getWeekStartDate(semanaSel) ?: java.time.LocalDate.now().toString(),
+                        numQuestions = numQuestions,
+                        detalle = det,
+                        asignacionId = assignmentId,
+                        gradoId = gradeId,
+                        seccionId = sectionId,
+                        weekNumber = semanaSel
+                    )
+                    selectedBimesterLabel = null
+                    selectedUnidadLabel = null
+                    selectedSemana = null
+                    selectedDate = null
+                    detalle = ""
+                    showCreateDialog = false
+                }
             },
             onChange = { b, u, s, f, d ->
                 if (selectedBimesterLabel != b) {
@@ -320,25 +340,32 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
                 val bimId = vm.getBimesterIdFromLabel(bimLabel)
                 val uniId = vm.getUnitIdFromLabel(uniLabel)
                 val id = editingItem!!.id
-                vm.updateWeekly(
-                    id = id,
-                    detalle = det,
-                    bimesterId = bimId,
-                    unidadId = uniId,
-                    gradoId = gradeId,
-                    seccionId = sectionId,
-                    fecha = fechaSel ?: vm.getWeekStartDate(semanaSel),
-                    numQuestions = numQuestions,
-                    asignacionId = assignmentId,
-                    weekNumber = semanaSel
-                )
-                showEditDialog = false
-                editingItem = null
-                selectedBimesterLabel = null
-                selectedUnidadLabel = null
-                selectedSemana = null
-                selectedDate = null
-                detalle = ""
+                
+                val action = {
+                    vm.updateWeekly(
+                        id = id,
+                        detalle = det,
+                        bimesterId = bimId,
+                        unidadId = uniId,
+                        gradoId = gradeId,
+                        seccionId = sectionId,
+                        fecha = fechaSel ?: vm.getWeekStartDate(semanaSel),
+                        numQuestions = numQuestions,
+                        asignacionId = assignmentId,
+                        weekNumber = semanaSel
+                    )
+                    showEditDialog = false
+                    editingItem = null
+                    selectedBimesterLabel = null
+                    selectedUnidadLabel = null
+                    selectedSemana = null
+                    selectedDate = null
+                    detalle = ""
+                }
+
+                vm.checkQuizUsage(id)
+                pendingEditAction = action
+                showEditWarningDialog = true
             },
             onChange = { b, u, s, f, d ->
                 if (selectedBimesterLabel != b) {
@@ -365,6 +392,119 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
             isUnitsLoading = state.isUnitsLoading,
             isWeeksLoading = state.isWeeksLoading
         )
+    }
+
+    if (itemToDelete != null) {
+        androidx.compose.material3.AlertDialog(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            onDismissRequest = { itemToDelete = null },
+            title = {
+                Text(
+                    "Confirmar eliminación",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                 if (state.isUsageLoading) {
+                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                         CircularProgressIndicator()
+                     }
+                 } else {
+                     val count = state.scannedCountForOp
+                     if (count > 0) {
+                         Column {
+                             Text("¡ADVERTENCIA CRÍTICA!", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                             Spacer(modifier = Modifier.height(8.dp))
+                             Text("Este semanal tiene $count exámenes escaneados. Si lo eliminas, SE PERDERÁN TODOS LOS RESULTADOS y el historial de los alumnos.")
+                             Spacer(modifier = Modifier.height(8.dp))
+                             Text("¿Estás absolutamente seguro de continuar?")
+                         }
+                     } else {
+                         Text("¿Eliminar semanal #${itemToDelete?.id}?")
+                     }
+                 }
+            },
+            confirmButton = {
+                if (!state.isUsageLoading) {
+                    androidx.compose.material3.TextButton(onClick = {
+                         itemToDelete?.let { vm.deleteWeekly(it.id) }
+                         itemToDelete = null
+                    }) {
+                        Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { itemToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showEditWarningDialog) {
+        LaunchedEffect(state.isUsageLoading, state.scannedCountForOp) {
+             if (!state.isUsageLoading && state.scannedCountForOp == 0) {
+                 pendingEditAction?.invoke()
+                 showEditWarningDialog = false
+                 pendingEditAction = null
+             }
+        }
+        
+        if (state.isUsageLoading || state.scannedCountForOp > 0) {
+             androidx.compose.material3.AlertDialog(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                onDismissRequest = { showEditWarningDialog = false },
+                title = {
+                    Text(
+                        if (state.isUsageLoading) "Verificando..." else "Advertencia de modificación",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = {
+                    if (state.isUsageLoading) {
+                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                             CircularProgressIndicator()
+                         }
+                    } else {
+                         Column {
+                             Text("¡ATENCIÓN!", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                             Spacer(modifier = Modifier.height(8.dp))
+                             Text("Hay ${state.scannedCountForOp} exámenes escaneados en este semanal.")
+                             Text("Modificar la configuración (Bimestre, Unidad, Semana) podría causar inconsistencias en los reportes.")
+                             Spacer(modifier = Modifier.height(8.dp))
+                             Text("¿Deseas guardar los cambios de todos modos?")
+                         }
+                    }
+                },
+                confirmButton = {
+                    if (!state.isUsageLoading) {
+                        androidx.compose.material3.TextButton(onClick = {
+                            pendingEditAction?.invoke()
+                            showEditWarningDialog = false
+                            pendingEditAction = null
+                        }) {
+                            Text("Guardar y Arriesgarse", color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { 
+                        showEditWarningDialog = false 
+                    }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -599,7 +739,6 @@ private fun WeeklyCard(
         enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
         exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically()
     ) {
-        var showDeleteDialog by remember { mutableStateOf(false) }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -619,7 +758,7 @@ private fun WeeklyCard(
                 Text(text = "Editar")
             }
             androidx.compose.material3.FilledTonalButton(
-                onClick = { showDeleteDialog = true },
+                onClick = { onDelete() },
                 colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(
                     containerColor = androidx.compose.ui.graphics.Color.Red.copy(alpha = 0.1f),
                     contentColor = androidx.compose.ui.graphics.Color.Red
@@ -630,33 +769,6 @@ private fun WeeklyCard(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = "Eliminar")
             }
-        }
-        if (showDeleteDialog) {
-            androidx.compose.material3.AlertDialog(
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                containerColor = MaterialTheme.colorScheme.surface,
-                onDismissRequest = { showDeleteDialog = false },
-                title = {
-                    Text(
-                        "Confirmar eliminación",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                },
-                text = { Text("¿Eliminar semanal #${item.id}?") },
-                confirmButton = {
-                    androidx.compose.material3.TextButton(onClick = { onDelete(); showDeleteDialog = false }) {
-                        Text("Eliminar", color = MaterialTheme.colorScheme.error)
-                    }
-                },
-                dismissButton = {
-                    androidx.compose.material3.TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancelar")
-                    }
-                }
-            )
         }
     }
     Spacer(modifier = Modifier.size(4.dp))

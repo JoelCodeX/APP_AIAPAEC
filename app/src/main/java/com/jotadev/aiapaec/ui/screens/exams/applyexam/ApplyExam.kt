@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -567,13 +568,18 @@ private fun StudentStatusRow(
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(10.dp)
             )
-            .padding(12.dp)
-            .clickable(enabled = status?.runId != null) {
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                enabled = status?.runId != null
+            ) {
                 status?.runId?.let { onViewResultClick(it) }
-            },
+            }
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+
         // Avatar con iniciales
         val initials =
             (student.firstName.takeIf { it.isNotBlank() }?.firstOrNull()?.toString() ?: "") +

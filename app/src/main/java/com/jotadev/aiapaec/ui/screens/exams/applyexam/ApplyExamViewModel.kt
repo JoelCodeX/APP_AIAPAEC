@@ -138,7 +138,8 @@ class ApplyExamViewModel(
             if (statusResult is Result.Success) {
                 val newStatuses = statusResult.data.mapKeys { it.key.toIntOrNull() ?: -1 }
                 println("refreshStudentStatuses: Success, received ${newStatuses.size} statuses")
-                _uiState.update { it.copy(studentStatuses = newStatuses, isLoading = false) }
+                val bars = buildPerformanceBars(newStatuses)
+                _uiState.update { it.copy(studentStatuses = newStatuses, performanceBars = bars, isLoading = false) }
             } else {
                 val msg = (statusResult as? Result.Error)?.message ?: "Unknown error"
                 println("refreshStudentStatuses error: $msg")
@@ -147,11 +148,44 @@ class ApplyExamViewModel(
         }
     }
 
-    private fun buildPerformanceBars(students: List<Student>): List<PerformanceBar> {
-        // Datos de ejemplo mientras no exista distribución real
-        val bins = (10..100 step 10).map { it }
-        val sampleCounts = intArrayOf(0, 1, 0, 1, 4, 3, 2, 0, 0, 0)
-        return bins.mapIndexed { idx, p -> PerformanceBar(label = "$p%", value = sampleCounts[idx].toFloat()) }
+    private fun buildPerformanceBars(statuses: Map<Int, StudentStatus>): List<PerformanceBar> {
+        if (statuses.isEmpty()) return emptyList()
+
+        // Validar contra la lista actual de estudiantes para no contar eliminados
+        val validStudentIds = _uiState.value.students.map { it.id }.toSet()
+
+        // Asumimos que el puntaje máximo es 100, ya que el sistema maneja puntajes en esa escala
+        // independientemente del número de preguntas.
+        val maxScore = 100.0
+
+        // Usamos 10 rangos de 10% cada uno (0-10%, 11-20%, ..., 91-100%)
+        val totalBins = 10
+        val binCounts = IntArray(totalBins)
+        // Etiquetas: 10, 20, 30... 100
+        val binLabels = (1..totalBins).map { "${it * 10}%" }
+
+        statuses.forEach { (studentId, status) ->
+            // Solo procesamos si el estudiante está en la lista actual
+            if (studentId !in validStudentIds) return@forEach
+
+            // Solo incluimos estudiantes que tengan un puntaje (score != null)
+            // Si el score es null (no ha rendido o se eliminó), no entra en la gráfica.
+            val score = status.score ?: return@forEach
+            
+            val percentage = (score / maxScore * 100).coerceIn(0.0, 100.0)
+            
+            // Calculamos el índice del bin (0 a 9)
+            // 0-9.99 -> 0
+            // 10-19.99 -> 1
+            // ...
+            // 100 -> 9
+            val binIndex = (percentage / 10).toInt().coerceAtMost(totalBins - 1)
+            binCounts[binIndex]++
+        }
+
+        return binLabels.mapIndexed { idx, label ->
+            PerformanceBar(label = label, value = binCounts[idx].toFloat())
+        }
     }
 
     fun uploadAnswerKeyFromUri(quizId: Int, uri: Uri, contentResolver: ContentResolver) {
@@ -278,21 +312,36 @@ fun PerformanceBarChart(title: String, bars: List<PerformanceBar>) {
         if (bars.isEmpty()) {
             Text(text = "Sin datos aún", color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            val maxValue = bars.maxOf { it.value }.coerceAtLeast(1f)
+            // Calcular escala del eje Y dinámicamente
+            val maxCount = bars.maxOf { it.value }.toInt()
+            val steps = 5
+            val stepSize = if (maxCount <= 5) 1 else ((maxCount + steps - 1) / steps)
+            val yTicks = (1..steps).map { it * stepSize }
+            val maxYTick = yTicks.last().toFloat()
+
             val axisColor = MaterialTheme.colorScheme.outline
-            Column(modifier = Modifier.fillMaxWidth()) {
+            
+            // Layout principal: Eje Y a la izquierda, Gráfico + Eje X a la derecha
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp), // Aumentamos altura para acomodar etiquetas
+                verticalAlignment = Alignment.Top
+            ) {
+                // SECCIÓN IZQUIERDA: EJE Y (Texto "Estudiantes" + Números)
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    verticalAlignment = Alignment.Bottom
+                        .width(36.dp) // Espacio fijo para el eje Y
+                        .fillMaxHeight()
+                        .padding(bottom = 24.dp), // Espacio para alinear con el gráfico (descontando altura de etiquetas X)
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    // Texto vertical del eje Y
+                    // Texto vertical "Estudiantes"
                     Box(
                         modifier = Modifier
                             .width(14.dp)
                             .fillMaxHeight(),
-                        contentAlignment = Alignment.CenterStart
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "Estudiantes",
@@ -304,14 +353,12 @@ fun PerformanceBarChart(title: String, bars: List<PerformanceBar>) {
                             overflow = TextOverflow.Visible
                         )
                     }
-                    Spacer(modifier = Modifier.width(0.dp))
-                    // Números del eje Y (1–5) fuera del área, espaciado uniforme
-                    val yTicks = (1..5).toList()
+                    
+                    // Números del eje Y
                     Column(
                         modifier = Modifier
-                            .width(16.dp)
-                            .fillMaxHeight()
-                            .padding(top = 8.dp, bottom = 8.dp),
+                            .width(22.dp)
+                            .fillMaxHeight(),
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.End
                     ) {
@@ -319,178 +366,130 @@ fun PerformanceBarChart(title: String, bars: List<PerformanceBar>) {
                             Text(
                                 text = t.toString(),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.End,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
+                        // Espacio para el 0 (alineado con la base)
+                        Text(
+                            text = "0",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                    // Contenedor del gráfico y ejes
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // SECCIÓN DERECHA: GRÁFICO + EJE X
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
+                    // Área del Gráfico (Barras + Grid)
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight()
+                            .fillMaxWidth()
                     ) {
-                        // Rejilla punteada (horizontal por ticks Y, vertical por centro de cada barra)
+                        // 1. Grid y Ejes dibujados con Canvas
                         Canvas(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(top = 8.dp, bottom = 8.dp)
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            val dash = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
-                            val gridColor = axisColor.copy(alpha = 0.35f)
-                            val yCount = yTicks.size
-                            val xCount = bars.size
-                            val yStep = size.height / yCount
-                            // Líneas horizontales (una por tick Y)
-                            for (i in 1..yCount) {
-                                val y = size.height - i * yStep
+                            val dash = PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f)
+                            val gridColor = axisColor.copy(alpha = 0.3f)
+                            
+                            // Líneas Horizontales (Grid Y)
+                            // Dibujamos steps + 1 líneas (incluyendo el 0)
+                            val yStep = size.height / steps
+                            for (i in 0..steps) {
+                                val y = i * yStep
                                 drawLine(
-                                    color = gridColor,
+                                    color = if (i == steps) axisColor else gridColor, // La última es el eje X (base)
                                     start = Offset(0f, y),
                                     end = Offset(size.width, y),
-                                    strokeWidth = 1f,
-                                    pathEffect = dash
+                                    strokeWidth = if (i == steps) 2f else 1f,
+                                    pathEffect = if (i == steps) null else dash
                                 )
                             }
-                            // Líneas verticales centradas por barra
-                            val xStep = size.width / xCount
-                            for (j in 0 until xCount) {
-                                val x = j * xStep + xStep / 2f
+
+                            // Líneas Verticales (Grid X)
+                            // 10 rangos -> 11 líneas (0, 10, ..., 100)
+                            val xSteps = 10
+                            val xStep = size.width / xSteps
+                            for (i in 0..xSteps) {
+                                val x = i * xStep
                                 drawLine(
-                                    color = gridColor,
+                                    color = if (i == 0) axisColor else gridColor, // La primera es el eje Y
                                     start = Offset(x, 0f),
                                     end = Offset(x, size.height),
-                                    strokeWidth = 1f,
-                                    pathEffect = dash
+                                    strokeWidth = if (i == 0) 2f else 1f,
+                                    pathEffect = if (i == 0) null else dash
                                 )
                             }
                         }
-                        // Eje Y
-                        Box(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .width(1.dp)
-                                .background(axisColor)
-                                .align(Alignment.BottomStart)
-                        )
-                        // Ticks del eje Y dentro del área, alineados a la línea
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .fillMaxHeight()
-                                .padding(top = 8.dp, bottom = 8.dp),
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            yTicks.forEach { _ ->
-                                Box(
-                                    modifier = Modifier
-                                        .width(8.dp)
-                                        .height(1.dp)
-                                        .background(axisColor)
-                                )
-                            }
-                        }
-                        // Eje X
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(axisColor)
-                                .align(Alignment.BottomStart)
-                        )
-                        // Ticks sobre el eje X centrados con cada barra
+
+                        // 2. Barras
                         Row(
                             modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .padding(start = 0.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .fillMaxSize(),
+                            verticalAlignment = Alignment.Bottom
                         ) {
-                            bars.forEach { _ ->
+                            bars.forEach { bar ->
+                                val fraction = (bar.value / maxYTick).coerceIn(0f, 1f)
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
                                         .fillMaxHeight(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(1.dp)
-                                            .fillMaxHeight()
-                                            .background(axisColor)
-                                    )
-                                }
-                            }
-                        }
-                        // Barras
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(start = 0.dp),
-                            verticalAlignment = Alignment.Bottom,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            bars.forEach { bar ->
-                                val fraction = (bar.value / maxValue).coerceIn(0f, 1f)
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                        .padding(horizontal = 2.dp)
-                                        .clip(RoundedCornerShape(6.dp)),
                                     contentAlignment = Alignment.BottomCenter
                                 ) {
+                                    // Barra coloreada
                                     Box(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(0.8f) // Un poco de espacio entre barras
                                             .fillMaxHeight(fraction)
-                                            .clip(RoundedCornerShape(6.dp))
+                                            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                             .background(MaterialTheme.colorScheme.secondary)
                                     )
                                 }
                             }
                         }
                     }
-                }
-                Spacer(modifier = Modifier.height(6.dp))
-                // Etiquetas eje X: 0 al inicio y cada porcentaje centrado bajo su barra
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 30.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(
-                        text = "0",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    bars.forEach { bar ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
+
+                    // Etiquetas Eje X
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Generamos etiquetas 0, 10, 20... 100
+                        for (i in 0..10) {
                             Text(
-                                text = bar.label.replace("%", ""),
+                                text = "${i * 10}",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.width(20.dp) // Ancho fijo para centrar mejor
                             )
                         }
                     }
+                    
+                    // Título del Eje X
+                    Text(
+                        text = "Porcentaje de puntuación",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        textAlign = TextAlign.Center
+                    )
                 }
-                // Texto bajo el eje X
-                Text(
-                    text = "Porcentaje de puntuación",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    textAlign = TextAlign.Center
-                )
-                // Etiquetas 1–5 movidas al eje Y
             }
         }
     }

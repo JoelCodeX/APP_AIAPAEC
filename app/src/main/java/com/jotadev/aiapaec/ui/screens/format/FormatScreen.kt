@@ -2,12 +2,19 @@ package com.jotadev.aiapaec.ui.screens.format
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import android.widget.Toast
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.compose.runtime.Composable
@@ -18,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -57,6 +66,10 @@ fun FormatScreen(navController: NavController) {
     var selectedScoreFormat by remember { mutableStateOf<String?>(null) }
     var showEditDialog by remember { mutableStateOf(false) }
     var itemToEdit by remember { mutableStateOf<com.jotadev.aiapaec.ui.screens.format.FormatItem?>(null) }
+    var itemToDelete by remember { mutableStateOf<com.jotadev.aiapaec.ui.screens.format.FormatItem?>(null) }
+
+    var showEditWarningDialog by remember { mutableStateOf(false) }
+    var pendingEditAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // CARGAR OPCIONES AL INGRESAR A LA PANTALLA
     LaunchedEffect(Unit) {
@@ -152,7 +165,10 @@ fun FormatScreen(navController: NavController) {
                 FormatsList(
                     items = state.formats,
                     onEdit = { itemToEdit = it; showEditDialog = true },
-                    onDelete = { vm.deleteFormat(it.id); Toast.makeText(ctx, "Formato eliminado", Toast.LENGTH_SHORT).show() },
+                    onDelete = {
+                        itemToDelete = it
+                        vm.checkFormatUsage(it.id)
+                    },
                     onClick = { item ->
                         val handle = navController.currentBackStackEntry?.savedStateHandle
                         handle?.set("weekly_assignment_id", item.id.toInt())
@@ -208,10 +224,18 @@ fun FormatScreen(navController: NavController) {
             isOpen = showEditDialog,
             onDismiss = { showEditDialog = false; itemToEdit = null },
             onConfirm = { grade, section, numQuestions, formatType, scoreFormat ->
+            val action = {
                 vm.updateFormat(current.id, grade, section, numQuestions, formatType, scoreFormat)
                 Toast.makeText(ctx, "Formato actualizado", Toast.LENGTH_SHORT).show()
-            },
-            onGradeChange = { vm.loadSectionsForGrade(it) },
+                showEditDialog = false
+                itemToEdit = null
+            }
+
+            vm.checkFormatUsage(current.id)
+            pendingEditAction = action
+            showEditWarningDialog = true
+        },
+        onGradeChange = { vm.loadSectionsForGrade(it) },
             isMetaLoading = state.isMetaLoading,
             gradeOptions = state.gradesOptions,
             sectionOptions = state.sectionsOptions,
@@ -224,5 +248,121 @@ fun FormatScreen(navController: NavController) {
             initialScoreFormat = null,
             confirmButtonText = "Guardar"
         )
+    }
+
+    if (itemToDelete != null) {
+        AlertDialog(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            onDismissRequest = { itemToDelete = null },
+            title = {
+                Text(
+                    "Confirmar eliminación",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                     if (state.isUsageLoading || state.formatUsageCount == null) {
+                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                             CircularProgressIndicator()
+                         }
+                     } else {
+                         val count = state.formatUsageCount ?: 0
+                         if (count > 0) {
+                             Column {
+                                 Text("¡ADVERTENCIA CRÍTICA!", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                                 Spacer(modifier = Modifier.height(8.dp))
+                                 Text("Este formato tiene $count semanales asociados. Si lo eliminas, SE PERDERÁN TODOS LOS SEMANALES y sus notas.")
+                                 Spacer(modifier = Modifier.height(8.dp))
+                                 Text("¿Estás absolutamente seguro de continuar?")
+                             }
+                         } else {
+                             Text("¿Eliminar formato ${itemToDelete?.name}?")
+                         }
+                     }
+                },
+                confirmButton = {
+                    if (!state.isUsageLoading && state.formatUsageCount != null) {
+                        TextButton(onClick = {
+                             itemToDelete?.let { 
+                                 vm.deleteFormat(it.id) 
+                                 Toast.makeText(ctx, "Formato eliminado", Toast.LENGTH_SHORT).show()
+                             }
+                             itemToDelete = null
+                        }) {
+                            Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                },
+            dismissButton = {
+                TextButton(onClick = { itemToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    if (showEditWarningDialog) {
+        LaunchedEffect(state.isUsageLoading, state.formatUsageCount) {
+             if (!state.isUsageLoading && state.formatUsageCount == 0) {
+                 pendingEditAction?.invoke()
+                 showEditWarningDialog = false
+                 pendingEditAction = null
+             }
+        }
+        
+        if (state.isUsageLoading || state.formatUsageCount == null || state.formatUsageCount!! > 0) {
+             AlertDialog(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                onDismissRequest = { showEditWarningDialog = false },
+                title = {
+                    Text(
+                        if (state.isUsageLoading || state.formatUsageCount == null) "Verificando..." else "Advertencia de modificación",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = {
+                    if (state.isUsageLoading || state.formatUsageCount == null) {
+                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                             CircularProgressIndicator()
+                         }
+                    } else {
+                         Column {
+                             Text("¡ATENCIÓN!", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                             Spacer(modifier = Modifier.height(8.dp))
+                             Text("Este formato tiene ${state.formatUsageCount} semanales asociados.")
+                             Text("Modificar la configuración (Grado, Sección, etc.) podría causar inconsistencias en los semanales existentes.")
+                             Spacer(modifier = Modifier.height(8.dp))
+                             Text("¿Deseas guardar los cambios de todos modos?")
+                         }
+                    }
+                },
+                confirmButton = {
+                    if (!state.isUsageLoading && state.formatUsageCount != null) {
+                        TextButton(onClick = {
+                            pendingEditAction?.invoke()
+                            showEditWarningDialog = false
+                            pendingEditAction = null
+                        }) {
+                            Text("Guardar y Arriesgarse", color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { 
+                        showEditWarningDialog = false 
+                    }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
     }
 }

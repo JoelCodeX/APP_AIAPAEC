@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.jotadev.aiapaec.data.api.RetrofitClient
+import com.jotadev.aiapaec.data.repository.QuizzesRepositoryImpl
+import com.jotadev.aiapaec.domain.models.Result
 
 data class FormatItem(
     val id: String,
@@ -31,7 +33,9 @@ data class FormatUiState(
     val error: String? = null,
     val gradesOptions: List<String> = emptyList(),
     val sectionsOptions: List<String> = emptyList(),
-    val sectionsByGrade: Map<String, List<String>> = emptyMap()
+    val sectionsByGrade: Map<String, List<String>> = emptyMap(),
+    val isUsageLoading: Boolean = false,
+    val formatUsageCount: Int? = null
 )
 
 class FormatViewModel : ViewModel() {
@@ -40,6 +44,7 @@ class FormatViewModel : ViewModel() {
 
     // MAPA INTERNO PARA OBTENER ID DE GRADO DESDE NOMBRE
     private var gradeNameToId: Map<String, Int> = emptyMap()
+    private val quizzesRepo = QuizzesRepositoryImpl()
 
     init {
         loadFormats()
@@ -192,6 +197,33 @@ class FormatViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 // SIN MANEJO DE ERRORES SEGÚN REGLAS
+            }
+        }
+    }
+
+    fun checkFormatUsage(id: String) {
+        _uiState.value = _uiState.value.copy(isUsageLoading = true, formatUsageCount = null)
+        viewModelScope.launch {
+            try {
+                val result = quizzesRepo.getQuizzes(
+                    page = 1,
+                    perPage = 1,
+                    query = null,
+                    gradoId = null,
+                    seccionId = null,
+                    bimesterId = null,
+                    asignacionId = id.toInt()
+                )
+                if (result is Result.Success) {
+                    _uiState.value = _uiState.value.copy(
+                        isUsageLoading = false,
+                        formatUsageCount = result.data.total
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(isUsageLoading = false, formatUsageCount = 0)
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isUsageLoading = false, formatUsageCount = 0)
             }
         }
     }

@@ -19,7 +19,8 @@ data class AnswersUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val hasUnsavedChanges: Boolean = false,
-    val lastSaveSucceeded: Boolean = false
+    val lastSaveSucceeded: Boolean = false,
+    val scannedCount: Int = 0
 )
 
 class AnswersViewModel(
@@ -36,12 +37,17 @@ class AnswersViewModel(
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            
+            // Cargar estado de estudiantes (conteo de escaneos)
+            val statusResult = quizzesRepository.getQuizStatus(id)
+            val count = if (statusResult is Result.Success) statusResult.data.size else 0
+            
             when (val result = quizzesRepository.getQuiz(id)) {
                 is Result.Success -> {
                     val quiz = result.data
                     // Compute points with fallback later once answers are loaded if numQuestions is missing
                     val computedPoints = computePointsPerQuestion(quiz.numQuestions)
-                    _uiState.update { it.copy(quiz = quiz, pointsPerQuestion = computedPoints, hasUnsavedChanges = false, lastSaveSucceeded = false) }
+                    _uiState.update { it.copy(quiz = quiz, pointsPerQuestion = computedPoints, hasUnsavedChanges = false, lastSaveSucceeded = false, scannedCount = count) }
                     loadAnswers(quiz.id)
                     _uiState.update { it.copy(isLoading = false) }
                 }

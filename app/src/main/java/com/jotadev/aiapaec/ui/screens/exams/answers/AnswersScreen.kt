@@ -62,6 +62,7 @@ fun AnswersScreen(navController: NavController, examId: String) {
     val vm: AnswersViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showRecalculateDialog by remember { mutableStateOf(false) }
     var editMode by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     var showUnsavedDialog by remember { mutableStateOf(false) }
@@ -87,7 +88,11 @@ fun AnswersScreen(navController: NavController, examId: String) {
             val reqSave = handle?.remove<Boolean>("answers_save_request")
             if (reqSave == true) {
                 if (editMode && state.hasUnsavedChanges) {
-                    vm.saveAnswers(examId)
+                    if (state.scannedCount > 0) {
+                        showRecalculateDialog = true
+                    } else {
+                        vm.saveAnswers(examId)
+                    }
                 }
             }
             val reqBack = handle?.remove<Boolean>("answers_back_request")
@@ -183,7 +188,13 @@ fun AnswersScreen(navController: NavController, examId: String) {
 
                 if (editMode && state.hasUnsavedChanges) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Button(onClick = { vm.saveAnswers(examId) }) {
+                    Button(onClick = { 
+                        if (state.scannedCount > 0) {
+                            showRecalculateDialog = true
+                        } else {
+                            vm.saveAnswers(examId) 
+                        }
+                    }) {
                         Text("Guardar cambios")
                     }
                 }
@@ -206,7 +217,13 @@ fun AnswersScreen(navController: NavController, examId: String) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
             },
-            text = { Text("¿Estás seguro de que deseas eliminar el solucionario?") },
+            text = {
+                val msg = if (state.scannedCount > 0)
+                    "¡ATENCIÓN! Hay ${state.scannedCount} exámenes ya calificados. Si eliminas el solucionario, estos resultados perderán su validez (aunque se conservarán las respuestas marcadas). ¿Continuar?"
+                else
+                    "¿Estás seguro de que deseas eliminar el solucionario?"
+                Text(msg)
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -220,6 +237,40 @@ fun AnswersScreen(navController: NavController, examId: String) {
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // DIALOGO DE RECALIFICACION (NUEVO)
+    if (showRecalculateDialog) {
+        AlertDialog(
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            onDismissRequest = { showRecalculateDialog = false },
+            title = {
+                Text(
+                    text = "Confirmar recalificación",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = { Text("Hay ${state.scannedCount} exámenes ya escaneados. Al guardar los cambios, se recalificarán automáticamente todos los exámenes. ¿Deseas continuar?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showRecalculateDialog = false
+                        vm.saveAnswers(examId)
+                    }
+                ) {
+                    Text("Guardar y Recalificar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRecalculateDialog = false }) {
                     Text("Cancelar")
                 }
             }
@@ -241,7 +292,13 @@ fun AnswersScreen(navController: NavController, examId: String) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
             },
-            text = { Text("Tienes cambios sin guardar. ¿Deseas guardar antes de salir?") },
+            text = { 
+                val msg = if (state.scannedCount > 0)
+                    "Tienes cambios sin guardar. AL GUARDAR SE RECALIFICARÁN ${state.scannedCount} EXÁMENES. ¿Deseas guardar antes de salir?"
+                else
+                    "Tienes cambios sin guardar. ¿Deseas guardar antes de salir?"
+                Text(msg) 
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
