@@ -1,5 +1,6 @@
 package com.jotadev.aiapaec.ui.screens.main
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -63,12 +64,36 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun MainScreen(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    onLogout: () -> Unit = {}
 ) {
     val bottomNavItems = BottomNavItem.getAllItems()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     var showSettings by remember { mutableStateOf(false) }
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var doubleBackToExitPressedOnce by remember { mutableStateOf(false) }
+
+    LaunchedEffect(doubleBackToExitPressedOnce) {
+        if (doubleBackToExitPressedOnce) {
+            delay(2000)
+            doubleBackToExitPressedOnce = false
+        }
+    }
+
+    BackHandler(enabled = showSettings) {
+        showSettings = false
+    }
+    
+    BackHandler(enabled = !showSettings && currentRoute == NavigationRoutes.HOME) {
+        if (doubleBackToExitPressedOnce) {
+            (context as? android.app.Activity)?.finish()
+        } else {
+            doubleBackToExitPressedOnce = true
+            android.widget.Toast.makeText(context, "Presiona de nuevo para salir", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val routesWithoutBottomBar = listOf(
         NavigationRoutes.GROUP_CLASSES,
@@ -82,7 +107,11 @@ fun MainScreen(
         NavigationRoutes.DETAILS_STUDENT,
         NavigationRoutes.DETAILS_CLASS,
         NavigationRoutes.CROP_PREVIEW,
-        NavigationRoutes.WEEKLY
+        NavigationRoutes.WEEKLY,
+        NavigationRoutes.EXAMS_FULL,
+        NavigationRoutes.GRADES_FULL,
+        NavigationRoutes.STUDENTS_FULL,
+        NavigationRoutes.FORMATS_FULL
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -126,7 +155,11 @@ fun MainScreen(
             onClose = { showSettings = false },
             modifier = Modifier.fillMaxSize()
         ) {
-            SettingsScreen(navController = navController, onClose = { showSettings = false })
+            SettingsScreen(
+                navController = navController,
+                onClose = { showSettings = false },
+                onLogout = onLogout
+            )
         }
     }
 }
@@ -141,7 +174,7 @@ private fun MainTopBar(
         currentRoute?.startsWith(NavigationRoutes.HOME) == true -> {
             WelcomeTopAppBar(onNavigationClick = onOpenSettings)
         }
-        currentRoute?.startsWith(NavigationRoutes.EXAMS) == true -> {
+        currentRoute?.startsWith(NavigationRoutes.EXAMS) == true || currentRoute?.startsWith(NavigationRoutes.EXAMS_FULL) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Exámenes",
                 actions = {
@@ -285,19 +318,19 @@ private fun MainTopBar(
                 }
             )
         }
-        currentRoute?.startsWith(NavigationRoutes.GRADES) == true -> {
+        currentRoute?.startsWith(NavigationRoutes.GRADES) == true || currentRoute?.startsWith(NavigationRoutes.GRADES_FULL) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Grados",
                 subtitle = "Gestiona grados y secciones de tu sede"
             )
         }
-        currentRoute?.startsWith(NavigationRoutes.STUDENTS) == true -> {
+        currentRoute?.startsWith(NavigationRoutes.STUDENTS) == true || currentRoute?.startsWith(NavigationRoutes.STUDENTS_FULL) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Estudiantes",
                 subtitle = "Gestiona alumnos de la sede y sus grados asociados"
             )
         }
-        currentRoute?.startsWith(NavigationRoutes.FORMATS) == true -> {
+        currentRoute?.startsWith(NavigationRoutes.FORMATS) == true || currentRoute?.startsWith(NavigationRoutes.FORMATS_FULL) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Asignación de formatos",
                 subtitle = "Configura formatos por grado para evaluaciones semanales",

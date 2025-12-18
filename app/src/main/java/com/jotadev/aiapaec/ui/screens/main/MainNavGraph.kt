@@ -45,6 +45,22 @@ fun MainNavGraph(
         composable(NavigationRoutes.FORMATS) {
             FormatScreen(navController = navController)
         }
+        
+        // Full Screen Variants
+        composable(NavigationRoutes.EXAMS_FULL) {
+            ExamsScreen(navController = navController)
+        }
+        composable(NavigationRoutes.GRADES_FULL) {
+            GradesScreen(navController = navController)
+        }
+        composable(NavigationRoutes.STUDENTS_FULL) {
+            StudentsScreen(navController = navController)
+        }
+        composable("${NavigationRoutes.FORMATS_FULL}?openDialog={openDialog}") { backStackEntry ->
+            val openDialog = backStackEntry.arguments?.getString("openDialog")?.toBoolean() ?: false
+            FormatScreen(navController = navController, openDialogInitially = openDialog)
+        }
+
         composable("${NavigationRoutes.WEEKLY}?title={title}&assignmentId={assignmentId}") { backStackEntry ->
             val assignmentIdArg = backStackEntry.arguments?.getString("assignmentId")?.toIntOrNull()
             WeeklyScreen(navController = navController, assignmentId = assignmentIdArg)

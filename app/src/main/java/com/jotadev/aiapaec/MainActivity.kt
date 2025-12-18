@@ -18,6 +18,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.splashscreen.SplashScreen
 import com.jotadev.aiapaec.navigation.AppNavigation
 import com.jotadev.aiapaec.ui.theme.AIAPAECTheme
+import com.jotadev.aiapaec.data.storage.TokenStorage
+import com.jotadev.aiapaec.data.storage.UserStorage
+import com.jotadev.aiapaec.navigation.NavigationRoutes
 
 @Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
@@ -26,6 +29,18 @@ class MainActivity : ComponentActivity() {
         val splash = installSplashScreen()
         configureSplashExitAnimation(splash)
         super.onCreate(savedInstanceState)
+        
+        // Inicializar almacenamiento
+        TokenStorage.init(applicationContext)
+        UserStorage.init(applicationContext)
+
+        // Determinar destino inicial
+        val startDestination = if (!TokenStorage.getToken().isNullOrBlank()) {
+            NavigationRoutes.MAIN
+        } else {
+            NavigationRoutes.LOGIN
+        }
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             AIAPAECTheme(dynamicColor = false) {
@@ -42,7 +57,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.primary
                 ) {
-                    AppNavigation()
+                    AppNavigation(startDestination = startDestination)
 //                    ApplyExam( navController = androidx.navigation.compose.rememberNavController(), examId = "exam123" )
                 }
             }

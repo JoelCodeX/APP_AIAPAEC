@@ -12,11 +12,12 @@ import com.jotadev.aiapaec.ui.screens.password.ForgotPasswordScreen
 
 @Composable
 fun AppNavigation(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    startDestination: String = NavigationRoutes.LOGIN
 ) {
     NavHost(
         navController = navController,
-        startDestination = NavigationRoutes.LOGIN
+        startDestination = startDestination
     ) {
         composable(NavigationRoutes.LOGIN) {
             LoginScreen(
@@ -32,7 +33,13 @@ fun AppNavigation(
         }
         
         composable(NavigationRoutes.MAIN) {
-            MainScreen()
+            MainScreen(
+                onLogout = {
+                    navController.navigate(NavigationRoutes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(NavigationRoutes.FORGOT_PASSWORD) {

@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.jotadev.aiapaec.data.storage.TokenStorage
 import com.jotadev.aiapaec.data.storage.UserStorage
 
 data class SettingsItem(
@@ -120,12 +121,12 @@ class SettingsViewModel : ViewModel() {
         }
     }
     
-    fun performAction(actionId: String) {
+    fun performAction(actionId: String, onLogoutSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             when (actionId) {
                 "backup" -> createBackup()
                 "sync" -> syncData()
-                "logout" -> logout()
+                "logout" -> logout(onLogoutSuccess)
             }
         }
     }
@@ -138,8 +139,13 @@ class SettingsViewModel : ViewModel() {
         // Lógica para sincronizar datos
     }
     
-    private suspend fun logout() {
-        // Lógica para cerrar sesión
+    private suspend fun logout(onSuccess: () -> Unit) {
+        TokenStorage.clear()
+        UserStorage.clear()
+        // Limpiar otros datos si es necesario
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+            onSuccess()
+        }
     }
     
     fun clearError() {

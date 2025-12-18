@@ -42,11 +42,11 @@ import com.jotadev.aiapaec.ui.components.format.FormatsList
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
-fun FormatScreen(navController: NavController) {
+fun FormatScreen(navController: NavController, openDialogInitially: Boolean = false) {
     val vm: FormatViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
     var isRefreshing by remember { mutableStateOf(false) }
-    var showCreateDialog by remember { mutableStateOf(false) }
+    var showCreateDialog by remember { mutableStateOf(openDialogInitially) }
     val ctx = LocalContext.current
 
     val handle = navController.currentBackStackEntry?.savedStateHandle

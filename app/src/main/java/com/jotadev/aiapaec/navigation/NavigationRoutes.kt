@@ -14,6 +14,12 @@ object NavigationRoutes {
     const val STUDENTS = "students"
     const val SETTINGS = "settings"
 
+    // Full Screen Routes (No Bottom Bar)
+    const val EXAMS_FULL = "exams_full"
+    const val GRADES_FULL = "grades_full"
+    const val STUDENTS_FULL = "students_full"
+    const val FORMATS_FULL = "formats_full"
+
     //Secondary Screens Details
     const val APPLY_EXAM = "apply_exam/{examId}"
     const val DETAILS_STUDENT = "student_detail/{studentId}"

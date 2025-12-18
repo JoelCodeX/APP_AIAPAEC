@@ -38,17 +38,46 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.R
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    onClose: () -> Unit = {}
+    onClose: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
     val settingsViewModel: SettingsViewModel = viewModel()
     val uiState = settingsViewModel.uiState
     val state = uiState.value
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Cerrar sesión") },
+            text = { Text("¿Estás seguro que deseas salir de la aplicación?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        settingsViewModel.performAction("logout", onLogoutSuccess = onLogout)
+                    }
+                ) {
+                    Text("Cerrar sesión", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -175,6 +204,23 @@ fun SettingsScreen(
                     }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item {
+                SectionTitle("Cuenta")
+                ListItem(
+                    headlineContent = { Text("Cerrar sesión", color = MaterialTheme.colorScheme.error) },
+                    supportingContent = { Text("Salir de la aplicación") },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    modifier = Modifier.clickable { showLogoutDialog = true }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }

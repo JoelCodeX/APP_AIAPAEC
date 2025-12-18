@@ -57,12 +57,17 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
-import com.jotadev.aiapaec.presentation.BimestersViewModel
-import com.jotadev.aiapaec.ui.screens.grades.GradesViewModel
+import androidx.compose.material.icons.rounded.DateRange
+import androidx.compose.material.icons.rounded.PostAdd
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.jotadev.aiapaec.ui.screens.exams.answers.ExamResult
-import com.jotadev.aiapaec.ui.screens.exams.answers.ResultsViewModel
 import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
-import com.jotadev.aiapaec.ui.screens.students.StudentsViewModel
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,22 +79,15 @@ fun HomeScreen(
     val settingsUiState by settingsViewModel.uiState.collectAsState()
     val userName = settingsUiState.userProfile?.name ?: "Usuario"
     val branchName = settingsUiState.userProfile?.branchName ?: "Sede"
-    settingsUiState.userProfile?.institution ?: "AIAPAEC"
-    val studentsVm: StudentsViewModel = viewModel()
-    val studentsState by studentsVm.uiState.collectAsState()
-    val gradesVm: GradesViewModel = viewModel()
-    val gradesState by gradesVm.uiState.collectAsState()
-    val bimestersVm: BimestersViewModel = viewModel()
-    val bimestersState by bimestersVm.uiState.collectAsState()
-    val resultsVm: ResultsViewModel = viewModel()
-    val resultsState by resultsVm.uiState.collectAsState()
+    
+    val homeViewModel: HomeViewModel = viewModel()
+    val homeState by homeViewModel.uiState.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             containerColor = MaterialTheme.colorScheme.background,
-
-            ) { paddingValues ->
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -103,16 +101,24 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     MetricCard(
-                        label = "Examenes",
-                        value = bimestersState.total.toString(),
+                        label = "Formatos",
+                        value = homeState.formatsCount.toString(),
                         icon = Icons.Rounded.Assessment,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                     MetricCard(
+                        label = "Semanales",
+                        value = homeState.weekliesCount.toString(),
+                        icon = Icons.Rounded.Leaderboard,
+                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                        accent = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
                         label = "Grados",
-                        value = gradesState.grades.size.toString(),
+                        value = homeState.gradesCount.toString(),
                         icon = Icons.Rounded.School,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.tertiary,
@@ -120,7 +126,7 @@ fun HomeScreen(
                     )
                     MetricCard(
                         label = "Alumnos",
-                        value = studentsState.total.toString(),
+                        value = homeState.studentsCount.toString(),
                         icon = Icons.Rounded.Groups,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.secondary,
@@ -128,10 +134,14 @@ fun HomeScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                ExamsPerformanceSection(results = resultsState.results)
+                ExamsPerformanceSection(
+                    results = homeState.performanceData,
+                    selectedRange = homeState.selectedTimeRange,
+                    onRangeSelected = homeViewModel::onTimeRangeSelected
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Acciones Principales",
+                    text = "Acciones Rápidas",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSecondary
@@ -227,39 +237,39 @@ private fun CategoryGridSection(
 ) {
     val categories = listOf(
         CategoryItem(
-            title = "Exámenes",
-            subtitle = "Crear o gestionar",
+            title = "Admisión",
+            subtitle = "Gestiona ingresos",
             icon = Icons.AutoMirrored.Rounded.Assignment,
             color = MaterialTheme.colorScheme.primary,
-            route = NavigationRoutes.EXAMS
+            route = NavigationRoutes.EXAMS_FULL
         ),
         CategoryItem(
             title = "Grados",
-            subtitle = "Organiza contenidos",
+            subtitle = "Seguimiento académico",
             icon = Icons.Rounded.Groups,
             color = MaterialTheme.colorScheme.secondary,
-            route = NavigationRoutes.GRADES
+            route = NavigationRoutes.GRADES_FULL
         ),
         CategoryItem(
             title = "Alumnos",
             subtitle = "Lista y seguimiento",
             icon = Icons.Rounded.School,
             color = MaterialTheme.colorScheme.tertiary,
-            route = NavigationRoutes.STUDENTS
+            route = NavigationRoutes.STUDENTS_FULL
         ),
         CategoryItem(
             title = "Formatos",
-            subtitle = "Ver reportes",
+            subtitle = "Asignaciones",
             icon = Icons.Rounded.Leaderboard,
             color = MaterialTheme.colorScheme.error,
-            route = NavigationRoutes.FORMATS
+            route = NavigationRoutes.FORMATS_FULL
         ),
         CategoryItem(
-            title = "Escanear",
-            subtitle = "Tarjeta QR",
-            icon = Icons.Rounded.QrCodeScanner,
-            color = MaterialTheme.colorScheme.primary,
-            route = NavigationRoutes.SCAN_UPLOAD
+            title = "Nuevo Formato",
+            subtitle = "Crear asignación",
+            icon = Icons.Rounded.PostAdd,
+            color = MaterialTheme.colorScheme.secondary,
+            route = "${NavigationRoutes.FORMATS_FULL}?openDialog=true"
         ),
         CategoryItem(
             title = "Ajustes",
@@ -389,12 +399,16 @@ private fun MetricCard(
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSecondary
             )
         }
@@ -402,7 +416,13 @@ private fun MetricCard(
 }
 
 @Composable
-private fun ExamsPerformanceSection(results: List<ExamResult>) {
+private fun ExamsPerformanceSection(
+    results: List<ExamResult>,
+    selectedRange: TimeRange,
+    onRangeSelected: (TimeRange) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -420,10 +440,50 @@ private fun ExamsPerformanceSection(results: List<ExamResult>) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondary
             )
-            AssistChip(onClick = {}, label = { Text("Últimos 6 meses") })
+            Box {
+                AssistChip(
+                    onClick = { expanded = true },
+                    label = { 
+                        Text(when(selectedRange) {
+                            TimeRange.LAST_WEEK -> "Última semana"
+                            TimeRange.LAST_BIMESTER -> "Último bimestre"
+                            TimeRange.LAST_6_MONTHS -> "Últimos 6 meses"
+                        }) 
+                    },
+                    trailingIcon = {
+                        Icon(Icons.Rounded.DateRange, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Última semana") },
+                        onClick = { 
+                            onRangeSelected(TimeRange.LAST_WEEK)
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Último bimestre") },
+                        onClick = { 
+                            onRangeSelected(TimeRange.LAST_BIMESTER)
+                            expanded = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Últimos 6 meses") },
+                        onClick = { 
+                            onRangeSelected(TimeRange.LAST_6_MONTHS)
+                            expanded = false
+                        }
+                    )
+                }
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        val (labels, values) = remember(results) { buildMonthlyAverage(results, 6) }
+        val (labels, values) = remember(results, selectedRange) { buildChartData(results, selectedRange) }
         PerformanceLineChart(
             labels = labels,
             values = values,
@@ -455,6 +515,9 @@ private fun PerformanceLineChart(
                 val w = size.width
                 val h = size.height
                 val padding = 16f
+                
+                if (values.isEmpty()) return@Canvas
+
                 val points = values.mapIndexed { i, v ->
                     val x =
                         padding + (w - 2 * padding) * (i.toFloat() / (values.size - 1).coerceAtLeast(
@@ -488,29 +551,82 @@ private fun PerformanceLineChart(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            labels.forEach { label ->
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            // Show only first, middle and last label to avoid overlap if too many
+            if (labels.size > 5) {
+                Text(text = labels.firstOrNull() ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = labels.getOrNull(labels.size / 2) ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = labels.lastOrNull() ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                labels.forEach { label ->
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
 }
 
-private fun buildMonthlyAverage(
+private fun buildChartData(
     results: List<ExamResult>,
-    months: Int
+    range: TimeRange
 ): Pair<List<String>, List<Float>> {
-    val monthNames =
-        listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
-    val byMonth = results.groupBy { it.date.substring(5, 7).toIntOrNull() ?: 1 }
-    val monthsSorted = byMonth.keys.sorted().takeLast(months)
-    val labels = monthsSorted.map { monthNames[(it - 1).coerceIn(0, 11)] }
-    val values = monthsSorted.map { m ->
-        val scores = byMonth[m]?.map { it.score } ?: emptyList()
-        if (scores.isEmpty()) 0f else scores.average().toFloat()
+    if (results.isEmpty()) return emptyList<String>() to emptyList<Float>()
+
+    return when (range) {
+        TimeRange.LAST_WEEK -> {
+            // Group by Day Name (Mon, Tue...)
+            val byDay = results.groupBy { 
+                try {
+                    LocalDate.parse(it.date).dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es", "ES"))
+                } catch (e: Exception) { "?" }
+            }
+            // Sort by original date order ideally, but here we just take the results order assuming they are sorted by date from VM
+            // To ensure correct order, we should re-sort keys based on the first occurrence in the sorted results
+            val sortedKeys = byDay.keys.sortedBy { key -> 
+                results.indexOfFirst { 
+                    try {
+                        LocalDate.parse(it.date).dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es", "ES")) == key
+                    } catch (e: Exception) { false }
+                } 
+            }
+            
+            val labels = sortedKeys
+            val values = sortedKeys.map { day ->
+                val scores = byDay[day]?.map { it.score } ?: emptyList()
+                if (scores.isEmpty()) 0f else scores.average().toFloat()
+            }
+            labels to values
+        }
+        TimeRange.LAST_BIMESTER -> {
+            // Group by Week? Or just raw dates if few. Let's group by "Sem X"
+            // For simplicity, let's group by Date (Day-Month)
+             val byDate = results.groupBy { 
+                try {
+                    val d = LocalDate.parse(it.date)
+                    "${d.dayOfMonth}/${d.monthValue}"
+                } catch (e: Exception) { "?" }
+            }
+            val labels = byDate.keys.toList()
+            val values = labels.map { d ->
+                 val scores = byDate[d]?.map { it.score } ?: emptyList()
+                 if (scores.isEmpty()) 0f else scores.average().toFloat()
+            }
+            labels to values
+        }
+        TimeRange.LAST_6_MONTHS -> {
+            val monthNames =
+                listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+            val byMonth = results.groupBy { it.date.substring(5, 7).toIntOrNull() ?: 1 }
+            val monthsSorted = byMonth.keys.sorted()
+            val labels = monthsSorted.map { monthNames[(it - 1).coerceIn(0, 11)] }
+            val values = monthsSorted.map { m ->
+                val scores = byMonth[m]?.map { it.score } ?: emptyList()
+                if (scores.isEmpty()) 0f else scores.average().toFloat()
+            }
+            labels to values
+        }
     }
-    return labels to values
 }
