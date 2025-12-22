@@ -3,6 +3,7 @@ package com.jotadev.aiapaec.ui.screens.scan
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,8 +59,10 @@ import androidx.navigation.NavController
 import com.jotadev.aiapaec.data.api.NetworkConfig
 import com.jotadev.aiapaec.data.storage.TokenStorage
 import com.jotadev.aiapaec.navigation.NavigationRoutes
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -101,6 +105,22 @@ fun ScanResultScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var isSaving by remember { mutableStateOf(false) }
+    var isSaved by remember { mutableStateOf(false) }
+
+    // Limpieza automática al salir si no se ha guardado
+    DisposableEffect(Unit) {
+        onDispose {
+            if (!isSaved) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        discardRun(client, runId)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
 
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val saveRequest by (savedStateHandle?.getStateFlow("scan_save_request", false)
@@ -113,6 +133,7 @@ fun ScanResultScreen(
                 Toast.makeText(context, "Guardando...", Toast.LENGTH_SHORT).show()
                 val result = saveScan(client, runId, quizId, studentId)
                 if (result.first) {
+                    isSaved = true
                     Toast.makeText(context, "Guardado exitosamente", Toast.LENGTH_SHORT).show()
                     navController.popBackStack(
                         NavigationRoutes.applyExam(quizId.toString()),
@@ -634,6 +655,23 @@ private suspend fun saveScan(
         } catch (e: Exception) {
             e.printStackTrace()
             false to "Excepción: ${e.message}"
+        }
+    }
+}
+
+private suspend fun discardRun(
+    client: OkHttpClient,
+    runId: String
+) {
+    withContext(Dispatchers.IO) {
+        try {
+            val url = "${NetworkConfig.baseRoot}/api/scan/discard"
+            val json = JSONObject().put("run_id", runId).toString()
+            val body = json.toRequestBody("application/json".toMediaType())
+            val request = Request.Builder().url(url).post(body).build()
+            client.newCall(request).execute().close()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

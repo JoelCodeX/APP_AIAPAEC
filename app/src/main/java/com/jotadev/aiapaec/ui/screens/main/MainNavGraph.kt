@@ -31,7 +31,15 @@ fun MainNavGraph(
         modifier = modifier
     ) {
         composable(NavigationRoutes.HOME) {
-            HomeScreen(navController = navController, onOpenSettings = onOpenSettings)
+            HomeScreen(
+                navController = navController, 
+                onOpenSettings = onOpenSettings,
+                onSessionExpired = {
+                    navController.navigate(NavigationRoutes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(NavigationRoutes.EXAMS) {
             ExamsScreen(navController = navController)

@@ -69,12 +69,19 @@ import com.jotadev.aiapaec.ui.screens.settings.SettingsViewModel
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.jotadev.aiapaec.data.storage.TokenStorage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onSessionExpired: () -> Unit
 ) {
     val settingsViewModel: SettingsViewModel = viewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsState()
@@ -83,6 +90,32 @@ fun HomeScreen(
     
     val homeViewModel: HomeViewModel = viewModel()
     val homeState by homeViewModel.uiState.collectAsState()
+
+    // --- SESSION & RESUME HANDLING ---
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // 1. Handle Session Expiry (Redirect to Login)
+    LaunchedEffect(homeState.isSessionExpired) {
+        if (homeState.isSessionExpired) {
+            TokenStorage.clear()
+            // UserStorage.clear() // Optional but recommended
+            onSessionExpired()
+        }
+    }
+
+    // 2. Refresh Data on Resume (Fix for "0 0 0" when returning to app)
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                homeViewModel.refreshData()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    // ---------------------------------
 
     val configuration = LocalConfiguration.current
     val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
@@ -163,7 +196,7 @@ fun HomeScreen(
                 ) {
                     MetricCard(
                         label = "Formatos",
-                        value = homeState.formatsCount.toString(),
+                        value = if (homeState.isLoadingMetrics) "..." else homeState.formatsCount.toString(),
                         icon = Icons.Rounded.Assessment,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.primary,
@@ -171,7 +204,7 @@ fun HomeScreen(
                     )
                     MetricCard(
                         label = "Semanales",
-                        value = homeState.weekliesCount.toString(),
+                        value = if (homeState.isLoadingMetrics) "..." else homeState.weekliesCount.toString(),
                         icon = Icons.Rounded.Leaderboard,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.error,
@@ -179,7 +212,7 @@ fun HomeScreen(
                     )
                     MetricCard(
                         label = "Grados",
-                        value = homeState.gradesCount.toString(),
+                        value = if (homeState.isLoadingMetrics) "..." else homeState.gradesCount.toString(),
                         icon = Icons.Rounded.School,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.tertiary,
@@ -187,7 +220,7 @@ fun HomeScreen(
                     )
                     MetricCard(
                         label = "Alumnos",
-                        value = homeState.studentsCount.toString(),
+                        value = if (homeState.isLoadingMetrics) "..." else homeState.studentsCount.toString(),
                         icon = Icons.Rounded.Groups,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.secondary,

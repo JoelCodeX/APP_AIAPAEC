@@ -33,7 +33,8 @@ data class HomeUiState(
     val selectedTimeRange: TimeRange = TimeRange.LAST_6_MONTHS,
     val isLoadingMetrics: Boolean = false,
     val isLoadingChart: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isSessionExpired: Boolean = false
 )
 
 class HomeViewModel : ViewModel() {
@@ -50,9 +51,14 @@ class HomeViewModel : ViewModel() {
         loadPerformanceData(TimeRange.LAST_6_MONTHS)
     }
 
+    fun refreshData() {
+        loadMetrics()
+        loadPerformanceData(_uiState.value.selectedTimeRange)
+    }
+
     fun loadMetrics() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingMetrics = true) }
+            _uiState.update { it.copy(isLoadingMetrics = true, error = null) }
             try {
                 // Execute in parallel
                 val formatsDeferred = async { apiService.getWeeklyAssignments(page = 1, perPage = 1) }
@@ -65,6 +71,12 @@ class HomeViewModel : ViewModel() {
                 val gradesResult = gradesDeferred.await()
                 val studentsResult = studentsDeferred.await()
 
+                // Check for 401 Unauthorized
+                if (formatsResp.code() == 401) {
+                    _uiState.update { it.copy(isLoadingMetrics = false, isSessionExpired = true) }
+                    return@launch
+                }
+
                 var formatsCount = 0
                 if (formatsResp.isSuccessful) {
                     formatsCount = formatsResp.body()?.data?.total ?: 0
@@ -73,6 +85,9 @@ class HomeViewModel : ViewModel() {
                 var weekliesCount = 0
                 if (weekliesResult is Result.Success) {
                     weekliesCount = weekliesResult.data.total
+                } else if (weekliesResult is Result.Error && weekliesResult.message.contains("401")) {
+                     _uiState.update { it.copy(isLoadingMetrics = false, isSessionExpired = true) }
+                     return@launch
                 }
 
                 var gradesCount = 0
