@@ -18,7 +18,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.jotadev.aiapaec.ui.components.FilterDropdown
@@ -49,6 +51,8 @@ fun CreateFormatDialog(
     val numQuestions = remember(isOpen, initialNumQuestions) { mutableStateOf<String>(initialNumQuestions?.toString() ?: "") }
     val formatType = remember(isOpen, initialFormatType) { mutableStateOf<String?>(initialFormatType) }
     val scoreFormat = remember(isOpen, initialScoreFormat) { mutableStateOf<String?>(initialScoreFormat) }
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     if (!isOpen) return
 
@@ -83,7 +87,7 @@ fun CreateFormatDialog(
                 ) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = if (isSmallScreen) 18.sp else 22.sp)
                     )
 
                     Row(

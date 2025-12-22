@@ -25,7 +25,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jotadev.aiapaec.ui.components.FilterDropdown
 
 @Composable
@@ -47,6 +49,8 @@ fun FormatSearchAndFilterBar(
     scoreFormatOptions: List<String>
 ) {
     var showFilters by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     Column(
         modifier = Modifier
@@ -60,10 +64,24 @@ fun FormatSearchAndFilterBar(
             OutlinedTextField(
                 value = searchText,
                 onValueChange = onSearchTextChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .size(width = 0.dp, height = if (isSmallScreen) 48.dp else 56.dp),
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
-                placeholder = { Text("Buscar formatos...") },
+                leadingIcon = { 
+                    Icon(
+                        Icons.Default.Search, 
+                        contentDescription = "Buscar",
+                        modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
+                    ) 
+                },
+                placeholder = { 
+                    Text(
+                        "Buscar formatos...",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 16.sp)
+                    ) 
+                },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 11.sp else 16.sp),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -74,14 +92,15 @@ fun FormatSearchAndFilterBar(
             IconButton(
                 onClick = { showFilters = !showFilters },
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(if (isSmallScreen) 48.dp else 56.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.secondary)
             ) {
                 Icon(
                     imageVector = Icons.Default.FilterList,
                     contentDescription = "Filtros",
-                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                 )
             }
         }

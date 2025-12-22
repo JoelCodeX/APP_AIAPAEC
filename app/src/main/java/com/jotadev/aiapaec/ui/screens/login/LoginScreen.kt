@@ -62,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +70,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -85,6 +87,25 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Lógica de responsividad
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val isSmallScreen = screenHeight < 700.dp
+
+    val logoSize = if (isSmallScreen) 130.dp else 200.dp
+    val topSpacerHeight = if (isSmallScreen) 10.dp else 60.dp
+    val middleSpacerHeight = if (isSmallScreen) 10.dp else 28.dp
+    val bottomSpacerHeight = if (isSmallScreen) 10.dp else 32.dp
+    
+    val cardInternalPadding = if (isSmallScreen) 16.dp else 24.dp
+    val cardSpacerLarge = if (isSmallScreen) 12.dp else 24.dp
+    val cardSpacerSmall = if (isSmallScreen) 8.dp else 16.dp
+    
+    val welcomeTextSize = if (isSmallScreen) 20.sp else 24.sp
+    val subtitleTextSize = if (isSmallScreen) 12.sp else 14.sp
+    val bodyTextSize = if (isSmallScreen) 12.sp else 14.sp
+
     LaunchedEffect(Unit) {
         com.jotadev.aiapaec.data.storage.UserStorage.init(context)
         viewModel.prefillRememberedEmail()
@@ -127,9 +148,9 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
-            LogoAiapaec()
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(topSpacerHeight))
+            LogoAiapaec(size = logoSize)
+            Spacer(modifier = Modifier.height(middleSpacerHeight))
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -148,38 +169,43 @@ fun LoginScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(cardInternalPadding),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
                         text = "Bienvenido",
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            fontSize = welcomeTextSize
                         ),
                         color = MaterialTheme.colorScheme.onSecondary,
                         textAlign = TextAlign.Center
                     )
                     Text(
                         text = "Inicia sesión para continuar",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = subtitleTextSize
+                        ),
                         color = MaterialTheme.colorScheme.onSecondary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 4.dp)
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(cardSpacerLarge))
                     val fieldErrors = mapFieldErrorsFromBackend(uiState.errorMessage)
                     CampoTextoUsuario(
                         valor = uiState.usuario,
                         onValorCambiado = viewModel::updateUsuario,
-                        serverErrorText = fieldErrors.email
+                        serverErrorText = fieldErrors.email,
+                        isSmallScreen = isSmallScreen
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(cardSpacerSmall))
                     CampoTextoContrasena(
                         valor = uiState.contrasena,
                         onValorCambiado = viewModel::updateContrasena,
                         mostrarContrasena = uiState.mostrarContrasena,
                         onToggleVisibilidad = viewModel::toggleMostrarContrasena,
-                        serverErrorText = fieldErrors.password
+                        serverErrorText = fieldErrors.password,
+                        isSmallScreen = isSmallScreen
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -199,14 +225,18 @@ fun LoginScreen(
                             )
                             Text(
                                 text = "Recordar",
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = bodyTextSize
+                                ),
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondary,
                             )
                         }
                         Text(
                             text = "¿Olvidaste tu contraseña?",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = bodyTextSize
+                            ),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable {
@@ -229,7 +259,9 @@ fun LoginScreen(
                             ) {
                                 Text(
                                     text = error,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = bodyTextSize
+                                    ),
                                     color = MaterialTheme.colorScheme.onErrorContainer,
                                     modifier = Modifier.padding(12.dp),
                                     textAlign = TextAlign.Center
@@ -237,7 +269,7 @@ fun LoginScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(cardSpacerLarge))
                     val isLoginEnabled = viewModel.isValidEmail(uiState.usuario) && uiState.contrasena.length >= 6
                     BotonIngresar(
                         onClick = {
@@ -245,12 +277,13 @@ fun LoginScreen(
                             viewModel.login()
                         },
                         isLoading = uiState.isLoading,
-                        isEnabled = isLoginEnabled
+                        isEnabled = isLoginEnabled,
+                        isSmallScreen = isSmallScreen
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(32.dp))
-            SocialMediaButtons()
+            Spacer(modifier = Modifier.height(bottomSpacerHeight))
+            SocialMediaButtons(isSmallScreen = isSmallScreen)
         }
     }
 }
@@ -292,8 +325,11 @@ fun openUrl(context: Context, url: String) {
 }
 
 @Composable
-fun SocialMediaButtons() {
+fun SocialMediaButtons(isSmallScreen: Boolean = false) {
     val context = LocalContext.current
+    val spacerSize = if (isSmallScreen) 8.dp else 16.dp
+    val iconSize = if (isSmallScreen) 40.dp else 48.dp
+    val fontSize = if (isSmallScreen) 12.sp else 14.sp
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -301,14 +337,14 @@ fun SocialMediaButtons() {
     ) {
         Text(
             text = "Síguenos en nuestras redes sociales",
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = fontSize),
             color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = spacerSize)
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(spacerSize, Alignment.CenterHorizontally),
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -320,24 +356,28 @@ fun SocialMediaButtons() {
                         context,
                         "https://www.facebook.com/colegios.aiapaec?locale=es_LA"
                     )
-                }
+                },
+                size = iconSize
             )
             SocialMediaButton(
                 iconResId = R.drawable.instagram, // Asegúrate de tener este recurso
                 contentDescription = "Instagram",
-                onClick = { openUrl(context, "https://www.instagram.com/colegios.aiapaec/") }
+                onClick = { openUrl(context, "https://www.instagram.com/colegios.aiapaec/") },
+                size = iconSize
             )
 
             SocialMediaButton(
                 iconResId = R.drawable.tiktok,
                 contentDescription = "TikTok",
-                onClick = { openUrl(context, "https://www.tiktok.com/@colegios.aiapaec") }
+                onClick = { openUrl(context, "https://www.tiktok.com/@colegios.aiapaec") },
+                size = iconSize
             )
 
             SocialMediaButton(
                 iconResId = R.drawable.youtube,
                 contentDescription = "YouTube",
-                onClick = { openUrl(context, "https://www.youtube.com/@colegiosaiapaec") }
+                onClick = { openUrl(context, "https://www.youtube.com/@colegiosaiapaec") },
+                size = iconSize
             )
         }
     }
@@ -347,11 +387,12 @@ fun SocialMediaButtons() {
 fun SocialMediaButton(
     onClick: () -> Unit,
     iconResId: Int,
-    contentDescription: String
+    contentDescription: String,
+    size: Dp = 48.dp
 ) {
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(size)
             .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
@@ -359,16 +400,16 @@ fun SocialMediaButton(
         Image(
             painter = painterResource(id = iconResId),
             contentDescription = contentDescription,
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(size),
         )
     }
 }
 
 @Composable
-private fun LogoAiapaec() {
+private fun LogoAiapaec(size: Dp) {
     Box(
         modifier = Modifier
-            .size(200.dp)
+            .size(size)
             .background(Color.Transparent)
     ) {
         Image(
@@ -386,6 +427,7 @@ private fun CampoTextoUsuario(
     valor: String,
     onValorCambiado: (String) -> Unit,
     serverErrorText: String? = null,
+    isSmallScreen: Boolean = false
 ) {
     var touched by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val isEmpty = valor.isBlank()
@@ -397,14 +439,19 @@ private fun CampoTextoUsuario(
         else -> null
     }
     val helperText = localHelper ?: serverErrorText
+    
+    val fontSize = if (isSmallScreen) 14.sp else 16.sp
+    val labelSize = if (isSmallScreen) 12.sp else 14.sp
+
     OutlinedTextField(
         value = valor,
         onValueChange = {
             if (!touched) touched = true
             onValorCambiado(it)
         },
-        label = { Text("Email") },
+        label = { Text("Email", fontSize = labelSize) },
         placeholder = { Text("") },
+        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = fontSize),
         leadingIcon = {
             Icon(
                 imageVector = Icons.Rounded.Email,
@@ -438,7 +485,7 @@ private fun CampoTextoUsuario(
     ) {
         Text(
             text = helperText ?: "",
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start
@@ -452,7 +499,8 @@ private fun CampoTextoContrasena(
     onValorCambiado: (String) -> Unit,
     mostrarContrasena: Boolean,
     onToggleVisibilidad: () -> Unit,
-    serverErrorText: String? = null
+    serverErrorText: String? = null,
+    isSmallScreen: Boolean = false
 ) {
     var touched by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val isEmpty = valor.isBlank()
@@ -463,14 +511,19 @@ private fun CampoTextoContrasena(
         else -> null
     }
     val helperText = localHelper ?: serverErrorText
+    
+    val fontSize = if (isSmallScreen) 14.sp else 16.sp
+    val labelSize = if (isSmallScreen) 12.sp else 14.sp
+
     OutlinedTextField(
         value = valor,
         onValueChange = {
             if (!touched) touched = true
             onValorCambiado(it)
         },
-        label = { Text("Contraseña") },
+        label = { Text("Contraseña", fontSize = labelSize) },
         placeholder = { Text("") },
+        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = fontSize),
         leadingIcon = {
             Icon(
                 imageVector = Icons.Rounded.Lock,
@@ -514,7 +567,7 @@ private fun CampoTextoContrasena(
     ) {
         Text(
             text = helperText ?: "",
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start
@@ -526,7 +579,8 @@ private fun CampoTextoContrasena(
 private fun BotonIngresar(
     onClick: () -> Unit,
     isLoading: Boolean = false,
-    isEnabled: Boolean = true
+    isEnabled: Boolean = true,
+    isSmallScreen: Boolean = false
 ) {
     Button(
         onClick = onClick,
@@ -556,7 +610,7 @@ private fun BotonIngresar(
                 text = "Ingresar",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = if (isSmallScreen) 16.sp else 18.sp
                 ),
                 color = MaterialTheme.colorScheme.onSecondary
             )

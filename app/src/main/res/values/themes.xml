@@ -9,4 +9,11 @@
         <!-- Compatibilidad para Android < 12: color del fondo de la ventana inicial -->
         <item name="android:windowBackground">@color/crimson_100</item>
     </style>
+
+    <style name="CustomDatePickerDialogTheme" parent="android:Theme.Material.Light.Dialog">
+        <item name="android:colorAccent">@color/crimson_40</item>
+        <item name="android:colorPrimary">@color/crimson_40</item>
+        <item name="android:colorPrimaryDark">@color/crimson_100</item>
+        <item name="android:headerBackground">@color/crimson_40</item>
+    </style>
 </resources>

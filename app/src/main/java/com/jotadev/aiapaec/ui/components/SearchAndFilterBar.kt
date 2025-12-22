@@ -33,7 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +63,8 @@ fun SearchAndFilterBar(
     )
 ) {
     var showFilters by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     Column(
         modifier = Modifier
@@ -77,12 +81,21 @@ fun SearchAndFilterBar(
             OutlinedTextField(
                 value = searchText,
                 onValueChange = onSearchTextChange,
-                modifier = Modifier.weight(1f), // <- AQUÍ USAMOS weight
-                placeholder = { Text("Buscar exámenes...") },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(if (isSmallScreen) 48.dp else 56.dp), // <- AQUÍ USAMOS weight
+                placeholder = { 
+                    Text(
+                        text = "Buscar exámenes...",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 16.sp)
+                    ) 
+                },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 11.sp else 16.sp),
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Buscar"
+                        contentDescription = "Buscar",
+                        modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                     )
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -95,13 +108,16 @@ fun SearchAndFilterBar(
 
             IconButton(
                 onClick = { showFilters = !showFilters },
-                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))
+                modifier = Modifier
+                    .size(if (isSmallScreen) 48.dp else 56.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.secondary)
             ) {
                 Icon(
                     imageVector = Icons.Default.FilterList,
                     contentDescription = "Filtros",
-                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                 )
             }
         }
@@ -155,6 +171,8 @@ fun FilterDropdown(
     enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     ExposedDropdownMenuBox(
         expanded = expanded && enabled,
@@ -166,8 +184,25 @@ fun FilterDropdown(
             onValueChange = {},
             readOnly = true,
             enabled = enabled,
-            label = { Text(label) },
-            placeholder = placeholder?.let { { Text(it) } },
+            label = { 
+                Text(
+                    text = label, 
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 14.sp),
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                ) 
+            },
+            placeholder = placeholder?.let { 
+                { 
+                    Text(
+                        text = it, 
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 14.sp),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    ) 
+                } 
+            },
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -176,7 +211,8 @@ fun FilterDropdown(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline
-            )
+            ),
+            singleLine = true
         )
 
         if (enabled) {
@@ -186,7 +222,12 @@ fun FilterDropdown(
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = { 
+                            Text(
+                                text = option, 
+                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp)
+                            ) 
+                        },
                         onClick = {
                             onValueChange(option)
                             expanded = false

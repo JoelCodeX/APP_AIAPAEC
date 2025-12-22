@@ -57,7 +57,7 @@ fun StudentsList(
         LazyColumn(
             modifier = modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(vertical = 8.dp)
+            contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
         ) {
             items(sortedStudents) { student ->
                 StudentCard(student = student, onClick = onStudentClick)

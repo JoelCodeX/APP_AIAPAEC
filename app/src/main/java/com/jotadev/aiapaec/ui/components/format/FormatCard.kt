@@ -23,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -50,9 +52,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jotadev.aiapaec.ui.screens.format.FormatItem
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +69,8 @@ fun FormatCard(
     isExpanded: Boolean,
     onToggleExpand: () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Card(
@@ -99,7 +105,7 @@ fun FormatCard(
                         ) {
                             Text(
                                 text = "${item.formatType}",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondary,
                                 modifier = Modifier.weight(1f),
@@ -116,7 +122,7 @@ fun FormatCard(
                                 shape = RoundedCornerShape(4.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.MoreHoriz,
+                                    imageVector =if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                     contentDescription = "Más acciones",
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(22.dp)
@@ -160,12 +166,6 @@ fun FormatCard(
                             centered = true
                         )
                     }
-//                Spacer(modifier = Modifier.height(8.dp))
-//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-////                    InfoChip(label = "Formato", value = item.formatType, icon = Icons.Default.Extension, modifier = Modifier.weight(1f), centered = false)
-//
-//                    Spacer(modifier = Modifier.weight(1f))
-//                }
                 }
             }
             Surface(
@@ -259,6 +259,9 @@ fun InfoChip(
     modifier: Modifier = Modifier,
     centered: Boolean = true
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     Column(
         modifier = modifier,
         horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start
@@ -272,12 +275,12 @@ fun InfoChip(
                 imageVector = icon,
                 contentDescription = label,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(if (isSmallScreen) 14.dp else 18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -286,7 +289,7 @@ fun InfoChip(
         }
         Text(
             text = value,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             textAlign = if (centered) TextAlign.Center else TextAlign.Start,

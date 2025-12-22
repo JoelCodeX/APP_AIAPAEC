@@ -31,6 +31,8 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Search
@@ -62,17 +64,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
+import com.jotadev.aiapaec.R
 import com.jotadev.aiapaec.ui.components.FilterDropdown
 import com.jotadev.aiapaec.ui.components.format.InfoChip
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -521,6 +526,8 @@ private fun WeeklySearchAndFilterBar(
     isUnitsLoading: Boolean
 ) {
     var showFilters by remember { mutableStateOf(false) }
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     Column(
         modifier = Modifier
@@ -531,10 +538,24 @@ private fun WeeklySearchAndFilterBar(
             OutlinedTextField(
                 value = searchText,
                 onValueChange = onSearchTextChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(if (isSmallScreen) 48.dp else 56.dp),
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
-                placeholder = { Text("Buscar semanales...") },
+                leadingIcon = { 
+                    Icon(
+                        Icons.Default.Search, 
+                        contentDescription = "Buscar",
+                        modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
+                    ) 
+                },
+                placeholder = { 
+                    Text(
+                        "Buscar semanales...",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 16.sp)
+                    ) 
+                },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 11.sp else 16.sp),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -543,13 +564,14 @@ private fun WeeklySearchAndFilterBar(
             )
             IconButton(onClick = { showFilters = !showFilters },
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(if (isSmallScreen) 48.dp else 56.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.secondary)) {
                 Icon(
                     imageVector = Icons.Default.FilterList,
                     contentDescription = "Filtros",
-                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                 )
             }
         }
@@ -650,6 +672,9 @@ private fun WeeklyCard(
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -683,7 +708,7 @@ private fun WeeklyCard(
                             val weekNumber = weekNumberProvider(item)
                             Text(
                                 text = "Semanal N° ${weekNumber ?: "-"}",
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondary
                             )
@@ -698,10 +723,10 @@ private fun WeeklyCard(
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.MoreHoriz,
+                                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                 contentDescription = "Más acciones",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(if (isSmallScreen) 18.dp else 22.dp)
                             )
                         }
                     }
@@ -728,7 +753,7 @@ private fun WeeklyCard(
                 Text(
                     text = "# ${item.id}",
                     color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
@@ -815,6 +840,9 @@ private fun CreateWeeklyQuizDialog(
     isUnitsLoading: Boolean,
     isWeeksLoading: Boolean
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Card(
             modifier = Modifier.fillMaxWidth(0.90f),
@@ -828,7 +856,7 @@ private fun CreateWeeklyQuizDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = title, style = MaterialTheme.typography.titleLarge)
+                Text(text = title, style = MaterialTheme.typography.titleLarge.copy(fontSize = if (isSmallScreen) 18.sp else 22.sp))
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     FilterDropdown(
@@ -936,7 +964,10 @@ private fun DateSelectorField(label: String, value: String?, onChange: (String) 
             trailingIcon = {
                 IconButton(onClick = {
                     val cal = Calendar.getInstance()
-                    DatePickerDialog(ctx, { _, y, m, d ->
+                    DatePickerDialog(
+                        ctx,
+                        R.style.CustomDatePickerDialogTheme,
+                        { _, y, m, d ->
                         val month = (m + 1).toString().padStart(2, '0')
                         val day = d.toString().padStart(2, '0')
                         onChange("$y-$month-$day")

@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
+import androidx.compose.ui.platform.LocalConfiguration
+
 @Composable
 fun BottomNavigationBar(
     navController: NavController,
@@ -25,6 +27,8 @@ fun BottomNavigationBar(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     Surface(
         shape = RoundedCornerShape(24.dp),
@@ -33,13 +37,13 @@ fun BottomNavigationBar(
         color = MaterialTheme.colorScheme.primary.copy(0.98f),
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = if (isSmallScreen) 12.dp else 16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
-                .padding(vertical = 6.dp),
+                .height(if (isSmallScreen) 60.dp else 72.dp)
+                .padding(vertical = if (isSmallScreen) 4.dp else 6.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -75,12 +79,12 @@ fun BottomNavigationBar(
                                 painter = painterResource(id = item.iconFilled),
                                 contentDescription = item.label,
                                 tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(30.dp)
+                                modifier = Modifier.size(if (isSmallScreen) 24.dp else 30.dp)
                             )
                             Text(
                                 text = item.label,
                                 fontWeight = FontWeight.ExtraBold,
-                                fontSize = 13.sp,
+                                fontSize = if (isSmallScreen) 11.sp else 13.sp,
                                 color = MaterialTheme.colorScheme.secondary,
                                 maxLines = 1
                             )
@@ -89,12 +93,12 @@ fun BottomNavigationBar(
                                 painter = painterResource(id = item.iconOutlined),
                                 contentDescription = item.label,
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                             )
                             Text(
                                 text = item.label,
                                 fontWeight = FontWeight.ExtraLight,
-                                fontSize = 12.sp,
+                                fontSize = if (isSmallScreen) 10.sp else 12.sp,
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 maxLines = 1
                             )

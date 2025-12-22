@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -83,158 +84,9 @@ fun HomeScreen(
     val homeViewModel: HomeViewModel = viewModel()
     val homeState by homeViewModel.uiState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.background,
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp)
-            ) {
-                GreetingCard(userName = userName, branchName = branchName)
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    MetricCard(
-                        label = "Formatos",
-                        value = homeState.formatsCount.toString(),
-                        icon = Icons.Rounded.Assessment,
-                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                        accent = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MetricCard(
-                        label = "Semanales",
-                        value = homeState.weekliesCount.toString(),
-                        icon = Icons.Rounded.Leaderboard,
-                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                        accent = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MetricCard(
-                        label = "Grados",
-                        value = homeState.gradesCount.toString(),
-                        icon = Icons.Rounded.School,
-                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                        accent = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    MetricCard(
-                        label = "Alumnos",
-                        value = homeState.studentsCount.toString(),
-                        icon = Icons.Rounded.Groups,
-                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
-                        accent = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                ExamsPerformanceSection(
-                    results = homeState.performanceData,
-                    selectedRange = homeState.selectedTimeRange,
-                    onRangeSelected = homeViewModel::onTimeRangeSelected
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Acciones Rápidas",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
-                // Cuadrícula de categorías con nuestros items
-                CategoryGridSection(
-                    onNavigate = { route -> navController.navigate(route) },
-                    onOpenSettings = onOpenSettings
-                )
-            }
-        }
-    }
-}
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
-@Composable
-private fun GreetingCard(userName: String, branchName: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    brush = Brush.horizontalGradient(
-                        listOf(
-                            Color(0xFFFDC400),
-                            Color(0xFFE3B719),
-                            Color(0xFFCC9E18)
-                        )
-                    )
-                )
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
-                    Text(
-                        text = "Hola, $userName",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondary
-                    )
-                    Text(
-                        text = "¿Qué deseas hacer hoy?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondary
-                    )
-                }
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                    BranchChip(branchName = branchName)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun BranchChip(branchName: String) {
-    Row(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f))
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-            .widthIn(min = 96.dp, max = 140.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Apartment,
-            contentDescription = "Sede",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = branchName,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSecondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun CategoryGridSection(
-    onNavigate: (String) -> Unit,
-    onOpenSettings: () -> Unit
-) {
     val categories = listOf(
         CategoryItem(
             title = "Admisión",
@@ -281,16 +133,178 @@ private fun CategoryGridSection(
         )
     )
 
-    LazyVerticalGrid(
-        columns = rememberCategoryGridCells(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp, start = 4.dp, end = 4.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        items(categories) { item ->
-            CategoryCard(item = item, onNavigate = onNavigate, onOpenSettings = onOpenSettings)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = MaterialTheme.colorScheme.background,
+        ) { paddingValues ->
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 100.dp
+                ),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // 1. Greeting (Span Full)
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                GreetingCard(userName = userName, branchName = branchName)
+            }
+
+            // 2. Metrics (Span Full)
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    MetricCard(
+                        label = "Formatos",
+                        value = homeState.formatsCount.toString(),
+                        icon = Icons.Rounded.Assessment,
+                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                        accent = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "Semanales",
+                        value = homeState.weekliesCount.toString(),
+                        icon = Icons.Rounded.Leaderboard,
+                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                        accent = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "Grados",
+                        value = homeState.gradesCount.toString(),
+                        icon = Icons.Rounded.School,
+                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                        accent = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricCard(
+                        label = "Alumnos",
+                        value = homeState.studentsCount.toString(),
+                        icon = Icons.Rounded.Groups,
+                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                        accent = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // 3. Chart (Span Full)
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                ExamsPerformanceSection(
+                    results = homeState.performanceData,
+                    selectedRange = homeState.selectedTimeRange,
+                    onRangeSelected = homeViewModel::onTimeRangeSelected
+                )
+            }
+
+            // 4. Title (Span Full)
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = "Acciones Rápidas",
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondary
+                )
+            }
+
+            // 5. Category Items (Span 1)
+            items(categories) { item ->
+                CategoryCard(
+                    item = item,
+                    onNavigate = { route -> navController.navigate(route) },
+                    onOpenSettings = onOpenSettings
+                )
+            }
         }
+    }
+}
+}
+
+@Composable
+private fun GreetingCard(userName: String, branchName: String) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = Brush.horizontalGradient(
+                        listOf(
+                            Color(0xFFFDC400),
+                            Color(0xFFE3B719),
+                            Color(0xFFCC9E18)
+                        )
+                    )
+                )
+                .padding(if (isSmallScreen) 12.dp else 16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
+                    Text(
+                        text = "Hola, $userName",
+                        style = MaterialTheme.typography.titleSmall.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
+                    Text(
+                        text = "¿Qué deseas hacer hoy?",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 12.sp else 14.sp),
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
+                }
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                    BranchChip(branchName = branchName)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BranchChip(branchName: String) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
+    Row(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.35f))
+            .padding(horizontal = if (isSmallScreen) 8.dp else 10.dp, vertical = if (isSmallScreen) 4.dp else 6.dp)
+            .widthIn(min = if (isSmallScreen) 80.dp else 96.dp, max = if (isSmallScreen) 120.dp else 140.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Apartment,
+            contentDescription = "Sede",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(if (isSmallScreen) 14.dp else 18.dp)
+        )
+        Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 6.dp))
+        Text(
+            text = branchName,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -300,6 +314,9 @@ private fun CategoryCard(
     onNavigate: (String) -> Unit,
     onOpenSettings: () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = {
@@ -309,47 +326,37 @@ private fun CategoryCard(
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp)
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(if (isSmallScreen) 8.dp else 10.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 2.dp else 4.dp),
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(if (isSmallScreen) 28.dp else 36.dp)
                     .background(item.color.copy(alpha = 0.1f), shape = MaterialTheme.shapes.small),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = item.icon,
                     contentDescription = item.title,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(if (isSmallScreen) 18.dp else 24.dp),
                     tint = item.color
                 )
             }
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Text(
                 text = item.subtitle,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 9.sp else 10.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }
-}
-
-@Composable
-private fun rememberCategoryGridCells(): GridCells {
-    val widthDp = LocalConfiguration.current.screenWidthDp
-    val columns = when {
-        widthDp <= 360 -> 2
-        else -> 3
-    }
-    return GridCells.Fixed(columns)
 }
 
 private data class CategoryItem(
@@ -370,21 +377,24 @@ private fun MetricCard(
     accent: Color,
     modifier: Modifier = Modifier
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     ElevatedCard(
-        modifier = modifier.height(72.dp),
+        modifier = modifier.height(if (isSmallScreen) 60.dp else 72.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(containerColor)
-                .padding(8.dp),
+                .padding(if (isSmallScreen) 6.dp else 8.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(22.dp)
+                        .size(if (isSmallScreen) 18.dp else 22.dp)
                         .background(accent.copy(alpha = 0.15f), shape = MaterialTheme.shapes.small),
                     contentAlignment = Alignment.Center
                 ) {
@@ -392,13 +402,13 @@ private fun MetricCard(
                         imageVector = icon,
                         contentDescription = label,
                         tint = accent,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(if (isSmallScreen) 14.dp else 16.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 6.dp))
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -406,7 +416,7 @@ private fun MetricCard(
             }
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSecondary
@@ -422,12 +432,14 @@ private fun ExamsPerformanceSection(
     onRangeSelected: (TimeRange) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.onPrimary, shape = MaterialTheme.shapes.medium)
-            .padding(12.dp)
+            .padding(if (isSmallScreen) 8.dp else 12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -436,7 +448,7 @@ private fun ExamsPerformanceSection(
         ) {
             Text(
                 text = "Rendimiento de Exámenes",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondary
             )
@@ -444,15 +456,19 @@ private fun ExamsPerformanceSection(
                 AssistChip(
                     onClick = { expanded = true },
                     label = { 
-                        Text(when(selectedRange) {
-                            TimeRange.LAST_WEEK -> "Última semana"
-                            TimeRange.LAST_BIMESTER -> "Último bimestre"
-                            TimeRange.LAST_6_MONTHS -> "Últimos 6 meses"
-                        }) 
+                        Text(
+                            text = when(selectedRange) {
+                                TimeRange.LAST_WEEK -> "Última semana"
+                                TimeRange.LAST_BIMESTER -> "Último bimestre"
+                                TimeRange.LAST_6_MONTHS -> "Últimos 6 meses"
+                            },
+                            fontSize = if (isSmallScreen) 10.sp else 12.sp
+                        ) 
                     },
                     trailingIcon = {
-                        Icon(Icons.Rounded.DateRange, contentDescription = null, modifier = Modifier.size(16.dp))
-                    }
+                        Icon(Icons.Rounded.DateRange, contentDescription = null, modifier = Modifier.size(if (isSmallScreen) 14.dp else 16.dp))
+                    },
+                    modifier = Modifier.height(if (isSmallScreen) 24.dp else 32.dp)
                 )
                 DropdownMenu(
                     expanded = expanded,
@@ -482,14 +498,14 @@ private fun ExamsPerformanceSection(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(if (isSmallScreen) 4.dp else 8.dp))
         val (labels, values) = remember(results, selectedRange) { buildChartData(results, selectedRange) }
         PerformanceLineChart(
             labels = labels,
             values = values,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .height(if (isSmallScreen) 140.dp else 180.dp)
                 .background(
                     MaterialTheme.colorScheme.onPrimary,
                     shape = MaterialTheme.shapes.medium
@@ -505,6 +521,9 @@ private fun PerformanceLineChart(
     values: List<Float>,
     modifier: Modifier = Modifier
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     val lineColor = MaterialTheme.colorScheme.primary
     val areaGradient = Brush.verticalGradient(
         colors = listOf(lineColor.copy(alpha = 0.25f), Color.Transparent)
@@ -546,21 +565,21 @@ private fun PerformanceLineChart(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(if (isSmallScreen) 4.dp else 6.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // Show only first, middle and last label to avoid overlap if too many
             if (labels.size > 5) {
-                Text(text = labels.firstOrNull() ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(text = labels.getOrNull(labels.size / 2) ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(text = labels.lastOrNull() ?: "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = labels.firstOrNull() ?: "", style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = labels.getOrNull(labels.size / 2) ?: "", style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = labels.lastOrNull() ?: "", style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 labels.forEach { label ->
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

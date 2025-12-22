@@ -12,7 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jotadev.aiapaec.ui.components.FilterDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +30,8 @@ fun GradesSearchAndFilterBar(
     modifier: Modifier = Modifier
 ) {
     var showFilters by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     Column(
         modifier = modifier
@@ -44,14 +48,23 @@ fun GradesSearchAndFilterBar(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
-                modifier = Modifier.weight(1f), // <- AQUÍ USAMOS weight
-                placeholder = { Text("Buscar grados disponibles...",
-                    color = MaterialTheme.colorScheme.primary) },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(if (isSmallScreen) 48.dp else 56.dp), // <- AQUÍ USAMOS weight
+                placeholder = { 
+                    Text(
+                        "Buscar grados disponibles...",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 16.sp)
+                    ) 
+                },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 11.sp else 16.sp),
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Buscar",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                     )
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -65,13 +78,16 @@ fun GradesSearchAndFilterBar(
             // BOTON DE FILTRO - MOVER DENTRO DEL MISMO ROW
             IconButton(
                 onClick = { showFilters = !showFilters },
-                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(12.dp))
+                modifier = Modifier
+                    .size(if (isSmallScreen) 48.dp else 56.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.secondary)
             ) {
                 Icon(
                     imageVector = Icons.Default.FilterList,
                     contentDescription = "Filtros",
-                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondary
+                    tint = if (showFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondary,
+                    modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                 )
             }
         }

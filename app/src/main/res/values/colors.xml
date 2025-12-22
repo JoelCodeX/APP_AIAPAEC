@@ -9,4 +9,6 @@
     <color name="white">#FFFFFFFF</color>
     <!-- Crimson100: Rojo profundo para el fondo del Splash -->
     <color name="crimson_100">#86171A</color>
+    <color name="crimson_40">#AB2524</color>
+    <color name="gold_100">#FDC400</color>
 </resources>

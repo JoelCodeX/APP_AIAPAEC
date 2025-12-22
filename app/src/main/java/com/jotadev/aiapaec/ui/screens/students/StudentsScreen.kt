@@ -49,13 +49,10 @@ fun StudentsScreen(navController: NavController) {
                 .padding(paddingValues)
                 .pullRefresh(pullState)
         ) {
-            var selectedClass by remember { androidx.compose.runtime.mutableStateOf("Todas") }
-            val classOptions = state.students.mapNotNull { it.className }.distinct().sorted()
             val sectionOptions = state.selectedGrade?.let { g -> state.sectionsByGrade[g] ?: emptyList() } ?: emptyList()
-            val filteredByClass = if (selectedClass == "Todas") state.students else state.students.filter { (it.className ?: "").equals(selectedClass, true) }
             val filteredByGrade = state.selectedGrade?.let { g ->
-                filteredByClass.filter { (it.className ?: "").contains(g, true) }
-            } ?: filteredByClass
+                state.students.filter { (it.className ?: "").contains(g, true) }
+            } ?: state.students
             val filteredStudents = state.selectedSection?.let { s ->
                 filteredByGrade.filter { (it.className ?: "").contains(s, true) }
             } ?: filteredByGrade
@@ -76,10 +73,7 @@ fun StudentsScreen(navController: NavController) {
                     selectedSection = state.selectedSection,
                     onSectionChange = { vm.onSectionSelected(it) },
                     sectionOptions = sectionOptions,
-                    isMetaLoading = state.isMetaLoading,
-                    selectedClass = selectedClass,
-                    onClassChange = { selectedClass = it },
-                    classOptions = classOptions
+                    isMetaLoading = state.isMetaLoading
                 )
                 
                 // LISTA DE ESTUDIANTES
