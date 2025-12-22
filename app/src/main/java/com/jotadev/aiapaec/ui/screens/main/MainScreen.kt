@@ -61,6 +61,7 @@ import com.jotadev.aiapaec.ui.components.WelcomeTopAppBar
 import com.jotadev.aiapaec.ui.screens.settings.SettingsScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.compose.ui.platform.LocalConfiguration
 
 @Composable
 fun MainScreen(
@@ -71,7 +72,7 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     var showSettings by remember { mutableStateOf(false) }
-    
+
     val context = androidx.compose.ui.platform.LocalContext.current
     var doubleBackToExitPressedOnce by remember { mutableStateOf(false) }
 
@@ -85,13 +86,17 @@ fun MainScreen(
     BackHandler(enabled = showSettings) {
         showSettings = false
     }
-    
+
     BackHandler(enabled = !showSettings && currentRoute == NavigationRoutes.HOME) {
         if (doubleBackToExitPressedOnce) {
             (context as? android.app.Activity)?.finish()
         } else {
             doubleBackToExitPressedOnce = true
-            android.widget.Toast.makeText(context, "Presiona de nuevo para salir", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(
+                context,
+                "Presiona de nuevo para salir",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -116,18 +121,18 @@ fun MainScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
-            .background(MaterialTheme.colorScheme.background),
-        topBar = {
-            MainTopBar(
-                currentRoute = currentRoute,
-                onOpenSettings = { showSettings = true },
-                navController = navController
-            )
-        },
-        bottomBar = {}
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .background(MaterialTheme.colorScheme.background),
+            topBar = {
+                MainTopBar(
+                    currentRoute = currentRoute,
+                    onOpenSettings = { showSettings = true },
+                    navController = navController
+                )
+            },
+            bottomBar = {}
         ) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize()) {
                 MainNavGraph(
@@ -164,23 +169,34 @@ fun MainScreen(
     }
 }
 
+
+
 @Composable
 private fun MainTopBar(
     currentRoute: String?,
     onOpenSettings: () -> Unit,
     navController: NavHostController
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     when {
         currentRoute?.startsWith(NavigationRoutes.HOME) == true -> {
             WelcomeTopAppBar(onNavigationClick = onOpenSettings)
         }
-        currentRoute?.startsWith(NavigationRoutes.EXAMS) == true || currentRoute?.startsWith(NavigationRoutes.EXAMS_FULL) == true -> {
+
+        currentRoute?.startsWith(NavigationRoutes.EXAMS) == true || currentRoute?.startsWith(
+            NavigationRoutes.EXAMS_FULL
+        ) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Exámenes",
                 actions = {
                     ActionIconButton(
                         onClick = {
-                            navController.currentBackStackEntry?.savedStateHandle?.set("exams_create_request", true)
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "exams_create_request",
+                                true
+                            )
                         },
                         icon = Icons.Filled.Add,
                         contentDescription = "Crear examen",
@@ -190,18 +206,26 @@ private fun MainTopBar(
                 }
             )
         }
+
         currentRoute?.startsWith(NavigationRoutes.QUIZ_ANSWERS) == true -> {
             val handle = navController.currentBackStackEntry?.savedStateHandle
-            val isEditing by (handle?.getStateFlow("answers_is_editing", false) ?: MutableStateFlow(false)).collectAsState()
-            val hasChanges by (handle?.getStateFlow("answers_has_changes", false) ?: MutableStateFlow(false)).collectAsState()
-            val hasAny by (handle?.getStateFlow("answers_has_any", false) ?: MutableStateFlow(false)).collectAsState()
+            val isEditing by (handle?.getStateFlow("answers_is_editing", false) ?: MutableStateFlow(
+                false
+            )).collectAsState()
+            val hasChanges by (handle?.getStateFlow("answers_has_changes", false)
+                ?: MutableStateFlow(false)).collectAsState()
+            val hasAny by (handle?.getStateFlow("answers_has_any", false)
+                ?: MutableStateFlow(false)).collectAsState()
             CustomTopAppBar(
                 title = "Respuestas",
                 backgroundColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.currentBackStackEntry?.savedStateHandle?.set("answers_back_request", true)
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            "answers_back_request",
+                            true
+                        )
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -214,7 +238,10 @@ private fun MainTopBar(
                     if (!isEditing) {
                         ActionIconButton(
                             onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("answers_edit_toggle", true)
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    "answers_edit_toggle",
+                                    true
+                                )
                             },
                             icon = Icons.Filled.Edit,
                             contentDescription = "Editar respuestas",
@@ -224,7 +251,10 @@ private fun MainTopBar(
                     } else if (hasChanges) {
                         ActionIconButton(
                             onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("answers_save_request", true)
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    "answers_save_request",
+                                    true
+                                )
                             },
                             icon = Icons.Filled.Save,
                             contentDescription = "Guardar cambios",
@@ -235,7 +265,10 @@ private fun MainTopBar(
                     if (!isEditing && hasAny) {
                         ActionIconButton(
                             onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("answers_delete_request", true)
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    "answers_delete_request",
+                                    true
+                                )
                             },
                             icon = Icons.Filled.Delete,
                             contentDescription = "Eliminar solucionario",
@@ -246,6 +279,7 @@ private fun MainTopBar(
                 }
             )
         }
+
         currentRoute?.startsWith(NavigationRoutes.APPLY_EXAM) == true -> {
             // Subpantalla: usar un único TopBar global con botón de regresar
             CustomTopAppBar(
@@ -263,6 +297,7 @@ private fun MainTopBar(
                 }
             )
         }
+
         currentRoute?.startsWith(NavigationRoutes.SCAN_UPLOAD) == true -> {
             CustomTopAppBar(
                 title = "Capturar",
@@ -279,8 +314,11 @@ private fun MainTopBar(
                 }
             )
         }
+
         currentRoute?.startsWith(NavigationRoutes.SCAN_RESULT) == true -> {
-            val readOnly = navController.currentBackStackEntry?.arguments?.getString("read_only")?.toBoolean() ?: false
+            val readOnly =
+                navController.currentBackStackEntry?.arguments?.getString("read_only")?.toBoolean()
+                    ?: false
             CustomTopAppBar(
                 title = "Resultados",
                 backgroundColor = MaterialTheme.colorScheme.primary,
@@ -307,7 +345,10 @@ private fun MainTopBar(
                         Spacer(modifier = Modifier.width(12.dp))
                         ActionIconButton(
                             onClick = {
-                                navController.currentBackStackEntry?.savedStateHandle?.set("scan_save_request", true)
+                                navController.currentBackStackEntry?.savedStateHandle?.set(
+                                    "scan_save_request",
+                                    true
+                                )
                             },
                             icon = Icons.Filled.Check,
                             contentDescription = "Aceptar",
@@ -318,26 +359,38 @@ private fun MainTopBar(
                 }
             )
         }
-        currentRoute?.startsWith(NavigationRoutes.GRADES) == true || currentRoute?.startsWith(NavigationRoutes.GRADES_FULL) == true -> {
+
+        currentRoute?.startsWith(NavigationRoutes.GRADES) == true || currentRoute?.startsWith(
+            NavigationRoutes.GRADES_FULL
+        ) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Grados",
                 subtitle = "Gestiona grados y secciones de tu sede"
             )
         }
-        currentRoute?.startsWith(NavigationRoutes.STUDENTS) == true || currentRoute?.startsWith(NavigationRoutes.STUDENTS_FULL) == true -> {
+
+        currentRoute?.startsWith(NavigationRoutes.STUDENTS) == true || currentRoute?.startsWith(
+            NavigationRoutes.STUDENTS_FULL
+        ) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Estudiantes",
                 subtitle = "Gestiona alumnos de la sede y sus grados asociados"
             )
         }
-        currentRoute?.startsWith(NavigationRoutes.FORMATS) == true || currentRoute?.startsWith(NavigationRoutes.FORMATS_FULL) == true -> {
+
+        currentRoute?.startsWith(NavigationRoutes.FORMATS) == true || currentRoute?.startsWith(
+            NavigationRoutes.FORMATS_FULL
+        ) == true -> {
             ScreenTopAppBar(
                 screenTitle = "Asignación de formatos",
                 subtitle = "Configura formatos por grado para evaluaciones semanales",
                 actions = {
                     ActionIconButton(
                         onClick = {
-                            navController.currentBackStackEntry?.savedStateHandle?.set("formats_create_request", true)
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "formats_create_request",
+                                true
+                            )
                         },
                         icon = Icons.Filled.Add,
                         contentDescription = "Asignar formato",
@@ -347,8 +400,10 @@ private fun MainTopBar(
                 }
             )
         }
+
         currentRoute?.startsWith(NavigationRoutes.WEEKLY) == true -> {
-            val weeklyTitle = navController.currentBackStackEntry?.arguments?.getString("title") ?: "Formatos semanales"
+            val weeklyTitle = navController.currentBackStackEntry?.arguments?.getString("title")
+                ?: "Formatos semanales"
             val prevHandle = navController.previousBackStackEntry?.savedStateHandle
             val gradeName = prevHandle?.get<String>("weekly_grade_name") ?: ""
             val sectionName = prevHandle?.get<String>("weekly_section_name") ?: ""
@@ -375,7 +430,10 @@ private fun MainTopBar(
                 actions = {
                     ActionIconButton(
                         onClick = {
-                            navController.currentBackStackEntry?.savedStateHandle?.set("weekly_create_request", true)
+                            navController.currentBackStackEntry?.savedStateHandle?.set(
+                                "weekly_create_request",
+                                true
+                            )
                         },
                         icon = Icons.Filled.Add,
                         contentDescription = "Crear quiz semanal",
@@ -385,6 +443,25 @@ private fun MainTopBar(
                 }
             )
         }
+
+        currentRoute?.startsWith("student_detail") == true -> {
+            CustomTopAppBar(
+                title = "Perfil del estudiante",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                titleStyle = if (isSmallScreen) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleLarge,
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            )
+        }
+
         else -> {}
     }
 }

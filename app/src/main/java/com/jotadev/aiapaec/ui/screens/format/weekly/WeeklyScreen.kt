@@ -546,12 +546,14 @@ private fun WeeklySearchAndFilterBar(
                     Icon(
                         Icons.Default.Search, 
                         contentDescription = "Buscar",
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                     ) 
                 },
                 placeholder = { 
                     Text(
                         "Buscar semanales...",
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 16.sp)
                     ) 
                 },
@@ -899,7 +901,13 @@ private fun CreateWeeklyQuizDialog(
                     OutlinedTextField(
                         value = detalle,
                         onValueChange = { onChange(selectedBimester, selectedUnidad, selectedSemana, selectedDate, it) },
-                        label = { Text("Detalle") },
+                        label = { 
+                            Text(
+                                "Detalle",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 14.sp)
+                            ) 
+                        },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -937,6 +945,9 @@ private fun CreateWeeklyQuizDialog(
 @Composable
 private fun DateSelectorField(label: String, value: String?, onChange: (String) -> Unit) {
     val ctx = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     Column {
         OutlinedTextField(
             value = value ?: "",
@@ -953,7 +964,13 @@ private fun DateSelectorField(label: String, value: String?, onChange: (String) 
                 onChange(formatted)
             },
             readOnly = false,
-            label = { Text(label) },
+            label = { 
+                Text(
+                    label,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 14.sp)
+                ) 
+            },
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -975,7 +992,8 @@ private fun DateSelectorField(label: String, value: String?, onChange: (String) 
                 }) {
                     Icon(
                         imageVector = Icons.Filled.CalendarMonth,
-                        contentDescription = "Seleccionar fecha"
+                        contentDescription = "Seleccionar fecha",
+                        modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                     )
                 }
             }

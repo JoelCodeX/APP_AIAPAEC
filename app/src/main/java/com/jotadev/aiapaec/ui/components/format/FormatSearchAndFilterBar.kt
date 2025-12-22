@@ -72,12 +72,14 @@ fun FormatSearchAndFilterBar(
                     Icon(
                         Icons.Default.Search, 
                         contentDescription = "Buscar",
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                     ) 
                 },
                 placeholder = { 
                     Text(
                         "Buscar formatos...",
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 16.sp)
                     ) 
                 },

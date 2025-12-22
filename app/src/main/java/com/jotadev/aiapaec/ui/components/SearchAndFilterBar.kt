@@ -87,6 +87,7 @@ fun SearchAndFilterBar(
                 placeholder = { 
                     Text(
                         text = "Buscar exámenes...",
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 16.sp)
                     ) 
                 },
@@ -95,6 +96,7 @@ fun SearchAndFilterBar(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Buscar",
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                     )
                 },
@@ -222,17 +224,19 @@ fun FilterDropdown(
             ) {
                 options.forEach { option ->
                     DropdownMenuItem(
-                        text = { 
-                            Text(
-                                text = option, 
-                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp)
-                            ) 
-                        },
-                        onClick = {
-                            onValueChange(option)
-                            expanded = false
-                        }
-                    )
+                    text = { 
+                        Text(
+                            text = option, 
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        ) 
+                    },
+                    onClick = {
+                        onValueChange(option)
+                        expanded = false
+                    }
+                )
                 }
             }
         }

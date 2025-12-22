@@ -128,6 +128,8 @@ private fun LevelFilterDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val levelOptions = listOf("Todos los niveles", "Primaria", "Secundaria")
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     ExposedDropdownMenuBox(
         modifier = modifier,
@@ -141,7 +143,15 @@ private fun LevelFilterDropdown(
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-            label = { Text("Nivel educativo") },
+            label = { 
+                Text(
+                    "Nivel educativo",
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 10.sp else 14.sp)
+                ) 
+            },
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -150,7 +160,8 @@ private fun LevelFilterDropdown(
                 focusedLabelColor = MaterialTheme.colorScheme.primary,
                 unfocusedLabelColor = MaterialTheme.colorScheme.onSecondary,
                 unfocusedTextColor = MaterialTheme.colorScheme.onSecondary
-            )
+            ),
+            singleLine = true
         )
         ExposedDropdownMenu(
             expanded = expanded,
@@ -160,7 +171,15 @@ private fun LevelFilterDropdown(
         ) {
             levelOptions.forEach { level ->
                 DropdownMenuItem(
-                    text = { Text(level, color = MaterialTheme.colorScheme.onSecondary) },
+                    text = { 
+                        Text(
+                            level, 
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        ) 
+                    },
                     onClick = {
                         onLevelChange(level)
                         expanded = false

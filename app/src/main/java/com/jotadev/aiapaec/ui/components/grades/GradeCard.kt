@@ -22,10 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.jotadev.aiapaec.domain.models.Grade
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +40,9 @@ fun GradeCard(
     onSectionBClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     val displayLevel = when (grade.nivel?.lowercase()) {
         "primary" -> "Primaria"
         "secondary" -> "Secundaria"
@@ -75,7 +80,7 @@ fun GradeCard(
                     ) {
                         Text(
                             text = grade.nombre,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondary,
                             modifier = Modifier.weight(1f),
@@ -117,7 +122,7 @@ fun GradeCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = displayLevel,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Medium
                         )
@@ -133,7 +138,7 @@ fun GradeCard(
                 Text(
                     text = "ID ${grade.id}",
                     color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
@@ -164,7 +169,10 @@ fun GradeCard(
             ) {
                 Icon(imageVector = Icons.Default.Class, contentDescription = "Sección A")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Sección A")
+                Text(
+                    text = "Sección A",
+                    fontSize = if (isSmallScreen) 12.sp else 14.sp
+                )
             }
             Button(
                 onClick = onSectionBClick,
@@ -177,7 +185,10 @@ fun GradeCard(
             ) {
                 Icon(imageVector = Icons.Default.Class, contentDescription = "Sección B")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Sección B")
+                Text(
+                    text = "Sección B",
+                    fontSize = if (isSmallScreen) 12.sp else 14.sp
+                )
             }
         }
     }

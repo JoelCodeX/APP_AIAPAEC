@@ -70,6 +70,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.AnnotatedString
@@ -94,6 +95,9 @@ import com.jotadev.aiapaec.navigation.NavigationRoutes
 fun ApplyExam(navController: NavController, examId: String) {
     val vm: ApplyExamViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     val prevHandle = navController.previousBackStackEntry?.savedStateHandle
     val applyGradeId = prevHandle?.get<Int>("apply_grade_id")
     val applySectionId = prevHandle?.get<Int>("apply_section_id")
@@ -186,10 +190,10 @@ fun ApplyExam(navController: NavController, examId: String) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(if (isSmallScreen) 10.dp else 16.dp)
                     .imePadding()
                     .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 12.dp else 16.dp)
             ) {
                 // INFO DE LA CARTILLA
             item {
@@ -280,19 +284,30 @@ fun ApplyExam(navController: NavController, examId: String) {
                 OutlinedTextField(
                     value = studentSearch,
                     onValueChange = { studentSearch = it },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(if (isSmallScreen) 48.dp else 56.dp),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Filled.Search,
-                            contentDescription = "Buscar"
+                            contentDescription = "Buscar",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
                         )
                     },
-                    placeholder = { Text("Buscar estudiantes...") },
+                    placeholder = { 
+                        Text(
+                            "Buscar estudiantes...",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp)
+                        ) 
+                    },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     ),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 16.sp),
                     singleLine = true
                 )
             }
@@ -373,6 +388,9 @@ private fun ExamInfoCard(
     showDistribution: Boolean,
     onToggleDistributionClick: () -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -385,46 +403,48 @@ private fun ExamInfoCard(
                     )
                 )
             )
-            .padding(8.dp)
+            .padding(if (isSmallScreen) 6.dp else 8.dp)
     ) {
         Text(
             text = "Detalles de la evaluación",
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onPrimary
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(if (isSmallScreen) 4.dp else 6.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            InfoChip(label = "Bimestre", value = bimester, icon = Icons.AutoMirrored.Filled.Assignment)
-            InfoChip(label = "Clase", value = className, icon = Icons.Filled.School)
-            InfoChip(label = "Fecha", value = date, icon = Icons.Filled.CalendarToday)
+            InfoChip(label = "Bimestre", value = bimester, icon = Icons.AutoMirrored.Filled.Assignment, isSmallScreen = isSmallScreen)
+            InfoChip(label = "Clase", value = className, icon = Icons.Filled.School, isSmallScreen = isSmallScreen)
+            InfoChip(label = "Fecha", value = date, icon = Icons.Filled.CalendarToday, isSmallScreen = isSmallScreen)
 
         }
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(if (isSmallScreen) 4.dp else 6.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 8.dp)
         ) {
             StatusPill(
                 label = if (hasKey) "Con solucionario" else "Sin solucionario",
                 color = MaterialTheme.colorScheme.secondary,
-                icon = if (hasKey) Icons.Filled.Key else Icons.Filled.Cancel
+                icon = if (hasKey) Icons.Filled.Key else Icons.Filled.Cancel,
+                isSmallScreen = isSmallScreen
             )
             StatusPill(
                 label = numQuestions?.let { "$it preguntas" } ?: "Sin asignar",
                 color = MaterialTheme.colorScheme.secondary,
-                icon = Icons.Filled.QuestionMark
+                icon = Icons.Filled.QuestionMark,
+                isSmallScreen = isSmallScreen
             )
         }
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(if (isSmallScreen) 6.dp else 10.dp))
         val actionText = if (hasKey) "Ver respuestas" else "Subir solucionario"
         val actionIcon = if (hasKey) Icons.AutoMirrored.Filled.Assignment else Icons.Filled.Key
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 8.dp)
         ) {
             Button(
                 onClick = onActionClick,
@@ -433,15 +453,16 @@ private fun ExamInfoCard(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     contentColor = MaterialTheme.colorScheme.onSecondary
                 ),
+                contentPadding = if (isSmallScreen) PaddingValues(horizontal = 8.dp, vertical = 4.dp) else ButtonDefaults.ContentPadding,
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
                     imageVector = actionIcon,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 18.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = actionText, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 8.dp))
+                Text(text = actionText, fontWeight = FontWeight.SemiBold, fontSize = if (isSmallScreen) 11.sp else 14.sp)
             }
             Button(
                 onClick = onToggleDistributionClick,
@@ -450,17 +471,19 @@ private fun ExamInfoCard(
                     containerColor = Color(0xFFD3CECE),
                     contentColor = MaterialTheme.colorScheme.onSecondary
                 ),
+                contentPadding = if (isSmallScreen) PaddingValues(horizontal = 8.dp, vertical = 4.dp) else ButtonDefaults.ContentPadding,
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
                     imageVector = Icons.Filled.PieChart,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 18.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 8.dp))
                 Text(
                     text =  " % de puntajes",
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = if (isSmallScreen) 11.sp else 14.sp
                 )
             }
         }
@@ -468,37 +491,37 @@ private fun ExamInfoCard(
 }
 
 @Composable
-private fun InfoChip(label: String, value: String, icon: ImageVector) {
+private fun InfoChip(label: String, value: String, icon: ImageVector, isSmallScreen: Boolean) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = if (isSmallScreen) 0.08f else 0.12f))
+            .padding(horizontal = if (isSmallScreen) 6.dp else 12.dp, vertical = if (isSmallScreen) 4.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(if (isSmallScreen) 14.dp else 16.dp)
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 6.dp))
         Text(
             text = value,
             color = MaterialTheme.colorScheme.onPrimary,
             fontWeight = FontWeight.Medium,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 10.sp else 11.sp)
         )
     }
 }
 
 @Composable
-private fun StatusPill(label: String, color: Color, icon: ImageVector? = null) {
+private fun StatusPill(label: String, color: Color, icon: ImageVector? = null, isSmallScreen: Boolean = false) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
             .background(color.copy(alpha = 0.3f))
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .padding(horizontal = if (isSmallScreen) 8.dp else 12.dp, vertical = if (isSmallScreen) 4.dp else 6.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
@@ -506,27 +529,27 @@ private fun StatusPill(label: String, color: Color, icon: ImageVector? = null) {
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(if (isSmallScreen) 14.dp else 16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 6.dp))
             }
             Text(
                 text = label,
                 color = MaterialTheme.colorScheme.onPrimary,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 10.sp else 11.sp),
                 fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
 @Composable
-private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = null) {
+private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = null, isSmallScreen: Boolean = false) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
             .background(color.copy(alpha = 0.3f))
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-            .widthIn(max = 120.dp)
+            .padding(horizontal = if (isSmallScreen) 8.dp else 10.dp, vertical = if (isSmallScreen) 4.dp else 6.dp)
+            .widthIn(max = if (isSmallScreen) 100.dp else 120.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (icon != null) {
@@ -534,14 +557,14 @@ private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = nul
                     imageVector = icon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(if (isSmallScreen) 12.dp else 14.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 6.dp))
             }
             Text(
                 text = label,
                 color = MaterialTheme.colorScheme.onSecondary,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 10.sp else 11.sp),
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -558,6 +581,9 @@ private fun StudentStatusRow(
     onScanClick: () -> Unit,
     onViewResultClick: (String) -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -575,7 +601,7 @@ private fun StudentStatusRow(
             ) {
                 status?.runId?.let { onViewResultClick(it) }
             }
-            .padding(12.dp),
+            .padding(if (isSmallScreen) 8.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -586,7 +612,7 @@ private fun StudentStatusRow(
                     (student.lastName.takeIf { it.isNotBlank() }?.firstOrNull()?.toString() ?: "")
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(if (isSmallScreen) 28.dp else 36.dp)
                 .clip(RoundedCornerShape(18.dp))
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
@@ -594,24 +620,28 @@ private fun StudentStatusRow(
             Text(
                 text = initials.uppercase(),
                 color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 12.sp else 14.sp),
                 textAlign = TextAlign.Center
             )
         }
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(if (isSmallScreen) 8.dp else 12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${student.firstName} ${student.lastName}",
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = if (isSmallScreen) 12.sp else 14.sp),
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             val clsRaw = student.className ?: "—"
             val cls = clsRaw.replace(" - ", " \u00A0- \u00A0")
             Text(
                 text = cls,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = if (isSmallScreen) 10.sp else 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
         val isCorrected = status?.status?.equals("Corregido", ignoreCase = true) == true
@@ -619,23 +649,24 @@ private fun StudentStatusRow(
         val tint = if (isCorrected) Color(0xFF2E7D32) else Color(0xFFC62828)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 6.dp)
         ) {
             StatusPillExam(
                 label = if (isCorrected) "Corregido" else "Por corregir",
                 color = tint,
-                icon = icon
+                icon = icon,
+                isSmallScreen = isSmallScreen
             )
             if (!isCorrected) {
                 if (isScanning) {
                     Box(
                         modifier = Modifier
-                            .widthIn(min = 80.dp)
-                            .height(36.dp),
+                            .widthIn(min = if (isSmallScreen) 60.dp else 80.dp)
+                            .height(if (isSmallScreen) 30.dp else 36.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(if (isSmallScreen) 16.dp else 20.dp),
                             strokeWidth = 2.dp,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -648,20 +679,20 @@ private fun StudentStatusRow(
                             containerColor = MaterialTheme.colorScheme.onPrimary,
                             contentColor = MaterialTheme.colorScheme.onSecondary
                         ),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(horizontal = if (isSmallScreen) 6.dp else 8.dp, vertical = if (isSmallScreen) 4.dp else 6.dp),
                         modifier = Modifier
-                            .widthIn(max = 120.dp)
+                            .widthIn(max = if (isSmallScreen) 100.dp else 120.dp)
                             .defaultMinSize(minWidth = 0.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.QrCodeScanner,
                             contentDescription = "Escanear",
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(if (isSmallScreen) 14.dp else 16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 6.dp))
                         Text(
                             "Escanear",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 10.sp else 11.sp),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

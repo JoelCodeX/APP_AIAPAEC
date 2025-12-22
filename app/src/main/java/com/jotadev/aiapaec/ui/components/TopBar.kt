@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +27,7 @@ fun CustomTopAppBar(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.primary,
     contentColor: Color = MaterialTheme.colorScheme.onPrimary,
+    titleStyle: TextStyle? = null,
     navigationIcon: @Composable (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
@@ -39,8 +41,10 @@ fun CustomTopAppBar(
                 Text(
                     text = title,
                     color = contentColor,
-                    fontSize = if (isSmallScreen) 16.sp else 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = titleStyle ?: MaterialTheme.typography.titleLarge.copy(
+                        fontSize = if (isSmallScreen) 16.sp else 20.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

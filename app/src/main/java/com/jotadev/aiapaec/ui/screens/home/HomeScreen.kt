@@ -344,13 +344,16 @@ private fun CategoryCard(
             }
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleSmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = if (isSmallScreen) 10.sp else 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Text(
                 text = item.subtitle,
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 9.sp else 10.sp),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 8.sp else 10.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis

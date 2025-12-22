@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Favorite
@@ -43,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,35 +51,20 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.domain.models.Quiz
-import com.jotadev.aiapaec.ui.components.CustomTopAppBar
 
 @Composable
 fun DetailsStudent(navController: NavController, studentId: Int) {
     val vm: StudentDetailsViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
 
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+
     LaunchedEffect(studentId) {
         if (studentId > 0) vm.load(studentId)
     }
 
-    Scaffold(
-        topBar = {
-            CustomTopAppBar(
-                title = "Perfil del estudiante",
-                backgroundColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary,
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = MaterialTheme.colorScheme.onTertiary
-                        )
-                    }
-                }
-            )
-        }
-    ) { inner ->
+    Scaffold { inner ->
         Box(modifier = Modifier.fillMaxSize().padding(inner)) {
             when {
                 state.isLoading -> {
@@ -113,8 +98,8 @@ fun DetailsStudent(navController: NavController, studentId: Int) {
                     if (student != null) {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            contentPadding = PaddingValues(if (isSmallScreen) 10.dp else 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 10.dp else 16.dp)
                         ) {
                             item {
                                 ProfileHeader(
@@ -124,7 +109,8 @@ fun DetailsStudent(navController: NavController, studentId: Int) {
                                     gender = student.gender,
                                     religion = student.religion,
                                     enrollmentDate = student.enrollmentDate,
-                                    phone = student.phone
+                                    phone = student.phone,
+                                    isSmallScreen = isSmallScreen
                                 )
                             }
 
@@ -132,14 +118,16 @@ fun DetailsStudent(navController: NavController, studentId: Int) {
                                 StudentInfoCard(
                                     className = student.className,
                                     classId = student.classId,
-                                    studentId = student.id
+                                    studentId = student.id,
+                                    isSmallScreen = isSmallScreen
                                 )
                             }
 
                             item {
                                 ExamsSection(
                                     exams = state.exams,
-                                    onExamClick = { /* navegar si se requiere */ }
+                                    onExamClick = { /* navegar si se requiere */ },
+                                    isSmallScreen = isSmallScreen
                                 )
                             }
                         }
@@ -158,11 +146,12 @@ private fun ProfileHeader(
     gender: String?,
     religion: String?,
     enrollmentDate: String?,
-    phone: String?
+    phone: String?,
+    isSmallScreen: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(if (isSmallScreen) 16.dp else 24.dp)
     ) {
         Box(
             modifier = Modifier
@@ -175,7 +164,7 @@ private fun ProfileHeader(
                         )
                     )
                 )
-                .padding(24.dp)
+                .padding(if (isSmallScreen) 16.dp else 24.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -183,7 +172,7 @@ private fun ProfileHeader(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
+                        .size(if (isSmallScreen) 60.dp else 80.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
@@ -191,15 +180,15 @@ private fun ProfileHeader(
                     Text(
                         text = initial.toString(),
                         color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = 42.sp,
+                        fontSize = if (isSmallScreen) 28.sp else 42.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(if (isSmallScreen) 8.dp else 12.dp))
                 Text(
                     text = name,
                     color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 20.sp,
+                    fontSize = if (isSmallScreen) 16.sp else 20.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -209,54 +198,106 @@ private fun ProfileHeader(
                     Icon(
                         imageVector = Icons.Default.Email,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                        tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                        modifier = Modifier.size(if (isSmallScreen) 16.dp else 24.dp)
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = email,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                        fontSize = if (isSmallScreen) 12.sp else 14.sp
                     )
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(if (isSmallScreen) 12.dp else 12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 8.dp)) {
                         AssistChip(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(if (isSmallScreen) 36.dp else 48.dp),
                             onClick = {},
-                            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary) },
-                            label = { Text(text = "Sexo: ${gender ?: "-"}") },
+                            leadingIcon = { 
+                                Icon(
+                                    Icons.Default.Person, 
+                                    contentDescription = null, 
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 24.dp)
+                                ) 
+                            },
+                            label = { 
+                                Text(
+                                    text = "Sexo: ${gender ?: "-"}",
+                                    fontSize = if (isSmallScreen) 10.sp else 14.sp
+                                ) 
+                            },
                             colors = AssistChipDefaults.assistChipColors(
                                 labelColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
                         AssistChip(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(if (isSmallScreen) 36.dp else 48.dp),
                             onClick = {},
-                            leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary) },
-                            label = { Text(text = "Admisión: ${enrollmentDate ?: "-"}") },
+                            leadingIcon = { 
+                                Icon(
+                                    Icons.Default.CalendarToday, 
+                                    contentDescription = null, 
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 24.dp)
+                                ) 
+                            },
+                            label = { 
+                                Text(
+                                    text = "Admisión: ${enrollmentDate ?: "-"}",
+                                    fontSize = if (isSmallScreen) 10.sp else 14.sp
+                                ) 
+                            },
                             colors = AssistChipDefaults.assistChipColors(
                                 labelColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
                     }
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 8.dp)) {
                         AssistChip(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(if (isSmallScreen) 36.dp else 48.dp),
                             onClick = {},
-                            leadingIcon = { Icon(Icons.Default.Favorite, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary) },
-                            label = { Text(text = "Religión: ${religion ?: "-"}") },
+                            leadingIcon = { 
+                                Icon(
+                                    Icons.Default.Favorite, 
+                                    contentDescription = null, 
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 24.dp)
+                                ) 
+                            },
+                            label = { 
+                                Text(
+                                    text = "Religión: ${religion ?: "-"}",
+                                    fontSize = if (isSmallScreen) 10.sp else 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                ) 
+                            },
                             colors = AssistChipDefaults.assistChipColors(
                                 labelColor = MaterialTheme.colorScheme.onPrimary
                             )
                         )
                         AssistChip(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().height(if (isSmallScreen) 36.dp else 48.dp),
                             onClick = {},
-                            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary) },
-                            label = { Text(text = "Tel: ${phone ?: "-"}") },
+                            leadingIcon = { 
+                                Icon(
+                                    Icons.Default.Phone, 
+                                    contentDescription = null, 
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 24.dp)
+                                ) 
+                            },
+                            label = { 
+                                Text(
+                                    text = "Tel: ${phone ?: "-"}",
+                                    fontSize = if (isSmallScreen) 10.sp else 14.sp
+                                ) 
+                            },
                             colors = AssistChipDefaults.assistChipColors(
                                 labelColor = MaterialTheme.colorScheme.onPrimary
                             )
@@ -273,77 +314,114 @@ private fun StudentInfoCard(
     className: String?,
     classId: Int?,
     studentId: Int,
+    isSmallScreen: Boolean
 ) {
-    Text(modifier = Modifier.padding(bottom = 4.dp), text = "Clases asociadas", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
+    Text(
+        modifier = Modifier.padding(bottom = 4.dp), 
+        text = "Grado Asociado:", 
+        style = if (isSmallScreen) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, 
+        color = MaterialTheme.colorScheme.onSurface
+    )
     Card(shape = RoundedCornerShape(16.dp)) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(if (isSmallScreen) 12.dp else 16.dp), 
+            verticalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 8.dp)
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.School, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Icon(
+                    imageVector = Icons.Default.School, 
+                    contentDescription = null, 
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 24.dp)
+                )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = className?.let { "Clase: $it" } ?: "Clase: Sin asignar",
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = className?.let { "Grado: $it" } ?: "Grado: Sin asignar",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = if (isSmallScreen) 12.sp else 14.sp
                 )
                 Spacer(Modifier.weight(1f))
                 AssistChip(
                     onClick = {},
-                    label = { Text("ID de Clase| ${classId ?: "-" }") }
+                    label = { 
+                        Text(
+                            "ID de Grado| ${classId ?: "-" }",
+                            fontSize = if (isSmallScreen) 10.sp else 14.sp
+                        ) 
+                    },
+                    modifier = Modifier.height(if (isSmallScreen) 24.dp else 32.dp)
                 )
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text(text = "ID estudiante: $studentId", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = "ID estudiante: $studentId", 
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = if (isSmallScreen) 12.sp else 14.sp
+            )
         }
     }
 }
 
 @Composable
-private fun ExamsSection(exams: List<Quiz>, onExamClick: (Quiz) -> Unit) {
+private fun ExamsSection(exams: List<Quiz>, onExamClick: (Quiz) -> Unit, isSmallScreen: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Exámenes asignados",
-            style = MaterialTheme.typography.titleMedium,
+            text = "Semanales asignados",
+            style = if (isSmallScreen) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
         if (exams.isEmpty()) {
             Text(
-                text = "No hay exámenes asignados",
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "No tiene semanales asignados",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = if (isSmallScreen) 12.sp else 14.sp
             )
         } else {
-            exams.forEach { exam -> ExamItem(exam = exam, onClick = { onExamClick(exam) }) }
+            exams.forEach { exam -> 
+                ExamItem(
+                    exam = exam, 
+                    onClick = { onExamClick(exam) },
+                    isSmallScreen = isSmallScreen
+                ) 
+            }
         }
     }
 }
 
 @Composable
-private fun ExamItem(exam: Quiz, onClick: () -> Unit) {
+private fun ExamItem(exam: Quiz, onClick: () -> Unit, isSmallScreen: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(if (isSmallScreen) 10.dp else 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                modifier = Modifier
+                    .size(if (isSmallScreen) 32.dp else 40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = ((exam.detalle?.firstOrNull() ?: 'E').uppercaseChar().toString()),
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (isSmallScreen) 12.sp else 16.sp
                 )
             }
-            Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.width(if (isSmallScreen) 8.dp else 12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = (exam.detalle ?: "QUIZ SEMANAL"),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = if (isSmallScreen) 12.sp else 14.sp
                 )
                 val gradoSeccion = listOfNotNull(exam.gradoNombre, exam.seccionNombre).joinToString(" ")
                 val subtitle = listOfNotNull(gradoSeccion.takeIf { it.isNotBlank() }, exam.bimesterName).joinToString(" · ")
@@ -351,14 +429,15 @@ private fun ExamItem(exam: Quiz, onClick: () -> Unit) {
                     Text(
                         text = subtitle,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
+                        fontSize = if (isSmallScreen) 10.sp else 12.sp
                     )
                 }
             }
             Text(
                 text = (exam.numQuestions ?: 0).toString(),
                 color = MaterialTheme.colorScheme.secondary,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                fontSize = if (isSmallScreen) 12.sp else 16.sp
             )
         }
     }
