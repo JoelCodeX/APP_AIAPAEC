@@ -88,9 +88,13 @@ class ApplyExamViewModel(
                         else -> { }
                     }
                     val effectiveGradeId = gradeId ?: quiz.gradoId
-                    val effectiveSectionId = sectionId ?: quiz.seccionId
-                    val gradeParam = if (effectiveSectionId != null) null else effectiveGradeId
-                    val pageResult = getStudents(page = 1, perPage = 100, query = null, gradeId = gradeParam, sectionId = effectiveSectionId)
+                    // Si gradeId viene informado (contexto asignación), respetamos sectionId (aunque sea null) para evitar fallback erróneo al quiz
+                    val effectiveSectionId = if (gradeId != null) sectionId else (sectionId ?: quiz.seccionId)
+                    
+                    // Si se especifica sección, ignoramos el grado para evitar filtros redundantes o conflictos
+                    val queryGradeId = if (effectiveSectionId != null) null else effectiveGradeId
+                    
+                    val pageResult = getStudents(page = 1, perPage = 100, query = null, gradeId = queryGradeId, sectionId = effectiveSectionId)
                     when (pageResult) {
                         is Result.Success -> {
                             val items = pageResult.data.items

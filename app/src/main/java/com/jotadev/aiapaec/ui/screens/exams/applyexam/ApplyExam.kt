@@ -311,36 +311,72 @@ fun ApplyExam(navController: NavController, examId: String) {
                     singleLine = true
                 )
             }
-            items(filteredStudents) { student ->
-                val statusObj = state.studentStatuses[student.id]
-                StudentStatusRow(
-                    student = student,
-                    status = statusObj,
-                    isScanning = scanningStudentId == student.id,
-                    onScanClick = { 
-                        if (!state.hasKey) {
-                            Toast.makeText(context, "Debes subir el solucionario antes de escanear.", Toast.LENGTH_SHORT).show()
-                        } else {
-                            scanningStudentId = student.id
-                            navController.navigate(NavigationRoutes.scanUpload(examId, student.id, state.expectedNumQuestions ?: 0)) 
-                        }
-                    },
-                    onViewResultClick = { runId ->
-                        // Corregido: Agregar /api al path para coincidir con el backend
-                        val overlayUrl = "${NetworkConfig.baseRoot}/api/scan/results/overlay/$runId"
-                        val encOverlay = Uri.encode(overlayUrl)
-                        navController.navigate(
-                            NavigationRoutes.scanResult(
-                                runId, 
-                                encOverlay, 
-                                state.expectedNumQuestions ?: 20,
-                                examId.toIntOrNull() ?: 0,
-                                student.id,
-                                readOnly = true
+            if (filteredStudents.isEmpty() && !state.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.School,
+                                contentDescription = "Sin Estudiantes",
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.outline
                             )
-                        )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No hay estudiantes registrados",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = "Los estudiantes aparecerán aquí cuando sean registrados",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
-                )
+                }
+            } else {
+                items(filteredStudents) { student ->
+                    val statusObj = state.studentStatuses[student.id]
+                    StudentStatusRow(
+                        student = student,
+                        status = statusObj,
+                        isScanning = scanningStudentId == student.id,
+                        onScanClick = {
+                            if (!state.hasKey) {
+                                Toast.makeText(context, "Debes subir el solucionario antes de escanear.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                scanningStudentId = student.id
+                                navController.navigate(NavigationRoutes.scanUpload(examId, student.id, state.expectedNumQuestions ?: 0))
+                            }
+                        },
+                        onViewResultClick = { runId ->
+                            // Corregido: Agregar /api al path para coincidir con el backend
+                            val overlayUrl = "${NetworkConfig.baseRoot}/api/scan/results/overlay/$runId"
+                            val encOverlay = Uri.encode(overlayUrl)
+                            navController.navigate(
+                                NavigationRoutes.scanResult(
+                                    runId,
+                                    encOverlay,
+                                    state.expectedNumQuestions ?: 20,
+                                    examId.toIntOrNull() ?: 0,
+                                    student.id,
+                                    readOnly = true
+                                )
+                            )
+                        }
+                    )
+                }
             }
 
             if (state.isLoading) {
