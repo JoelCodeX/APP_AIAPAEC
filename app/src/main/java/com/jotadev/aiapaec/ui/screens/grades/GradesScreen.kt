@@ -1,5 +1,6 @@
 package com.jotadev.aiapaec.ui.screens.grades
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.jotadev.aiapaec.data.api.SectionDto
+import com.jotadev.aiapaec.domain.models.Grade
+import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.grades.GradesList
 import com.jotadev.aiapaec.ui.components.grades.GradesSearchAndFilterBar
 
@@ -30,25 +34,19 @@ fun GradesScreen(navController: NavController) {
     val vm: GradesViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
-    var selectedLevel by remember { mutableStateOf("Todos los niveles") }
+    // selectedLevel moved to ViewModel
 
-    // Define funciones para manejar las secciones
-    val onSectionAClick = { grade: com.jotadev.aiapaec.domain.models.Grade ->
-        // Aquí puedes navegar a la pantalla de la sección A
-        // Por ejemplo: navController.navigate("sectionA/${grade.id}")
-        println("Sección A clickeada para el grado: ${grade.nombre}")
-
-        // O si quieres mantener la funcionalidad anterior de filtrar:
-        // vm.onGradeChange(grade.nombre)
-    }
-
-    val onSectionBClick = { grade: com.jotadev.aiapaec.domain.models.Grade ->
-        // Aquí puedes navegar a la pantalla de la sección B
-        // Por ejemplo: navController.navigate("sectionB/${grade.id}")
-        println("Sección B clickeada para el grado: ${grade.nombre}")
-
-        // O si quieres mantener la funcionalidad anterior de filtrar:
-        // vm.onGradeChange(grade.nombre)
+    // Función para manejar clicks en secciones
+    val onSectionClick = { grade: Grade, section: SectionDto ->
+        navController.navigate(
+            NavigationRoutes.sectionStudents(
+                gradeId = grade.id,
+                sectionId = section.id,
+                gradeName = grade.nombre,
+                sectionName = section.nombre,
+                studentCount = section.studentCount
+            )
+        )
     }
 
     Scaffold(
@@ -65,8 +63,8 @@ fun GradesScreen(navController: NavController) {
                 GradesSearchAndFilterBar(
                     searchQuery = searchQuery,
                     onSearchQueryChange = { searchQuery = it },
-                    selectedLevel = selectedLevel,
-                    onLevelChange = { selectedLevel = it },
+                    selectedLevel = state.selectedLevel,
+                    onLevelChange = { vm.onLevelChange(it) },
                     selectedGrade = state.selectedGrade,
                     onGradeChange = { vm.onGradeChange(it) },
                     gradeOptions = state.gradesOptions,
@@ -77,7 +75,7 @@ fun GradesScreen(navController: NavController) {
 
                 val filteredGrades = state.grades.filter { g ->
                     val byGrade = state.selectedGrade == "Todos los grados" || g.nombre == state.selectedGrade
-                    val byLevel = selectedLevel == "Todos los niveles" || (g.nivel ?: "") == selectedLevel
+                    val byLevel = state.selectedLevel == "Todos los niveles" || (g.nivel ?: "") == state.selectedLevel
                     val q = searchQuery.trim()
                     val byQuery = q.isBlank() || g.nombre.contains(q, true) || (g.descripcion ?: "").contains(q, true)
                     byGrade && byLevel && byQuery
@@ -86,8 +84,7 @@ fun GradesScreen(navController: NavController) {
                 // LISTA DE GRADOS - Actualizado con nuevos parámetros
                 GradesList(
                     grades = filteredGrades,
-                    onSectionAClick = onSectionAClick,
-                    onSectionBClick = onSectionBClick
+                    onSectionClick = onSectionClick
                 )
 
                 if (state.isLoading) {

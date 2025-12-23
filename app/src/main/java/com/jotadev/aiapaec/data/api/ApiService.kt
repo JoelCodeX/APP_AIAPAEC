@@ -437,14 +437,17 @@ data class GradeDto(
     val id: Int,
     val nombre: String,
     val nivel: String?,
-    val descripcion: String?
+    val descripcion: String?,
+    @SerializedName("student_count") val studentCount: Int = 0,
+    val sections: List<SectionDto> = emptyList()
 )
 
 data class SectionDto(
     val id: Int,
     val nombre: String,
     val turno: String?,
-    val capacidad: Int?
+    val capacidad: Int?,
+    @SerializedName("student_count") val studentCount: Int = 0
 )
 
 data class StudentDto(

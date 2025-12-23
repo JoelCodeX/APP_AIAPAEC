@@ -30,6 +30,7 @@ fun StudentsSearchAndFilterBar(
     onSectionChange: (String?) -> Unit,
     sectionOptions: List<String>,
     isMetaLoading: Boolean,
+    showFilters: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var isFilterExpanded by remember { mutableStateOf(false) }
@@ -81,49 +82,53 @@ fun StudentsSearchAndFilterBar(
                 singleLine = true
             )
             // BOTÓN DE FILTRO
-            IconButton(
-                onClick = { isFilterExpanded = !isFilterExpanded },
-                modifier = Modifier
-                    .size(if (isSmallScreen) 48.dp else 56.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.secondary)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.FilterList,
-                    contentDescription = "Filtros",
-                    tint = if (isFilterExpanded) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
-                )
+            if (showFilters) {
+                IconButton(
+                    onClick = { isFilterExpanded = !isFilterExpanded },
+                    modifier = Modifier
+                        .size(if (isSmallScreen) 48.dp else 56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.secondary)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Filtros",
+                        tint = if (isFilterExpanded) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(if (isSmallScreen) 20.dp else 24.dp)
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        // FILTROS EXPANDIBLES
-        AnimatedVisibility(visible = isFilterExpanded) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // FILTRO POR GRADO
-                FilterDropdown(
-                    label = "Grado",
-                    selectedValue = selectedGrade ?: "Todos",
-                    options = listOf("Todos") + gradeOptions,
-                    onValueChange = { v -> onGradeChange(if (v == "Todos") null else v) },
-                    placeholder = if (isMetaLoading) "Cargando grados..." else "Selecciona grado",
-                    modifier = Modifier.weight(1f)
-                )
+        if (showFilters) {
+            Spacer(modifier = Modifier.height(8.dp))
+            // FILTROS EXPANDIBLES
+            AnimatedVisibility(visible = isFilterExpanded) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // FILTRO POR GRADO
+                    FilterDropdown(
+                        label = "Grado",
+                        selectedValue = selectedGrade ?: "Todos",
+                        options = listOf("Todos") + gradeOptions,
+                        onValueChange = { v -> onGradeChange(if (v == "Todos") null else v) },
+                        placeholder = if (isMetaLoading) "Cargando grados..." else "Selecciona grado",
+                        modifier = Modifier.weight(1f)
+                    )
 
-                // FILTRO POR SECCIÓN
-                FilterDropdown(
-                    label = "Sección",
-                    selectedValue = selectedSection ?: "Todas",
-                    options = listOf("Todas") + sectionOptions,
-                    onValueChange = { v -> onSectionChange(if (v == "Todas") null else v) },
-                    placeholder = if (isMetaLoading) "Cargando secciones..." else "Selecciona sección",
-                    enabled = sectionOptions.isNotEmpty(),
-                    modifier = Modifier.weight(1f)
-                )
+                    // FILTRO POR SECCIÓN
+                    FilterDropdown(
+                        label = "Sección",
+                        selectedValue = selectedSection ?: "Todas",
+                        options = listOf("Todas") + sectionOptions,
+                        onValueChange = { v -> onSectionChange(if (v == "Todas") null else v) },
+                        placeholder = if (isMetaLoading) "Cargando secciones..." else "Selecciona sección",
+                        enabled = sectionOptions.isNotEmpty(),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

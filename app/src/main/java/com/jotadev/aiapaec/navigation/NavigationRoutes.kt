@@ -20,11 +20,12 @@ object NavigationRoutes {
     const val STUDENTS_FULL = "students_full"
     const val FORMATS_FULL = "formats_full"
 
-    //Secondary Screens Details
+    // Secondary Screens Details
     const val APPLY_EXAM = "apply_exam/{examId}"
     const val DETAILS_STUDENT = "student_detail/{studentId}"
     const val DETAILS_CLASS = "class_detail/{classId}"
     const val QUIZ_ANSWERS = "quiz_answers/{examId}"
+    const val SECTION_STUDENTS = "section_students/{gradeId}/{sectionId}/{gradeName}/{sectionName}/{studentCount}"
 
 
     
@@ -47,6 +48,8 @@ object NavigationRoutes {
     fun quizAnswers(examId: String) = "quiz_answers/$examId"
     fun detailsStudent(studentId: Int) = "student_detail/$studentId"
     fun detailsClass(classId: Int) = "class_detail/$classId"
+    fun sectionStudents(gradeId: Int, sectionId: Int, gradeName: String, sectionName: String, studentCount: Int) = 
+        "section_students/$gradeId/$sectionId/${Uri.encode(gradeName)}/${Uri.encode(sectionName)}/$studentCount"
     fun cropPreview(path: String) = "${CROP_PREVIEW}?path=$path"
     fun scanResult(runId: String, overlayUrl: String, tipo: Int, quizId: Int, studentId: Int, readOnly: Boolean = false) = "${SCAN_RESULT}?run_id=$runId&overlay=$overlayUrl&tipo=$tipo&quiz_id=$quizId&student_id=$studentId&read_only=$readOnly"
     fun scanUpload(examId: String, studentId: Int, numQuestions: Int) = "scan_upload/$examId/$studentId/$numQuestions"

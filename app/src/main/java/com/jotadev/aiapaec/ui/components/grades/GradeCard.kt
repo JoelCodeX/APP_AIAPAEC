@@ -9,25 +9,27 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Class
-import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jotadev.aiapaec.data.api.SectionDto
 import com.jotadev.aiapaec.domain.models.Grade
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,8 +38,7 @@ fun GradeCard(
     grade: Grade,
     isExpanded: Boolean,
     onCardClick: () -> Unit,
-    onSectionAClick: () -> Unit,
-    onSectionBClick: () -> Unit,
+    onSectionClick: (SectionDto) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
@@ -111,21 +112,40 @@ fun GradeCard(
                 Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.School,
-                            contentDescription = "Nivel",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = displayLevel,
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.School,
+                                contentDescription = "Nivel",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = displayLevel,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Group,
+                                contentDescription = "Estudiantes",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${grade.studentCount} Estudiantes",
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = if (isSmallScreen) 10.sp else 12.sp),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
@@ -151,44 +171,54 @@ fun GradeCard(
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = onSectionAClick,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+        if (grade.sections.isEmpty()) {
+            Text(
+                text = "No hay secciones registradas",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(imageVector = Icons.Default.Class, contentDescription = "Sección A")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Sección A",
-                    fontSize = if (isSmallScreen) 12.sp else 14.sp
-                )
-            }
-            Button(
-                onClick = onSectionBClick,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary
-                )
-            ) {
-                Icon(imageVector = Icons.Default.Class, contentDescription = "Sección B")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Sección B",
-                    fontSize = if (isSmallScreen) 12.sp else 14.sp
-                )
+                grade.sections.forEachIndexed { index, section ->
+                    val containerColor = if (index % 2 == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                    val contentColor = if (index % 2 == 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
+                    
+                    Button(
+                        onClick = { onSectionClick(section) },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = containerColor,
+                            contentColor = contentColor
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Class,
+                            contentDescription = section.nombre,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "SECCIÓN ${section.nombre}",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = if (isSmallScreen) 11.sp else 14.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
     }

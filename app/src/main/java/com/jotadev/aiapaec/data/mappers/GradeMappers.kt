@@ -10,7 +10,9 @@ fun GradeDto.toDomain(): Grade {
         id = id,
         nombre = nombre,
         nivel = nivel,
-        descripcion = descripcion
+        descripcion = descripcion,
+        studentCount = studentCount,
+        sections = sections
     )
 }
 

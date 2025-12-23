@@ -18,6 +18,7 @@ import com.jotadev.aiapaec.ui.screens.scan.ScanResultScreen
 import com.jotadev.aiapaec.ui.screens.scan.ScanUploadScreen
 import com.jotadev.aiapaec.ui.screens.students.DetailsStudent
 import com.jotadev.aiapaec.ui.screens.students.StudentsScreen
+import com.jotadev.aiapaec.ui.screens.grades.section_students.SectionStudentsScreen
 
 @Composable
 fun MainNavGraph(
@@ -127,6 +128,23 @@ fun MainNavGraph(
             val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
             val idInt = studentId.toIntOrNull() ?: 0
             DetailsStudent(navController = navController, studentId = idInt)
+        }
+
+        composable(NavigationRoutes.SECTION_STUDENTS) { backStackEntry ->
+            val gradeId = backStackEntry.arguments?.getString("gradeId")?.toIntOrNull() ?: 0
+            val sectionId = backStackEntry.arguments?.getString("sectionId")?.toIntOrNull() ?: 0
+            val gradeName = Uri.decode(backStackEntry.arguments?.getString("gradeName") ?: "")
+            val sectionName = Uri.decode(backStackEntry.arguments?.getString("sectionName") ?: "")
+            val studentCount = backStackEntry.arguments?.getString("studentCount")?.toIntOrNull() ?: 0
+            
+            SectionStudentsScreen(
+                navController = navController,
+                gradeId = gradeId,
+                sectionId = sectionId,
+                gradeName = gradeName,
+                sectionName = sectionName,
+                studentCount = studentCount
+            )
         }
 
         // Ruta DETAILS_CLASS eliminada al remover funcionalidad de clases

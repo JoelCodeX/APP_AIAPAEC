@@ -14,13 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jotadev.aiapaec.data.api.SectionDto
 import com.jotadev.aiapaec.domain.models.Grade
 
 @Composable
 fun GradesList(
     grades: List<Grade>,
-    onSectionAClick: (Grade) -> Unit,
-    onSectionBClick: (Grade) -> Unit,
+    onSectionClick: (Grade, SectionDto) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Estado para controlar qué tarjeta está expandida
@@ -79,8 +79,7 @@ fun GradesList(
                         grade.id
                     }
                 },
-                onSectionAClick = { onSectionAClick(grade) },
-                onSectionBClick = { onSectionBClick(grade) }
+                onSectionClick = { section -> onSectionClick(grade, section) }
             )
             Spacer(modifier = Modifier.height(4.dp))
         }

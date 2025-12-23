@@ -1,5 +1,6 @@
 package com.jotadev.aiapaec.ui.screens.main
 
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -116,7 +117,8 @@ fun MainScreen(
         NavigationRoutes.EXAMS_FULL,
         NavigationRoutes.GRADES_FULL,
         NavigationRoutes.STUDENTS_FULL,
-        NavigationRoutes.FORMATS_FULL
+        NavigationRoutes.FORMATS_FULL,
+        NavigationRoutes.SECTION_STUDENTS
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -183,6 +185,28 @@ private fun MainTopBar(
     when {
         currentRoute?.startsWith(NavigationRoutes.HOME) == true -> {
             WelcomeTopAppBar(onNavigationClick = onOpenSettings)
+        }
+
+        currentRoute == NavigationRoutes.SECTION_STUDENTS -> {
+            val gradeName = Uri.decode(navController.currentBackStackEntry?.arguments?.getString("gradeName") ?: "")
+            val sectionName = Uri.decode(navController.currentBackStackEntry?.arguments?.getString("sectionName") ?: "")
+            val studentCount = navController.currentBackStackEntry?.arguments?.getString("studentCount") ?: "0"
+
+            CustomTopAppBar(
+                title = "$gradeName - $sectionName",
+                subtitle = "$studentCount Estudiantes",
+                backgroundColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            )
         }
 
         currentRoute?.startsWith(NavigationRoutes.EXAMS) == true || currentRoute?.startsWith(

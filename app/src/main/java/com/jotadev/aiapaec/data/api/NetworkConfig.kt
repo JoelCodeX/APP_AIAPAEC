@@ -22,9 +22,9 @@ object NetworkConfig {
     private const val PORT = 5000
 
     // PRODUCCIÓN
-    val baseRoot: String = "https://web-production-3c6a3.up.railway.app"
+//    val baseRoot: String = "https://web-production-3c6a3.up.railway.app"
     // DESARROLLO
-//     val baseRoot: String = if (isEmulator()) "http://10.0.2.2:$PORT" else "http://$LOCAL_IP:$PORT"
+     val baseRoot: String = if (isEmulator()) "http://10.0.2.2:$PORT" else "http://$LOCAL_IP:$PORT"
     
     val apiBase: String = "$baseRoot/api/"
 }
