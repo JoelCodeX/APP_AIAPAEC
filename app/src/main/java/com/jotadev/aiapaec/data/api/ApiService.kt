@@ -50,7 +50,9 @@ interface ApiService {
         @Query("per_page") perPage: Int = 20,
         @Query("q") query: String? = null,
         @Query("grade_id") gradeId: Int? = null,
-        @Query("section_id") sectionId: Int? = null
+        @Query("section_id") sectionId: Int? = null,
+        @Query("sort_by") sortBy: String? = "id",
+        @Query("order") order: String? = "asc"
     ): Response<StudentsResponse>
 
     // STUDENT DETAIL

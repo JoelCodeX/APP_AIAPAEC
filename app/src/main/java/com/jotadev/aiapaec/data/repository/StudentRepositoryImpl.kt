@@ -15,7 +15,9 @@ class StudentRepositoryImpl : StudentRepository {
         perPage: Int,
         query: String?,
         gradeId: Int?,
-        sectionId: Int?
+        sectionId: Int?,
+        sortBy: String?,
+        order: String?
     ): Result<StudentsPage> {
         return try {
             val response = api.getStudents(
@@ -23,7 +25,9 @@ class StudentRepositoryImpl : StudentRepository {
                 perPage = perPage,
                 query = query,
                 gradeId = gradeId,
-                sectionId = sectionId
+                sectionId = sectionId,
+                sortBy = sortBy,
+                order = order
             )
             if (response.isSuccessful) {
                 val body = response.body()
