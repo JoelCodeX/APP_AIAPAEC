@@ -27,6 +27,7 @@ import com.jotadev.aiapaec.domain.models.Grade
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.grades.GradesList
 import com.jotadev.aiapaec.ui.components.grades.GradesSearchAndFilterBar
+import com.jotadev.aiapaec.ui.components.grades.GradesSkeleton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -82,14 +83,15 @@ fun GradesScreen(navController: NavController) {
                 }
 
                 // LISTA DE GRADOS - Actualizado con nuevos parámetros
-                GradesList(
-                    grades = filteredGrades,
-                    onSectionClick = onSectionClick
-                )
-
-                if (state.isLoading) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                if (state.isLoading && filteredGrades.isEmpty()) {
+                    GradesSkeleton()
+                } else {
+                    GradesList(
+                        grades = filteredGrades,
+                        onSectionClick = onSectionClick
+                    )
                 }
+
                 if (state.errorMessage != null) {
                     Text(
                         text = state.errorMessage ?: "",

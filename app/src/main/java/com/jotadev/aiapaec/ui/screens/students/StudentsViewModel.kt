@@ -23,6 +23,7 @@ data class StudentsUiState(
     val total: Int = 0,
     val pages: Int = 0,
     val isLoading: Boolean = false,
+    val isAppending: Boolean = false, // Carga de siguientes páginas
     val errorMessage: String? = null,
     // Opciones de filtros por grado y sección
     val isMetaLoading: Boolean = false,
@@ -59,10 +60,22 @@ class StudentsViewModel(
 
     fun fetchStudents(page: Int? = null) {
         val targetPage = page ?: _uiState.value.page
+        val isFirstPage = targetPage == 1
+
+        if (!isFirstPage && (targetPage > _uiState.value.pages && _uiState.value.pages > 0)) {
+            return // No hay más páginas
+        }
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            if (isFirstPage) {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null, students = emptyList(), page = 1) }
+            } else {
+                _uiState.update { it.copy(isAppending = true, errorMessage = null) }
+            }
+
             val gradeId = _uiState.value.selectedGrade?.let { gradeNameToId[it] }
             val sectionId = _uiState.value.selectedSection?.let { sectionNameToId[it] }
+            
             when (val result = getStudents(
                 targetPage,
                 _uiState.value.perPage,
@@ -73,24 +86,34 @@ class StudentsViewModel(
                 is Result.Success -> {
                     val pageData = result.data
                     _uiState.update {
+                        val currentList = if (isFirstPage) emptyList() else it.students
                         it.copy(
-                            students = pageData.items,
+                            students = currentList + pageData.items,
                             page = pageData.page,
                             perPage = pageData.perPage,
                             total = pageData.total,
                             pages = pageData.pages,
                             isLoading = false,
+                            isAppending = false,
                             errorMessage = null
                         )
                     }
                 }
                 is Result.Error -> {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                    _uiState.update { it.copy(isLoading = false, isAppending = false, errorMessage = result.message) }
                 }
                 is Result.Loading -> {
-                    _uiState.update { it.copy(isLoading = true) }
+                    // Manejado arriba
                 }
             }
+        }
+    }
+    
+    fun loadNextPage() {
+        if (_uiState.value.isLoading || _uiState.value.isAppending) return
+        val nextPage = _uiState.value.page + 1
+        if (nextPage <= _uiState.value.pages) {
+            fetchStudents(page = nextPage)
         }
     }
 

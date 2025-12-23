@@ -23,6 +23,8 @@ import androidx.navigation.NavController
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.students.StudentsList
 import com.jotadev.aiapaec.ui.components.students.StudentsSearchAndFilterBar
+import com.jotadev.aiapaec.ui.components.ListSkeleton
+import androidx.compose.ui.platform.LocalConfiguration
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
@@ -36,7 +38,9 @@ fun SectionStudentsScreen(
 ) {
     val vm: SectionStudentsViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
-
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+    
     LaunchedEffect(gradeId, sectionId) {
         vm.init(gradeId, sectionId)
     }
@@ -69,16 +73,16 @@ fun SectionStudentsScreen(
                 showFilters = false
             )
 
-            StudentsList(
-                students = state.students,
-                modifier = Modifier.weight(1f),
-                onStudentClick = { student ->
-                    navController.navigate(NavigationRoutes.detailsStudent(student.id))
-                }
-            )
-
             if (state.isLoading && state.students.isEmpty()) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                ListSkeleton(isSmallScreen = isSmallScreen)
+            } else {
+                StudentsList(
+                    students = state.students,
+                    modifier = Modifier.weight(1f),
+                    onStudentClick = { student ->
+                        navController.navigate(NavigationRoutes.detailsStudent(student.id))
+                    }
+                )
             }
             
             if (state.errorMessage != null) {

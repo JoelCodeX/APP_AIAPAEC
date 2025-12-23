@@ -196,7 +196,8 @@ fun LoginScreen(
                         valor = uiState.usuario,
                         onValorCambiado = viewModel::updateUsuario,
                         serverErrorText = fieldErrors.email,
-                        isSmallScreen = isSmallScreen
+                        isSmallScreen = isSmallScreen,
+                        enabled = !uiState.isLoading
                     )
                     Spacer(modifier = Modifier.height(cardSpacerSmall))
                     CampoTextoContrasena(
@@ -205,7 +206,8 @@ fun LoginScreen(
                         mostrarContrasena = uiState.mostrarContrasena,
                         onToggleVisibilidad = viewModel::toggleMostrarContrasena,
                         serverErrorText = fieldErrors.password,
-                        isSmallScreen = isSmallScreen
+                        isSmallScreen = isSmallScreen,
+                        enabled = !uiState.isLoading
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -427,7 +429,8 @@ private fun CampoTextoUsuario(
     valor: String,
     onValorCambiado: (String) -> Unit,
     serverErrorText: String? = null,
-    isSmallScreen: Boolean = false
+    isSmallScreen: Boolean = false,
+    enabled: Boolean = true
 ) {
     var touched by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val isEmpty = valor.isBlank()
@@ -449,6 +452,7 @@ private fun CampoTextoUsuario(
             if (!touched) touched = true
             onValorCambiado(it)
         },
+        enabled = enabled,
         label = { Text("Email", fontSize = labelSize) },
         placeholder = { Text("") },
         textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = fontSize),
@@ -500,7 +504,8 @@ private fun CampoTextoContrasena(
     mostrarContrasena: Boolean,
     onToggleVisibilidad: () -> Unit,
     serverErrorText: String? = null,
-    isSmallScreen: Boolean = false
+    isSmallScreen: Boolean = false,
+    enabled: Boolean = true
 ) {
     var touched by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val isEmpty = valor.isBlank()
@@ -521,6 +526,7 @@ private fun CampoTextoContrasena(
             if (!touched) touched = true
             onValorCambiado(it)
         },
+        enabled = enabled,
         label = { Text("Contraseña", fontSize = labelSize) },
         placeholder = { Text("") },
         textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = fontSize),

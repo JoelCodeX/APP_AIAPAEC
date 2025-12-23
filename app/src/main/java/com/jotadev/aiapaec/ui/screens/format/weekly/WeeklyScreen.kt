@@ -80,6 +80,7 @@ import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.R
 import com.jotadev.aiapaec.ui.components.FilterDropdown
 import com.jotadev.aiapaec.ui.components.format.InfoChip
+import com.jotadev.aiapaec.ui.components.ListSkeleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.Calendar
 
@@ -90,6 +91,9 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     var isRefreshing by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
+
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
 
     val handle = navController.currentBackStackEntry?.savedStateHandle
     val weeklyCreateFlow = handle?.getStateFlow("weekly_create_request", false) ?: MutableStateFlow(false)
@@ -197,37 +201,41 @@ fun WeeklyScreen(navController: NavController, assignmentId: Int?) {
                     isUnitsLoading = state.isUnitsLoading
                 )
 
-                WeeklyList(
-                    items = state.quizzes,
-                    onClick = { quiz ->
-                        val handle = navController.currentBackStackEntry?.savedStateHandle
-                        handle?.set("apply_grade_id", gradeId)
-                        handle?.set("apply_section_id", sectionId)
-                        handle?.set("apply_grade_name", gradeName)
-                        handle?.set("apply_section_name", sectionName)
-                        navController.navigate(NavigationRoutes.applyExam(quiz.id.toString()))
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                    getWeekNumberForItem = vm::getStoredWeekNumberForItem,
-                    getUnitLabelForItem = vm::getUnitLabelForItem,
-                    unitLabelsVersion = state.unitLabelsVersion,
-                    onDelete = {
-                        itemToDelete = it
-                        vm.checkQuizUsage(it.id)
-                    },
-                    onEdit = {
-                        editingItem = it
-                        selectedBimesterLabel = it.bimesterId?.let { id -> bimesterLabel(id) }
-                        val bimId = it.bimesterId
-                        vm.loadUnitsForBimesterById(bimId)
-                        selectedUnidadLabel = vm.getUnitLabelForItem(it)
-                        selectedUnidadLabel?.let { label -> vm.loadWeeksForUnit(label) }
-                        selectedSemana = vm.getStoredWeekNumberForItem(it)
-                        selectedDate = it.fecha
-                        detalle = it.detalle ?: ""
-                        showEditDialog = true
-                    }
-                )
+                if (state.isLoading && state.quizzes.isEmpty()) {
+                    ListSkeleton(isSmallScreen = isSmallScreen)
+                } else {
+                    WeeklyList(
+                        items = state.quizzes,
+                        onClick = { quiz ->
+                            val handle = navController.currentBackStackEntry?.savedStateHandle
+                            handle?.set("apply_grade_id", gradeId)
+                            handle?.set("apply_section_id", sectionId)
+                            handle?.set("apply_grade_name", gradeName)
+                            handle?.set("apply_section_name", sectionName)
+                            navController.navigate(NavigationRoutes.applyExam(quiz.id.toString()))
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                        getWeekNumberForItem = vm::getStoredWeekNumberForItem,
+                        getUnitLabelForItem = vm::getUnitLabelForItem,
+                        unitLabelsVersion = state.unitLabelsVersion,
+                        onDelete = {
+                            itemToDelete = it
+                            vm.checkQuizUsage(it.id)
+                        },
+                        onEdit = {
+                            editingItem = it
+                            selectedBimesterLabel = it.bimesterId?.let { id -> bimesterLabel(id) }
+                            val bimId = it.bimesterId
+                            vm.loadUnitsForBimesterById(bimId)
+                            selectedUnidadLabel = vm.getUnitLabelForItem(it)
+                            selectedUnidadLabel?.let { label -> vm.loadWeeksForUnit(label) }
+                            selectedSemana = vm.getStoredWeekNumberForItem(it)
+                            selectedDate = it.fecha
+                            detalle = it.detalle ?: ""
+                            showEditDialog = true
+                        }
+                    )
+                }
             }
             PullRefreshIndicator(
                 refreshing = isRefreshing,

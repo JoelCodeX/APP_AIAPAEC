@@ -51,6 +51,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jotadev.aiapaec.domain.models.Quiz
+import com.jotadev.aiapaec.navigation.NavigationRoutes
+import com.jotadev.aiapaec.ui.screens.students.details.StudentDetailsSkeleton
 
 @Composable
 fun DetailsStudent(navController: NavController, studentId: Int) {
@@ -68,15 +70,7 @@ fun DetailsStudent(navController: NavController, studentId: Int) {
         Box(modifier = Modifier.fillMaxSize().padding(inner)) {
             when {
                 state.isLoading -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.height(12.dp))
-                        Text("Cargando perfil...", color = MaterialTheme.colorScheme.onBackground)
-                    }
+                    StudentDetailsSkeleton(isSmallScreen = isSmallScreen)
                 }
                 state.errorMessage != null -> {
                     Column(
@@ -126,7 +120,9 @@ fun DetailsStudent(navController: NavController, studentId: Int) {
                             item {
                                 ExamsSection(
                                     exams = state.exams,
-                                    onExamClick = { /* navegar si se requiere */ },
+                                    onExamClick = { exam -> 
+                                        navController.navigate(NavigationRoutes.applyExam(exam.id.toString()))
+                                    },
                                     isSmallScreen = isSmallScreen
                                 )
                             }
@@ -391,6 +387,7 @@ private fun ExamsSection(exams: List<Quiz>, onExamClick: (Quiz) -> Unit, isSmall
 @Composable
 private fun ExamItem(exam: Quiz, onClick: () -> Unit, isSmallScreen: Boolean) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -407,7 +404,7 @@ private fun ExamItem(exam: Quiz, onClick: () -> Unit, isSmallScreen: Boolean) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = ((exam.detalle?.firstOrNull() ?: 'E').uppercaseChar().toString()),
+                    text = (exam.weekNumber ?: "?").toString(),
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = if (isSmallScreen) 12.sp else 16.sp
@@ -416,15 +413,21 @@ private fun ExamItem(exam: Quiz, onClick: () -> Unit, isSmallScreen: Boolean) {
             Spacer(Modifier.width(if (isSmallScreen) 8.dp else 12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = (exam.detalle ?: "QUIZ SEMANAL"),
+                    text = "Semanal N° ${exam.weekNumber ?: ""}",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontSize = if (isSmallScreen) 12.sp else 14.sp
                 )
-                val gradoSeccion = listOfNotNull(exam.gradoNombre, exam.seccionNombre).joinToString(" ")
-                val subtitle = listOfNotNull(gradoSeccion.takeIf { it.isNotBlank() }, exam.bimesterName).joinToString(" · ")
+                
+                val parts = mutableListOf<String>()
+                exam.gradoNombre?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
+                exam.seccionNombre?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
+                exam.bimesterName?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
+                exam.unidadId?.let { parts.add("UNIDAD $it") }
+                val subtitle = parts.joinToString(" - ")
+                
                 if (subtitle.isNotBlank()) {
                     Text(
                         text = subtitle,

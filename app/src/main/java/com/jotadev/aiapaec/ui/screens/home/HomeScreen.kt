@@ -76,6 +76,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.jotadev.aiapaec.data.storage.TokenStorage
 
+import com.jotadev.aiapaec.ui.components.shimmerEffect
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -196,7 +198,7 @@ fun HomeScreen(
                 ) {
                     MetricCard(
                         label = "Formatos",
-                        value = if (homeState.isLoadingMetrics) "..." else homeState.formatsCount.toString(),
+                        value = if (homeState.isLoadingMetrics) null else homeState.formatsCount.toString(),
                         icon = Icons.Rounded.Assessment,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.primary,
@@ -204,7 +206,7 @@ fun HomeScreen(
                     )
                     MetricCard(
                         label = "Semanales",
-                        value = if (homeState.isLoadingMetrics) "..." else homeState.weekliesCount.toString(),
+                        value = if (homeState.isLoadingMetrics) null else homeState.weekliesCount.toString(),
                         icon = Icons.Rounded.Leaderboard,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.error,
@@ -212,7 +214,7 @@ fun HomeScreen(
                     )
                     MetricCard(
                         label = "Grados",
-                        value = if (homeState.isLoadingMetrics) "..." else homeState.gradesCount.toString(),
+                        value = if (homeState.isLoadingMetrics) null else homeState.gradesCount.toString(),
                         icon = Icons.Rounded.School,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.tertiary,
@@ -220,7 +222,7 @@ fun HomeScreen(
                     )
                     MetricCard(
                         label = "Alumnos",
-                        value = if (homeState.isLoadingMetrics) "..." else homeState.studentsCount.toString(),
+                        value = if (homeState.isLoadingMetrics) null else homeState.studentsCount.toString(),
                         icon = Icons.Rounded.Groups,
                         containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         accent = MaterialTheme.colorScheme.secondary,
@@ -407,7 +409,7 @@ private data class CategoryItem(
 @Composable
 private fun MetricCard(
     label: String,
-    value: String,
+    value: String?,
     icon: ImageVector,
     containerColor: Color,
     accent: Color,
@@ -450,13 +452,23 @@ private fun MetricCard(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSecondary
-            )
+            if (value == null) {
+                Box(
+                    modifier = Modifier
+                        .width(if (isSmallScreen) 30.dp else 40.dp)
+                        .height(if (isSmallScreen) 14.dp else 16.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .shimmerEffect()
+                )
+            } else {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = if (isSmallScreen) 14.sp else 16.sp),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSecondary
+                )
+            }
         }
     }
 }

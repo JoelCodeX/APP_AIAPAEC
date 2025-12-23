@@ -72,13 +72,9 @@ class LoginViewModel(
             when (val result = loginUseCase(currentState.usuario, currentState.contrasena)) {
                 is Result.Success -> {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
                         isLoginSuccessful = true,
                         userToken = result.data.token,
-                        errorMessage = null,
-                        usuario = "",
-                        contrasena = "",
-                        mostrarContrasena = false
+                        errorMessage = null
                     )
                     // GUARDAR PERFIL Y SEDE DEL USUARIO
                     val u = result.data.user
@@ -131,6 +127,14 @@ class LoginViewModel(
     fun prefillRememberedEmail() {
         val savedEmail = UserStorage.getRememberedEmail()
         val rememberFlag = UserStorage.getRememberFlag()
+
+        // Reset state to ensure clean start
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            isLoginSuccessful = false,
+            errorMessage = null
+        )
+
         if (rememberFlag && !savedEmail.isNullOrBlank()) {
             _uiState.value = _uiState.value.copy(
                 usuario = savedEmail,

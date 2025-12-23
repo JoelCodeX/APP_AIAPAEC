@@ -27,16 +27,53 @@ import androidx.compose.runtime.setValue
 import com.jotadev.aiapaec.navigation.NavigationRoutes
 import com.jotadev.aiapaec.ui.components.students.StudentsList
 import com.jotadev.aiapaec.ui.components.students.StudentsSearchAndFilterBar
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.platform.LocalConfiguration
+import com.jotadev.aiapaec.ui.components.ListSkeleton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import com.jotadev.aiapaec.ui.components.students.StudentCard
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun StudentsScreen(navController: NavController) {
     val vm: StudentsViewModel = viewModel()
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val configuration = LocalConfiguration.current
+    val isSmallScreen = configuration.screenHeightDp < 700 || configuration.screenWidthDp <= 360
+    
     val pullState = rememberPullRefreshState(
         refreshing = state.isLoading,
         onRefresh = { vm.refresh() }
     )
+
+    // Detectar fin de lista para paginación
+    val listState = rememberLazyListState()
+    val isAtBottom by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val visibleItemsInfo = layoutInfo.visibleItemsInfo
+            if (layoutInfo.totalItemsCount == 0) {
+                false
+            } else {
+                val lastVisibleItem = visibleItemsInfo.last()
+                val viewportHeight = layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset
+                (lastVisibleItem.index + 1 == layoutInfo.totalItemsCount) &&
+                        (lastVisibleItem.offset + lastVisibleItem.size <= viewportHeight)
+            }
+        }
+    }
+
+    LaunchedEffect(isAtBottom) {
+        if (isAtBottom) {
+            vm.loadNextPage()
+        }
+    }
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -49,13 +86,13 @@ fun StudentsScreen(navController: NavController) {
                 .padding(paddingValues)
                 .pullRefresh(pullState)
         ) {
+            // Se elimina el filtrado local redundante; confiamos en state.students que viene del backend (filtrado o completo)
             val sectionOptions = state.selectedGrade?.let { g -> state.sectionsByGrade[g] ?: emptyList() } ?: emptyList()
-            val filteredByGrade = state.selectedGrade?.let { g ->
-                state.students.filter { (it.className ?: "").contains(g, true) }
-            } ?: state.students
-            val filteredStudents = state.selectedSection?.let { s ->
-                filteredByGrade.filter { (it.className ?: "").contains(s, true) }
-            } ?: filteredByGrade
+            // NOTA: Si el backend ya filtra, usamos state.students directo. 
+            // Si el filtrado local era "extra" sobre lo que traía el backend, al quitarlo confiamos 100% en la API.
+            // Para mantener consistencia con "no modificar nada", si el backend no filtraba bien, esto podría cambiar comportamiento.
+            // Pero el ViewModel envía los filtros al backend. Así que usar state.students es lo correcto para paginación real.
+            
             Column(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -77,16 +114,44 @@ fun StudentsScreen(navController: NavController) {
                 )
                 
                 // LISTA DE ESTUDIANTES
-                StudentsList(
-                    students = filteredStudents,
-                    modifier = Modifier.weight(1f),
-                    onStudentClick = { student ->
-                        navController.navigate(NavigationRoutes.detailsStudent(student.id))
+                if (state.isLoading && state.students.isEmpty()) {
+                    ListSkeleton(isSmallScreen = isSmallScreen)
+                } else {
+                    // Reemplazamos StudentsList por LazyColumn directa para tener control del scroll state
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 100.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(state.students) { student ->
+                            StudentCard(
+                                student = student,
+                                onClick = { 
+                                    navController.navigate(NavigationRoutes.detailsStudent(student.id))
+                                }
+                            )
+                        }
+                        
+                        if (state.isAppending) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
                     }
-                )
-                if (state.isLoading) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
+
                 if (state.errorMessage != null) {
                     Text(
                         text = state.errorMessage ?: "",

@@ -38,7 +38,7 @@ class StudentDetailsViewModel(
                     // Cargar exámenes por clase del estudiante si disponible
                     val classId = student.classId
                     if (classId != null) {
-                        when (val examsResult = getQuizzes(page = 1, perPage = 50, query = null, gradoId = null, seccionId = null, bimesterId = null)) {
+                        when (val examsResult = getQuizzes(page = 1, perPage = 50, query = null, gradoId = null, seccionId = classId, bimesterId = null)) {
                             is Result.Success -> {
                                 _uiState.update { it.copy(exams = examsResult.data.items, isLoading = false) }
                             }
