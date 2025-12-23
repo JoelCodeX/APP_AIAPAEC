@@ -41,79 +41,139 @@ class StudentsViewModel(
     val uiState: StateFlow<StudentsUiState> = _uiState
     private var gradeNameToId: Map<String, Int> = emptyMap()
     private var sectionNameToId: Map<String, Int> = emptyMap()
+    
+    // Control para paginación inversa (Backend DESC -> Frontend ASC)
+    private var nextReversePage: Int = 0
 
     init {
-        fetchStudents()
+        fetchStudents(page = 1)
         loadMetaOptions()
         // Auto-actualización periódica cada 30 segundos
         viewModelScope.launch {
             while (isActive) {
                 delay(30_000)
-                fetchStudents(page = 1)
+                // Solo refrescar si estamos en la vista inicial para evitar saltos raros
+                if (!uiState.value.isAppending && nextReversePage < uiState.value.pages) {
+                     // Opcional: Podríamos implementar un refresco inteligente, 
+                     // pero con paginación inversa es complejo. Por ahora lo dejamos pausado o solo refresh total.
+                     // fetchStudents(page = 1) 
+                }
             }
         }
     }
 
     fun onQueryChange(value: String) {
         _uiState.update { it.copy(query = value) }
+        fetchStudents(page = 1)
     }
 
     fun fetchStudents(page: Int? = null) {
-        val targetPage = page ?: _uiState.value.page
-        val isFirstPage = targetPage == 1
-
-        if (!isFirstPage && (targetPage > _uiState.value.pages && _uiState.value.pages > 0)) {
-            return // No hay más páginas
-        }
-
+        // Si page es 1 o null, iniciamos el proceso de "Reverse Pagination"
+        val isReset = page == 1 || page == null
+        
         viewModelScope.launch {
-            if (isFirstPage) {
+            if (isReset) {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null, students = emptyList(), page = 1) }
-            } else {
-                _uiState.update { it.copy(isAppending = true, errorMessage = null) }
-            }
-
-            val gradeId = _uiState.value.selectedGrade?.let { gradeNameToId[it] }
-            val sectionId = _uiState.value.selectedSection?.let { sectionNameToId[it] }
-            
-            when (val result = getStudents(
-                targetPage,
-                _uiState.value.perPage,
-                _uiState.value.query.ifBlank { null },
-                gradeId,
-                sectionId
-            )) {
-                is Result.Success -> {
-                    val pageData = result.data
-                    _uiState.update {
-                        val currentList = if (isFirstPage) emptyList() else it.students
-                        it.copy(
-                            students = currentList + pageData.items,
-                            page = pageData.page,
-                            perPage = pageData.perPage,
-                            total = pageData.total,
-                            pages = pageData.pages,
-                            isLoading = false,
-                            isAppending = false,
-                            errorMessage = null
-                        )
+                
+                // 1. Obtener metadatos (Total de páginas) usando la página 1
+                val gradeId = _uiState.value.selectedGrade?.let { gradeNameToId[it] }
+                val sectionId = _uiState.value.selectedSection?.let { sectionNameToId[it] }
+                
+                val metaResult = getStudents(
+                    1,
+                    _uiState.value.perPage,
+                    _uiState.value.query.ifBlank { null },
+                    gradeId,
+                    sectionId
+                )
+                
+                if (metaResult is Result.Success) {
+                    val totalPages = metaResult.data.pages
+                    if (totalPages == 0) {
+                        // No hay datos
+                        _uiState.update { 
+                            it.copy(isLoading = false, students = emptyList(), total = 0, pages = 0) 
+                        }
+                        return@launch
                     }
+                    
+                    // 2. Calcular la última página (que tiene los registros más antiguos -> ID 1, 2...)
+                    val lastPage = totalPages
+                    
+                    // 3. Cargar esa última página
+                    loadReversePage(lastPage, isFirstLoad = true)
+                    
+                    // 4. Configurar siguiente página a cargar (hacia atrás)
+                    nextReversePage = lastPage - 1
+                } else if (metaResult is Result.Error) {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = metaResult.message) }
                 }
-                is Result.Error -> {
-                    _uiState.update { it.copy(isLoading = false, isAppending = false, errorMessage = result.message) }
-                }
-                is Result.Loading -> {
-                    // Manejado arriba
+                
+            } else {
+                // Carga de página específica (siguiente chunk en scroll infinito)
+                page?.let { targetPage ->
+                    loadReversePage(targetPage, isFirstLoad = false)
+                    nextReversePage = targetPage - 1
                 }
             }
         }
     }
     
+    private suspend fun loadReversePage(page: Int, isFirstLoad: Boolean) {
+        if (!isFirstLoad) {
+            _uiState.update { it.copy(isAppending = true, errorMessage = null) }
+        }
+
+        val gradeId = _uiState.value.selectedGrade?.let { gradeNameToId[it] }
+        val sectionId = _uiState.value.selectedSection?.let { sectionNameToId[it] }
+
+        val result = getStudents(
+            page,
+            _uiState.value.perPage,
+            _uiState.value.query.ifBlank { null },
+            gradeId,
+            sectionId
+        )
+
+        when (result) {
+            is Result.Success -> {
+                val pageData = result.data
+                // REVERTIMOS la lista para que quede ASCENDENTE (1, 2, 3...)
+                // Ya que el backend devuelve DESCENDENTE (20, 19, 18...)
+                val sortedItems = pageData.items.reversed() // O sortedBy { it.id }
+                
+                _uiState.update {
+                    it.copy(
+                        students = it.students + sortedItems,
+                        page = pageData.page, // Mantenemos ref de la página API, aunque no se use para next
+                        perPage = pageData.perPage,
+                        total = pageData.total,
+                        pages = pageData.pages,
+                        isLoading = false,
+                        isAppending = false,
+                        errorMessage = null
+                    )
+                }
+            }
+            is Result.Error -> {
+                _uiState.update { 
+                    it.copy(
+                        isLoading = false, 
+                        isAppending = false, 
+                        errorMessage = result.message
+                    ) 
+                }
+            }
+            is Result.Loading -> {}
+        }
+    }
+    
     fun loadNextPage() {
         if (_uiState.value.isLoading || _uiState.value.isAppending) return
-        val nextPage = _uiState.value.page + 1
-        if (nextPage <= _uiState.value.pages) {
-            fetchStudents(page = nextPage)
+        
+        // En modo reverso, cargamos la página anterior (nextReversePage)
+        if (nextReversePage >= 1) {
+            fetchStudents(page = nextReversePage)
         }
     }
 
