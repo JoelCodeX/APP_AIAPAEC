@@ -9,6 +9,7 @@ interface StudentRepository {
         page: Int = 1,
         perPage: Int = 20,
         query: String? = null,
+        id: Int? = null,
         gradeId: Int? = null,
         sectionId: Int? = null,
         sortBy: String? = "id",

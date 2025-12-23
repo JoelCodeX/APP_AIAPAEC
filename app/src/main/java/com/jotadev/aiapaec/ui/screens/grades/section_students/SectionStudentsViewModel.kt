@@ -49,11 +49,14 @@ class SectionStudentsViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             
             when (val result = getStudents(
-                targetPage,
-                _uiState.value.perPage,
-                _uiState.value.query.ifBlank { null },
-                currentGradeId,
-                currentSectionId
+                page = targetPage,
+                perPage = _uiState.value.perPage,
+                query = _uiState.value.query.ifBlank { null },
+                id = null,
+                gradeId = currentGradeId,
+                sectionId = currentSectionId,
+                sortBy = "id",
+                order = "asc"
             )) {
                 is Result.Success -> {
                     val pageData = result.data

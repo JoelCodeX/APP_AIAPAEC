@@ -9,11 +9,12 @@ class GetStudentsUseCase(private val repository: StudentRepository) {
         page: Int,
         perPage: Int,
         query: String?,
+        id: Int? = null,
         gradeId: Int? = null,
         sectionId: Int? = null,
         sortBy: String? = "id",
         order: String? = "asc"
     ): Result<StudentsPage> {
-        return repository.getStudents(page, perPage, query, gradeId, sectionId, sortBy, order)
+        return repository.getStudents(page, perPage, query, id, gradeId, sectionId, sortBy, order)
     }
 }

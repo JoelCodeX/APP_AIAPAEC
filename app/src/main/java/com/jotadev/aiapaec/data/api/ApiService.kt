@@ -49,6 +49,7 @@ interface ApiService {
         @Query("page") page: Int = 1,
         @Query("per_page") perPage: Int = 20,
         @Query("q") query: String? = null,
+        @Query("id") id: Int? = null,
         @Query("grade_id") gradeId: Int? = null,
         @Query("section_id") sectionId: Int? = null,
         @Query("sort_by") sortBy: String? = "id",
@@ -447,6 +448,7 @@ data class GradeDto(
 data class SectionDto(
     val id: Int,
     val nombre: String,
+    @SerializedName("grade_id") val gradeId: Int? = null,
     val turno: String?,
     val capacidad: Int?,
     @SerializedName("student_count") val studentCount: Int = 0

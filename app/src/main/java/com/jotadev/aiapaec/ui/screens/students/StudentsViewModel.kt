@@ -7,6 +7,8 @@ import com.jotadev.aiapaec.domain.models.Student
 import com.jotadev.aiapaec.domain.usecases.GetStudentsUseCase
 import com.jotadev.aiapaec.data.repository.StudentRepositoryImpl
 import com.jotadev.aiapaec.data.api.RetrofitClient
+import com.jotadev.aiapaec.data.api.GradeDto
+import com.jotadev.aiapaec.data.api.SectionDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -40,11 +42,12 @@ class StudentsViewModel(
     private val _uiState = MutableStateFlow(StudentsUiState())
     val uiState: StateFlow<StudentsUiState> = _uiState
     private var gradeNameToId: Map<String, Int> = emptyMap()
-    private var sectionNameToId: Map<String, Int> = emptyMap()
+    // Reemplazamos el mapa simple por un caché estructurado: Grado -> (Sección -> ID)
+    private val sectionIdsCache = mutableMapOf<String, Map<String, Int>>()
+    private var gradesList: List<GradeDto> = emptyList() // Caché de grados con sus secciones
     
-    // Control para paginación inversa (Backend DESC -> Frontend ASC)
-    private var nextReversePage: Int = 0
-
+    // Control para paginación estándar (Backend ordena por ID ASC)
+    
     init {
         fetchStudents(page = 1)
         loadMetaOptions()
@@ -52,11 +55,9 @@ class StudentsViewModel(
         viewModelScope.launch {
             while (isActive) {
                 delay(30_000)
-                // Solo refrescar si estamos en la vista inicial para evitar saltos raros
-                if (!uiState.value.isAppending && nextReversePage < uiState.value.pages) {
-                     // Opcional: Podríamos implementar un refresco inteligente, 
-                     // pero con paginación inversa es complejo. Por ahora lo dejamos pausado o solo refresh total.
-                     // fetchStudents(page = 1) 
+                // Refresco silencioso solo si estamos en la primera página y no hay carga activa
+                if (!uiState.value.isLoading && !uiState.value.isAppending && uiState.value.page == 1) {
+                     // fetchStudents(page = 1) // Comentado por seguridad
                 }
             }
         }
@@ -67,113 +68,79 @@ class StudentsViewModel(
         fetchStudents(page = 1)
     }
 
-    fun fetchStudents(page: Int? = null) {
-        // Si page es 1 o null, iniciamos el proceso de "Reverse Pagination"
-        val isReset = page == 1 || page == null
+    fun fetchStudents(page: Int = 1, isPagination: Boolean = false) {
+        val isReset = page == 1
         
         viewModelScope.launch {
             if (isReset) {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null, students = emptyList(), page = 1) }
-                
-                // 1. Obtener metadatos (Total de páginas) usando la página 1
-                val gradeId = _uiState.value.selectedGrade?.let { gradeNameToId[it] }
-                val sectionId = _uiState.value.selectedSection?.let { sectionNameToId[it] }
-                
-                val metaResult = getStudents(
-                    1,
-                    _uiState.value.perPage,
-                    _uiState.value.query.ifBlank { null },
-                    gradeId,
-                    sectionId
-                )
-                
-                if (metaResult is Result.Success) {
-                    val totalPages = metaResult.data.pages
-                    if (totalPages == 0) {
-                        // No hay datos
-                        _uiState.update { 
-                            it.copy(isLoading = false, students = emptyList(), total = 0, pages = 0) 
-                        }
-                        return@launch
-                    }
-                    
-                    // 2. Calcular la última página (que tiene los registros más antiguos -> ID 1, 2...)
-                    val lastPage = totalPages
-                    
-                    // 3. Cargar esa última página
-                    loadReversePage(lastPage, isFirstLoad = true)
-                    
-                    // 4. Configurar siguiente página a cargar (hacia atrás)
-                    nextReversePage = lastPage - 1
-                } else if (metaResult is Result.Error) {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = metaResult.message) }
-                }
-                
             } else {
-                // Carga de página específica (siguiente chunk en scroll infinito)
-                page?.let { targetPage ->
-                    loadReversePage(targetPage, isFirstLoad = false)
-                    nextReversePage = targetPage - 1
+                    _uiState.update { it.copy(isAppending = true, errorMessage = null) }
                 }
+                val gradeId = _uiState.value.selectedGrade?.let { gradeNameToId[it] }
+                
+                // Obtener ID de sección desde el caché estructurado
+                // Esto garantiza que el ID corresponda al grado seleccionado y no a uno anterior
+                val sectionId = _uiState.value.selectedGrade?.let { grade ->
+                    _uiState.value.selectedSection?.let { section ->
+                        sectionIdsCache[grade]?.get(section)
+                    }
+                }
+
+                // Detectar si la búsqueda es por ID (numérico) o por texto
+                val rawQuery = _uiState.value.query.trim()
+            val idFilter = rawQuery.toIntOrNull()
+            val textQuery = if (idFilter == null && rawQuery.isNotBlank()) rawQuery else null
+
+            val result = getStudents(
+                page,
+                _uiState.value.perPage,
+                textQuery,
+                idFilter,
+                gradeId,
+                sectionId,
+                sortBy = "id",
+                order = "asc"
+            )
+            
+            when (result) {
+                is Result.Success -> {
+                    val pageData = result.data
+                    _uiState.update {
+                        it.copy(
+                            students = if (isReset) pageData.items else it.students + pageData.items,
+                            page = pageData.page,
+                            perPage = pageData.perPage,
+                            total = pageData.total,
+                            pages = pageData.pages,
+                            isLoading = false,
+                            isAppending = false,
+                            errorMessage = null
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            isAppending = false, 
+                            errorMessage = result.message
+                        ) 
+                    }
+                }
+                is Result.Loading -> {}
             }
         }
     }
     
-    private suspend fun loadReversePage(page: Int, isFirstLoad: Boolean) {
-        if (!isFirstLoad) {
-            _uiState.update { it.copy(isAppending = true, errorMessage = null) }
-        }
-
-        val gradeId = _uiState.value.selectedGrade?.let { gradeNameToId[it] }
-        val sectionId = _uiState.value.selectedSection?.let { sectionNameToId[it] }
-
-        val result = getStudents(
-            page,
-            _uiState.value.perPage,
-            _uiState.value.query.ifBlank { null },
-            gradeId,
-            sectionId
-        )
-
-        when (result) {
-            is Result.Success -> {
-                val pageData = result.data
-                // REVERTIMOS la lista para que quede ASCENDENTE (1, 2, 3...)
-                // Ya que el backend devuelve DESCENDENTE (20, 19, 18...)
-                val sortedItems = pageData.items.reversed() // O sortedBy { it.id }
-                
-                _uiState.update {
-                    it.copy(
-                        students = it.students + sortedItems,
-                        page = pageData.page, // Mantenemos ref de la página API, aunque no se use para next
-                        perPage = pageData.perPage,
-                        total = pageData.total,
-                        pages = pageData.pages,
-                        isLoading = false,
-                        isAppending = false,
-                        errorMessage = null
-                    )
-                }
-            }
-            is Result.Error -> {
-                _uiState.update { 
-                    it.copy(
-                        isLoading = false, 
-                        isAppending = false, 
-                        errorMessage = result.message
-                    ) 
-                }
-            }
-            is Result.Loading -> {}
-        }
-    }
+    // Método auxiliar eliminado (loadReversePage) ya que usamos paginación estándar
     
     fun loadNextPage() {
         if (_uiState.value.isLoading || _uiState.value.isAppending) return
         
-        // En modo reverso, cargamos la página anterior (nextReversePage)
-        if (nextReversePage >= 1) {
-            fetchStudents(page = nextReversePage)
+        // Paginación estándar: si no estamos en la última página, cargamos la siguiente
+        if (_uiState.value.page < _uiState.value.pages) {
+            fetchStudents(page = _uiState.value.page + 1, isPagination = true)
         }
     }
 
@@ -186,17 +153,32 @@ class StudentsViewModel(
     private fun loadMetaOptions() {
         viewModelScope.launch {
             _uiState.update { it.copy(isMetaLoading = true) }
-            val gradesResp = RetrofitClient.apiService.getGradesByBranch(page = 1, perPage = 200)
-            val gradeItems = gradesResp.body()?.data?.items ?: emptyList()
-            gradeNameToId = gradeItems.associate { it.nombre to it.id }
-            val gradesBranch = gradeItems.map { it.nombre }.distinct().sorted()
-            _uiState.update {
-                it.copy(
-                    isMetaLoading = false,
-                    gradesOptions = gradesBranch,
-                    sectionsOptions = emptyList(),
-                    sectionsByGrade = emptyMap()
-                )
+            try {
+                val gradesResp = RetrofitClient.apiService.getGradesByBranch(page = 1, perPage = 200)
+                val gradeItems = gradesResp.body()?.data?.items ?: emptyList()
+                gradesList = gradeItems // Guardamos la lista completa para acceso local a secciones
+                gradeNameToId = gradeItems.associate { it.nombre to it.id }
+                val gradesBranch = gradeItems.map { it.nombre }.distinct().sorted()
+                
+                // Pre-cargar secciones si vienen en el objeto GradeDto
+                val sectionsMap = gradeItems.associate { grade ->
+                    val sMap = grade.sections.associate { it.nombre to it.id }
+                    if (sMap.isNotEmpty()) {
+                        sectionIdsCache[grade.nombre] = sMap
+                    }
+                    grade.nombre to grade.sections.map { it.nombre }.sorted()
+                }
+                
+                _uiState.update {
+                    it.copy(
+                        isMetaLoading = false,
+                        gradesOptions = gradesBranch,
+                        sectionsOptions = emptyList(),
+                        sectionsByGrade = sectionsMap
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isMetaLoading = false) }
             }
         }
     }
@@ -204,14 +186,65 @@ class StudentsViewModel(
     fun loadSectionsForGrade(gradeName: String?) {
         if (gradeName.isNullOrBlank()) return
         val gradeId = gradeNameToId[gradeName] ?: return
+        
         viewModelScope.launch {
-            val resp = RetrofitClient.apiService.getSectionsByBranch(page = 1, perPage = 200, gradeId = gradeId)
-            val items = resp.body()?.data?.items ?: emptyList()
-            val sections = items.map { it.nombre }.distinct().sorted()
-            sectionNameToId = items.associate { it.nombre to it.id }
-            val currentMap = _uiState.value.sectionsByGrade.toMutableMap()
-            currentMap[gradeName] = sections
-            _uiState.update { it.copy(sectionsByGrade = currentMap, sectionsOptions = sections) }
+            // ESTRATEGIA MIXTA:
+            // 1. Intentar obtener secciones desde la caché local (gradesList) si existen
+            val cachedGrade = gradesList.find { it.id == gradeId }
+            val cachedSections = cachedGrade?.sections ?: emptyList()
+            
+            if (cachedSections.isNotEmpty()) {
+                val sectionsNames = cachedSections.map { it.nombre }.distinct().sorted()
+                // Actualizamos el caché de IDs para este grado específico
+                sectionIdsCache[gradeName] = cachedSections.associate { it.nombre to it.id }
+                
+                val currentMap = _uiState.value.sectionsByGrade.toMutableMap()
+                currentMap[gradeName] = sectionsNames
+                _uiState.update { it.copy(sectionsByGrade = currentMap, sectionsOptions = sectionsNames) }
+            } else {
+                // 2. Fallback: Llamada a API si no hay secciones anidadas
+                try {
+                    val resp = RetrofitClient.apiService.getSectionsByBranch(page = 1, perPage = 200, gradeId = gradeId)
+                    val allItems = resp.body()?.data?.items ?: emptyList()
+                    
+                    // Filtrar secciones que correspondan al grado solicitado
+                    // Esto es crítico porque el endpoint podría devolver secciones de otros grados
+                    val hasGradeInfo = allItems.any { it.gradeId != null }
+                    val items = if (hasGradeInfo) {
+                        allItems.filter { it.gradeId == gradeId }
+                    } else {
+                        allItems
+                    }
+                    
+                    // SEGURIDAD: Validar integridad de los datos
+                    // Si no tenemos gradeId explícito (backend desactualizado) y detectamos nombres duplicados,
+                    // significa que recibimos TODAS las secciones (backend ignoró el filtro).
+                    // En este caso, NO debemos actualizar la caché con datos corruptos.
+                    if (!hasGradeInfo) {
+                        val names = items.map { it.nombre }
+                        val hasDuplicates = names.size != names.distinct().size
+                        if (hasDuplicates) {
+                            // Si detectamos ambigüedad, preferimos conservar la caché existente (si existe) o abortar
+                            if (sectionIdsCache[gradeName]?.isNotEmpty() == true) {
+                                return@launch
+                            }
+                            // Si no hay caché previa, es mejor no mostrar secciones que mostrar secciones erróneas
+                            return@launch
+                        }
+                    }
+                    
+                    val sections = items.map { it.nombre }.distinct().sorted()
+                    
+                    // Actualizamos el caché de IDs para este grado específico
+                    sectionIdsCache[gradeName] = items.associate { it.nombre to it.id }
+                    
+                    val currentMap = _uiState.value.sectionsByGrade.toMutableMap()
+                    currentMap[gradeName] = sections
+                    _uiState.update { it.copy(sectionsByGrade = currentMap, sectionsOptions = sections) }
+                } catch (e: Exception) {
+                    // Manejo silencioso de error en carga de secciones
+                }
+            }
         }
     }
 

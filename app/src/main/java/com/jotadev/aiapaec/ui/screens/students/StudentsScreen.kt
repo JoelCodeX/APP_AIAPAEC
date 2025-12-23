@@ -124,7 +124,7 @@ fun StudentsScreen(navController: NavController) {
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.students) { student ->
+                        items(items = state.students, key = { it.id }) { student ->
                             StudentCard(
                                 student = student,
                                 onClick = { 
