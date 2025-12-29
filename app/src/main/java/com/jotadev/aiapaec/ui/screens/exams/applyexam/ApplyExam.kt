@@ -351,6 +351,7 @@ fun ApplyExam(navController: NavController, examId: String) {
                     StudentStatusRow(
                         student = student,
                         status = statusObj,
+                        maxScore = 100, // Escala fija sobre 100
                         isScanning = scanningStudentId == student.id,
                         onScanClick = {
                             if (!state.hasKey) {
@@ -613,6 +614,7 @@ private fun StatusPillExam(label: String, color: Color, icon: ImageVector? = nul
 private fun StudentStatusRow(
     student: Student, 
     status: StudentStatus?, 
+    maxScore: Int,
     isScanning: Boolean = false,
     onScanClick: () -> Unit,
     onViewResultClick: (String) -> Unit
@@ -641,6 +643,7 @@ private fun StudentStatusRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        val isCorrected = status?.status?.equals("Corregido", ignoreCase = true) == true
 
         // Avatar con iniciales
         val initials =
@@ -661,6 +664,8 @@ private fun StudentStatusRow(
             )
         }
         Spacer(modifier = Modifier.width(if (isSmallScreen) 8.dp else 12.dp))
+        
+        // COLUMNA CENTRAL: NOMBRE, CLASE Y BARRA (SI APLICA)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${student.firstName} ${student.lastName}",
@@ -679,21 +684,81 @@ private fun StudentStatusRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            
+            // BARRA DE PROGRESO SI ESTÁ CORREGIDO
+            if (isCorrected && status?.score != null) {
+                // Score literal según BD
+                val scoreVal = status.score
+                
+                // Barra basada en 100 como máximo
+                val progress = (scoreVal / 100.0).coerceIn(0.0, 1.0).toFloat()
+                
+                Spacer(modifier = Modifier.height(6.dp))
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = when {
+                        scoreVal < 50 -> Color(0xFFE53935) // Rojo (Bajo) 0-10
+                        scoreVal < 65 -> Color(0xFFEF791E) // Naranja (Regular) 11-13
+                        scoreVal < 71 -> Color(0xFF6ADC32)//Verde Claro (Aceptable) 14-16
+                        else -> Color(0xFF0A8D13) // Verde Fuerte (Sobresaliente) 16-20
+                    },
+                    trackColor = Color(0xFFEEEEEE),
+                )
+            }
         }
-        val isCorrected = status?.status?.equals("Corregido", ignoreCase = true) == true
-        val icon = if (isCorrected) Icons.Default.CheckCircle else Icons.Default.Cancel
-        val tint = if (isCorrected) Color(0xFF2E7D32) else Color(0xFFC62828)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 6.dp)
-        ) {
-            StatusPillExam(
-                label = if (isCorrected) "Corregido" else "Por corregir",
-                color = tint,
-                icon = icon,
-                isSmallScreen = isSmallScreen
-            )
-            if (!isCorrected) {
+
+        // COLUMNA DERECHA: PUNTAJE O BOTÓN/ESTADO
+        Spacer(modifier = Modifier.width(8.dp))
+        
+        if (isCorrected) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Icono de check para reforzar estado "Corregido"
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Corregido",
+                    tint = Color(0xFF2E7D32),
+                    modifier = Modifier.size(if (isSmallScreen) 16.dp else 20.dp)
+                )
+                
+                // Mostrar puntaje literal
+                val scoreVal = status?.score ?: 0.0
+                
+                val scoreText = if (scoreVal % 1.0 == 0.0) {
+                    scoreVal.toInt().toString()
+                } else {
+                    String.format("%.0f", scoreVal)
+                }
+                
+                Text(
+                    text = "$scoreText/100",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = if (isSmallScreen) 12.sp else 14.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        } else {
+            // Mostrar estado "Por corregir" y botón o loader
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(if (isSmallScreen) 4.dp else 6.dp)
+            ) {
+                val icon = Icons.Default.Cancel
+                val tint = Color(0xFFC62828)
+                
+                StatusPillExam(
+                    label = "Por corregir",
+                    color = tint,
+                    icon = icon,
+                    isSmallScreen = isSmallScreen
+                )
+                
                 if (isScanning) {
                     Box(
                         modifier = Modifier
@@ -724,13 +789,6 @@ private fun StudentStatusRow(
                             imageVector = Icons.Default.QrCodeScanner,
                             contentDescription = "Escanear",
                             modifier = Modifier.size(if (isSmallScreen) 14.dp else 16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(if (isSmallScreen) 4.dp else 6.dp))
-                        Text(
-                            "Escanear",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = if (isSmallScreen) 10.sp else 11.sp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

@@ -23,7 +23,9 @@ fun QuizDto.toDomain(): Quiz {
         asignacionId = asignacion_id,
         gradoNombre = grado_nombre,
         seccionNombre = seccion_nombre,
-        bimesterName = bimester_name
+        bimesterName = bimester_name,
+        scannedCount = scanned_count,
+        totalCount = total_count
     )
 }
 

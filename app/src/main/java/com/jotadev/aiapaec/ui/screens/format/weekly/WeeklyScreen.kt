@@ -749,8 +749,47 @@ private fun WeeklyCard(
                         InfoChip(label = "Fecha", value = item.fecha ?: "-", icon = Icons.Default.DateRange, modifier = Modifier.weight(1f), centered = true)
                     }
                     Spacer(modifier = Modifier.size(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        InfoChip(label = "Detalle", value = item.detalle ?: "-", icon = Icons.Default.Info, modifier = Modifier.weight(1f), centered = false)
+
+                    // Progress Bar Section
+                    if (item.scannedCount != null && item.totalCount != null) {
+                        val scanned = item.scannedCount
+                        val total = item.totalCount
+                        val progress = if (total > 0) scanned.toFloat() / total.toFloat() else 0f
+                        val percentage = (progress * 100).toInt()
+                        
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "$scanned/$total Corregidos",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "$percentage%",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF2979FF)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            androidx.compose.material3.LinearProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = Color(0xFF2979FF),
+                                trackColor = Color(0xFFEEEEEE)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        InfoChip(label = "Detalle", value = item.detalle ?: "-", icon = Icons.Default.Info, modifier = Modifier.weight(1f), centered = true)
                     }
                 }
             }

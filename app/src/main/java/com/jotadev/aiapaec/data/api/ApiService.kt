@@ -523,7 +523,9 @@ data class QuizDto(
     @SerializedName("asignacion_id") val asignacion_id: Int?,
     @SerializedName("grado_nombre") val grado_nombre: String?,
     @SerializedName("seccion_nombre") val seccion_nombre: String?,
-    @SerializedName("bimester_name") val bimester_name: String?
+    @SerializedName("bimester_name") val bimester_name: String?,
+    @SerializedName("scanned_count") val scanned_count: Int? = null,
+    @SerializedName("total_count") val total_count: Int? = null
 )
 
 data class CreateQuizRequest(

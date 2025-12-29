@@ -17,5 +17,7 @@ data class Quiz(
     val asignacionId: Int?,
     val gradoNombre: String?,
     val seccionNombre: String?,
-    val bimesterName: String?
+    val bimesterName: String?,
+    val scannedCount: Int? = null,
+    val totalCount: Int? = null
 )
