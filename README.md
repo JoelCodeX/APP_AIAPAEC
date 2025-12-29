@@ -2,237 +2,111 @@
 
 ## 📱 Descripción del Proyecto
 
-AIAPAEC es una aplicación móvil nativa para Android desarrollada en Kotlin utilizando Jetpack Compose. La aplicación está diseñada para gestionar exámenes, resultados y actividades académicas con una interfaz moderna y profesional.
+AIAPAEC es una aplicación móvil nativa para Android desarrollada en **Kotlin** y **Jetpack Compose**. Su función principal es facilitar la gestión académica y la **calificación automática de exámenes** mediante escaneo de cartillas de respuestas (OMR).
 
-## 🏗️ Arquitectura
+La aplicación permite a los docentes y administradores gestionar exámenes, ver resultados en tiempo real y digitalizar notas de manera eficiente.
 
-### Patrón MVVM (Model-View-ViewModel)
-- **Model**: Manejo de datos y lógica de negocio
-- **View**: Interfaces de usuario con Jetpack Compose
-- **ViewModel**: Gestión de estado y lógica de presentación
+## ✨ Funcionalidades Principales
 
-### Estructura del Proyecto
+- **📸 Escaneo OMR Inteligente**:
+  - Captura de cartillas de examen usando **CameraX**.
+  - Detección de bordes y recorte automático.
+  - Envío seguro al backend para procesamiento y calificación instantánea.
+  - Visualización de resultados con overlay (superposición de respuestas correctas/incorrectas).
+- **📝 Gestión de Exámenes**:
+  - Listado de exámenes programados y pasados.
+  - Aplicación de exámenes y asignación de notas.
+- **📊 Registro de Notas**:
+  - Visualización de notas por alumno y sección.
+  - Formatos semanales y bimestrales.
+- **🔐 Acceso Seguro**:
+  - Autenticación JWT integrada.
+  - Perfiles de usuario y gestión de sesión.
+- **🏫 Gestión Académica**:
+  - Listado de estudiantes por sección.
+  - Visualización de detalles del estudiante.
+
+## 🏗️ Arquitectura y Tecnologías
+
+El proyecto sigue una arquitectura **MVVM (Model-View-ViewModel)** limpia y modular.
+
+### Stack Tecnológico
+- **Lenguaje**: Kotlin 2.2.20
+- **UI Toolkit**: Jetpack Compose (Material Design 3)
+- **Navegación**: Navigation Compose
+- **Red**: Retrofit 2 + OkHttp + Gson
+- **Cámara**: CameraX + Accompanist Permissions
+- **Imágenes**: Coil (carga asíncrona) + OpenCV (procesamiento base)
+- **Inyección de Dependencias**: Hilt (preparado/en integración)
+- **Corrutinas**: Kotlin Coroutines & Flow
+
+### Estructura del Proyecto (`app/src/main/java/com/jotadev/aiapaec`)
+
 ```
-app/src/main/java/com/jotadev/aiapaec/
-├── MainActivity.kt                 # Actividad principal
-├── navigation/                     # Sistema de navegación
-│   ├── AppNavigation.kt           # Configuración de navegación principal
-│   ├── BottomNavItem.kt           # Items de navegación inferior
-│   ├── BottomNavigationBar.kt     # Barra de navegación inferior
-│   └── NavigationRoutes.kt        # Definición de rutas
-└── ui/
-    ├── components/                # Componentes reutilizables
-    │   └── TopBar.kt             # Barras superiores personalizadas
-    ├── screens/                   # Pantallas de la aplicación
-    │   ├── exams/                # Módulo de exámenes
-    │   ├── home/                 # Pantalla principal
-    │   ├── login/                # Autenticación
-    │   ├── main/                 # Pantalla principal con navegación
-    │   ├── results/              # Resultados de exámenes
-    │   └── settings/             # Configuraciones
-    └── theme/                    # Sistema de diseño
-        ├── Color.kt              # Paleta de colores
-        ├── Font.kt               # Tipografías
-        ├── Theme.kt              # Tema principal
-        └── Type.kt               # Estilos de texto
-```
-
-## 🎨 Sistema de Diseño
-
-### Colores Corporativos AIAPAEC
-- **Primario**: Crimson (Rojo corporativo)
-- **Secundario**: Gold (Dorado)
-- **Superficie**: Blanco y grises
-- **Texto**: Blanco sobre fondos oscuros, negro sobre fondos claros
-
-### Tipografía
-- Fuente personalizada integrada con Google Fonts
-- Jerarquía tipográfica consistente
-- Estilos optimizados para legibilidad
-
-## 📱 Funcionalidades Principales
-
-### 🔐 Autenticación
-- Pantalla de login con validación de campos
-- Gestión de estado de autenticación
-- Navegación automática tras login exitoso
-
-### 🏠 Pantalla Principal (Home)
-- Dashboard con acciones rápidas
-- Información del usuario
-- Navegación a módulos principales
-
-### 📝 Módulo de Exámenes
-- Gestión de exámenes
-- Interfaz preparada para funcionalidades futuras
-
-### 📊 Resultados
-- Visualización de resultados de exámenes
-- Interfaz preparada para análisis de datos
-
-### ⚙️ Configuraciones
-- Ajustes de la aplicación
-- Preferencias del usuario
-
-## 🛠️ Tecnologías y Dependencias
-
-### Tecnologías Principales
-- **Kotlin**: 2.2.20
-- **Android Gradle Plugin**: 8.13.0
-- **Jetpack Compose**: BOM 2025.09.01
-- **Material Design 3**: 1.4.0
-
-### Dependencias Clave
-```kotlin
-// Core Android
-implementation("androidx.core:core-ktx:1.17.0")
-implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
-implementation("androidx.activity:activity-compose:1.11.0")
-
-// Jetpack Compose
-implementation(platform("androidx.compose:compose-bom:2025.09.01"))
-implementation("androidx.compose.ui:ui")
-implementation("androidx.compose.ui:ui-graphics")
-implementation("androidx.compose.ui:ui-tooling-preview")
-implementation("androidx.compose.material3:material3")
-
-// Navegación
-implementation("androidx.navigation:navigation-compose:2.9.5")
-
-// UI/UX
-implementation("androidx.compose.material:material-icons-extended:1.7.8")
-implementation("androidx.compose.ui:ui-text-google-fonts:1.9.2")
-implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+com.jotadev.aiapaec/
+├── data/                  # Capa de Datos
+│   ├── api/               # Interfaces Retrofit y cliente HTTP
+│   ├── mappers/           # Transformadores de DTO a Dominio
+│   ├── repository/        # Implementación de repositorios
+│   └── storage/           # Persistencia local (Token, User Prefs)
+├── domain/                # Capa de Dominio
+│   ├── models/            # Data classes de negocio
+│   ├── repository/        # Interfaces de repositorios
+│   └── usecases/          # Casos de uso (Lógica de negocio pura)
+├── di/                    # Inyección de Dependencias (AppModule)
+├── navigation/            # Rutas y grafos de navegación
+├── ui/                    # Capa de Presentación (Compose)
+│   ├── components/        # UI Reutilizable (TopBar, Shimmer, etc.)
+│   ├── theme/             # Sistema de diseño (Color, Type, Theme)
+│   └── screens/           # Pantallas por funcionalidad
+│       ├── login/         # Autenticación
+│       ├── home/          # Dashboard principal
+│       ├── scan/          # Escaneo y resultados OMR
+│       ├── exams/         # Listado y aplicación de exámenes
+│       ├── grades/        # Registro de notas
+│       ├── students/      # Directorio de estudiantes
+│       ├── settings/      # Configuración de usuario
+│       └── format/        # Formatos semanales
+└── utils/                 # Utilidades generales
 ```
 
-## 🔧 Configuración del Proyecto
+## 📋 Requisitos de Desarrollo
 
-### Requisitos del Sistema
-- **Android Studio**: Última versión estable
-- **SDK mínimo**: API 25 (Android 7.1)
-- **SDK objetivo**: API 36
-- **Java**: Versión 11
-
-### Configuración de Compilación
-```kotlin
-android {
-    compileSdk = 36
-    
-    defaultConfig {
-        applicationId = "com.jotadev.aiapaec"
-        minSdk = 25
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-    }
-    
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-}
-```
+- **Android Studio**: Ladybug o superior.
+- **JDK**: Versión 17 o 21.
+- **Dispositivo**: Android 7.1 (API 25) mínimo. Recomendado Android 10+.
 
 ## 🚀 Instalación y Ejecución
 
-### Clonar el Repositorio
-```bash
-git clone [URL_DEL_REPOSITORIO]
-cd FRONTED
-```
+1.  **Clonar el repositorio**:
+    ```bash
+    git clone <url-repo>
+    cd FRONTED
+    ```
+2.  **Abrir en Android Studio**:
+    - Selecciona la carpeta `FRONTED` como proyecto.
+    - Espera la sincronización de Gradle.
+3.  **Configurar API**:
+    - Asegúrate de que el backend esté corriendo.
+    - En `NetworkConfig.kt` (o similar), verifica la `BASE_URL`. Para emulador suele ser `http://10.0.2.2:5000/`. Para dispositivo físico, usa la IP de tu red local (ej. `http://192.168.1.XX:5000/`).
+4.  **Ejecutar**:
+    - Conecta tu dispositivo o inicia un emulador.
+    - Dale al botón ▶️ "Run 'app'".
 
-### Compilar el Proyecto
-```bash
-# En Windows
-./gradlew build
+## 📱 Flujo de Uso (Escaneo)
 
-# En Linux/Mac
-./gradlew build
-```
+1.  Iniciar sesión.
+2.  Ir a la sección de **Exámenes** o usar el acceso directo de **Escanear**.
+3.  Seleccionar el examen a calificar.
+4.  Enfocar la cartilla con la cámara.
+5.  Capturar la imagen (la app sugiere o permite recorte).
+6.  Confirmar el envío.
+7.  Verificar la nota y las respuestas marcadas en el overlay de resultado.
+8.  Guardar la calificación.
 
-### Ejecutar en Dispositivo/Emulador
-1. Conectar dispositivo Android o iniciar emulador
-2. Ejecutar desde Android Studio o usar:
-```bash
-./gradlew installDebug
-```
+## 🤝 Contribución
 
-## 📋 Características Técnicas
-
-### Gestión de Estado
-- **StateFlow** para manejo reactivo de estado
-- **ViewModel** para persistencia durante cambios de configuración
-- **Compose State** para estado local de UI
-
-### Navegación
-- **Navigation Compose** para navegación declarativa
-- Rutas tipadas y navegación segura
-- Gestión de back stack automática
-
-### Interfaz de Usuario
-- **Material Design 3** como sistema de diseño
-- **Jetpack Compose** para UI declarativa
-- Componentes reutilizables y modulares
-- Soporte para temas claro/oscuro
-
-### Arquitectura de Pantallas
-Cada pantalla sigue el patrón:
-- **Screen.kt**: Composable de la interfaz
-- **ViewModel.kt**: Lógica de negocio y estado
-- **UiState**: Data class para estado de la pantalla
-
-## 🎯 Buenas Prácticas Implementadas
-
-### Código
-- Separación clara de responsabilidades
-- Funciones pequeñas y enfocadas
-- Comentarios concisos en una línea
-- Código profesional y escalable
-
-### UI/UX
-- Diseño consistente entre pantallas
-- Navegación intuitiva
-- Feedback visual apropiado
-- Accesibilidad considerada
-
-### Arquitectura
-- Patrón MVVM bien definido
-- Inyección de dependencias preparada
-- Modularización por características
-- Testabilidad mejorada
-
-## 🔮 Funcionalidades Futuras
-
-### Próximas Implementaciones
-- [ ] Integración con API backend
-- [ ] Autenticación con JWT
-- [ ] Escaneo de códigos QR
-- [ ] Análisis de resultados avanzado
-- [ ] Notificaciones push
-- [ ] Modo offline
-- [ ] Exportación de datos
-
-### Mejoras Técnicas
-- [ ] Testing unitario y de integración
-- [ ] CI/CD pipeline
-- [ ] Optimización de rendimiento
-- [ ] Internacionalización (i18n)
-- [ ] Análisis de crashes
-
-## 👥 Equipo de Desarrollo
-
-**Desarrollador Principal**: JotaDev  
-**Organización**: AIAPAEC  
-**Versión**: 1.0  
-
-## 📄 Licencia
-
-Este proyecto es propiedad de AIAPAEC. Todos los derechos reservados.
-
----
-
-**Nota**: Esta aplicación está en desarrollo activo. Las funcionalidades pueden cambiar en futuras versiones.
+- Mantener el estilo de código Kotlin oficial.
+- Usar componentes de Material 3.
+- Seguir el patrón MVVM.
+- Crear ramas por feature (`feature/scan-update`, `fix/login-bug`).

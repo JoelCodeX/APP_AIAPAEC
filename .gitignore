@@ -17,3 +17,12 @@
 .cxx
 local.properties
 
+# Keystore files
+*.jks
+*.keystore
+*.p12
+*.key
+
+# Google Services (Firebase)
+google-services.json
+GoogleService-Info.plist
