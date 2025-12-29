@@ -23,10 +23,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -49,11 +56,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.exifinterface.media.ExifInterface
 import androidx.navigation.NavController
@@ -82,11 +92,16 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
         containerColor = MaterialTheme.colorScheme.background,
     ) { paddingValues ->
         val context = androidx.compose.ui.platform.LocalContext.current
-        val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-        var hasPermission by remember { mutableStateOf(false) }
-        var previewView by remember { mutableStateOf<PreviewView?>(null) }
-        var statusText by remember { mutableStateOf("") }
-        var roi by remember { mutableStateOf<FloatArray?>(null) }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val haptic = LocalHapticFeedback.current
+
+    var hasPermission by remember { mutableStateOf(false) }
+    var previewView by remember { mutableStateOf<PreviewView?>(null) }
+    var camera by remember { mutableStateOf<androidx.camera.core.Camera?>(null) }
+    var isFlashOn by remember { mutableStateOf(false) }
+    var isCapturing by remember { mutableStateOf(false) }
+    var statusText by remember { mutableStateOf("") }
+    var roi by remember { mutableStateOf<FloatArray?>(null) }
 
         val permissionLauncher =
             rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -118,7 +133,7 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                     val selector = CameraSelector.DEFAULT_BACK_CAMERA
                     try {
                         cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
+                        camera = cameraProvider.bindToLifecycle(
                             lifecycleOwner,
                             selector,
                             preview,
@@ -206,7 +221,6 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                         blendMode = BlendMode.SrcOver
                     )
                 }
-
                 // ROI NORMALIZADA BASADA EN LOS VISORES DE ESQUINA
                 val minLeft = listOf(
                     transparentAreas[0].left,
@@ -243,6 +257,25 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                 val rhPad = (rh + pad * 2f).coerceIn(0f, 1f)
                 roi = floatArrayOf(rxPad, ryPad, rwPad, rhPad)
             }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                SmallFloatingActionButton(
+                    onClick = {
+                        isFlashOn = !isFlashOn
+                        camera?.cameraControl?.enableTorch(isFlashOn)
+                    },
+                    containerColor = if (isFlashOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                    contentColor = if (isFlashOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                ) {
+                    Icon(
+                        imageVector = if (isFlashOn) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                        contentDescription = "Flash"
+                    )
+                }
+            }
 
             Column(
                 modifier = Modifier
@@ -257,7 +290,9 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
 
                 FloatingActionButton(
                     onClick = {
-                        if (!hasPermission) return@FloatingActionButton
+                        if (!hasPermission || isCapturing) return@FloatingActionButton
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isCapturing = true
                         statusText = "Capturando..."
                         val out = createTempFile()
                         val outputOptions = ImageCapture.OutputFileOptions.Builder(out).build()
@@ -267,6 +302,7 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                             object : ImageCapture.OnImageSavedCallback {
                                 override fun onError(exception: ImageCaptureException) {
                                     statusText = "Error de captura"
+                                    isCapturing = false
                                 }
 
                                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
@@ -290,8 +326,10 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                                                         studentId
                                                     )
                                                 )
+                                                // Don't set isCapturing to false here to avoid UI flicker before navigation
                                             } else {
                                                 statusText = "Fallo al procesar"
+                                                isCapturing = false
                                             }
                                         }
                                     }.start()
@@ -308,7 +346,7 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                 }
             }
 
-            if (statusText.isNotEmpty()) {
+            if (statusText.isNotEmpty() && !isCapturing) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -317,6 +355,35 @@ fun ScanUploadScreen(navController: NavController, examId: String, studentId: In
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(text = statusText, color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+
+            // Overlay de carga
+            if (isCapturing) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.85f))
+                        .zIndex(10f)
+                        .clickable(enabled = false) {}, // Bloquear clicks
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = statusText,
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

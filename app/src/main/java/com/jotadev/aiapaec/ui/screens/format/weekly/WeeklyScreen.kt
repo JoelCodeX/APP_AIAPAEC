@@ -771,7 +771,7 @@ private fun WeeklyCard(
                                     text = "$percentage%",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF2979FF)
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -781,7 +781,7 @@ private fun WeeklyCard(
                                     .fillMaxWidth()
                                     .height(8.dp)
                                     .clip(RoundedCornerShape(4.dp)),
-                                color = Color(0xFF2979FF),
+                                color = MaterialTheme.colorScheme.primary,
                                 trackColor = Color(0xFFEEEEEE)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
