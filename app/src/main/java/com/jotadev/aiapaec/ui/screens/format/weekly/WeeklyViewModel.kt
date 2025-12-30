@@ -52,7 +52,7 @@ class WeeklyViewModel : ViewModel() {
     private var loadJob: Job? = null
 
     init {
-        loadQuizzes()
+        // loadQuizzes() -> Removed to avoid double call with LaunchedEffect
         loadMetaOptions()
     }
 
@@ -172,7 +172,7 @@ class WeeklyViewModel : ViewModel() {
         unidadLabel: String? = null,
         assignmentId: Int? = null
     ) {
-        loadJob?.cancel()
+        // loadJob?.cancel() -> Removed to prevent 499 errors on server side due to rapid cancellations
         loadJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             val gradeId = grade?.let { gradeNameToId[it] }
