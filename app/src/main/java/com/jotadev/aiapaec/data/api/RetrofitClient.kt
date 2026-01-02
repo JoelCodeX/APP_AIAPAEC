@@ -7,6 +7,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import com.jotadev.aiapaec.data.storage.TokenStorage
 import okhttp3.Interceptor
+import com.jotadev.aiapaec.data.session.SessionManager
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object RetrofitClient {
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -20,7 +25,19 @@ object RetrofitClient {
         if (!token.isNullOrBlank()) {
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }
-        chain.proceed(requestBuilder.build())
+        
+        val response = chain.proceed(requestBuilder.build())
+        
+        if (response.code == 401) {
+            // Token expirado o inválido detectado globalmente
+            // Usamos un scope global o específico para lanzar el evento, 
+            // ya que no podemos suspender dentro del interceptor síncrono
+            CoroutineScope(Dispatchers.IO).launch {
+                SessionManager.triggerLogout()
+            }
+        }
+        
+        response
     }
 
     private val okHttpClient = OkHttpClient.Builder()

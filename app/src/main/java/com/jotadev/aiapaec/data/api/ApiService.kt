@@ -40,6 +40,9 @@ data class UserData(
 )
 
 interface ApiService {
+    @GET("auth/verify")
+    suspend fun verifyToken(): Response<LoginResponse>
+
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 

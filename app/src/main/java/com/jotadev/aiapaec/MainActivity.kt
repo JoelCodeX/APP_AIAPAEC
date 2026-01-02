@@ -21,12 +21,28 @@ import com.jotadev.aiapaec.ui.theme.AIAPAECTheme
 import com.jotadev.aiapaec.data.storage.TokenStorage
 import com.jotadev.aiapaec.data.storage.UserStorage
 import com.jotadev.aiapaec.navigation.NavigationRoutes
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import com.jotadev.aiapaec.data.api.RetrofitClient
+import com.jotadev.aiapaec.data.session.SessionManager
+import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.flow.collectLatest
+import android.widget.Toast
 
 @Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // SplashScreen API: instala y anima la salida del splash
         val splash = installSplashScreen()
+        
+        // Mantener el Splash hasta determinar si el token es válido
+        var isCheckingToken = true
+        splash.setKeepOnScreenCondition { isCheckingToken }
+        
         configureSplashExitAnimation(splash)
         super.onCreate(savedInstanceState)
         
@@ -34,11 +50,32 @@ class MainActivity : ComponentActivity() {
         TokenStorage.init(applicationContext)
         UserStorage.init(applicationContext)
 
-        // Determinar destino inicial
-        val startDestination = if (!TokenStorage.getToken().isNullOrBlank()) {
-            NavigationRoutes.MAIN
+        // Estado inicial de navegación
+        var startDestination by mutableStateOf(NavigationRoutes.LOGIN)
+
+        // Validar token al inicio
+        val token = TokenStorage.getToken()
+        if (!token.isNullOrBlank()) {
+            lifecycleScope.launch {
+                try {
+                    val response = RetrofitClient.apiService.verifyToken()
+                    if (response.isSuccessful && response.body() != null) {
+                        startDestination = NavigationRoutes.MAIN
+                    } else {
+                        // Token inválido o expirado
+                        TokenStorage.clear()
+                        startDestination = NavigationRoutes.LOGIN
+                    }
+                } catch (e: Exception) {
+                    // Error de red u otro, asumir inválido por seguridad
+                    startDestination = NavigationRoutes.LOGIN
+                } finally {
+                    isCheckingToken = false
+                }
+            }
         } else {
-            NavigationRoutes.LOGIN
+            startDestination = NavigationRoutes.LOGIN
+            isCheckingToken = false
         }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -53,12 +90,33 @@ class MainActivity : ComponentActivity() {
                         isAppearanceLightNavigationBars = false
                     }
                 }
+                
+                val navController = rememberNavController()
+                
+                // Observador global de sesión
+                LaunchedEffect(Unit) {
+                    SessionManager.logoutEvent.collectLatest {
+                        TokenStorage.clear()
+                        // UserStorage.clear() // Opcional: limpiar datos de usuario si se desea
+                        Toast.makeText(applicationContext, "Tu sesión ha expirado", Toast.LENGTH_LONG).show()
+                        navController.navigate(NavigationRoutes.LOGIN) {
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+                
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.primary
                 ) {
-                    AppNavigation(startDestination = startDestination)
-//                    ApplyExam( navController = androidx.navigation.compose.rememberNavController(), examId = "exam123" )
+                    // Solo renderizar navegación cuando terminemos de chequear el token
+                    if (!isCheckingToken) {
+                        AppNavigation(
+                            navController = navController,
+                            startDestination = startDestination
+                        )
+                    }
                 }
             }
         }
