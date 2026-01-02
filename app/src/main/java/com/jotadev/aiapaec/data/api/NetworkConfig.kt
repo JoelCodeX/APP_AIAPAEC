@@ -18,14 +18,13 @@ object NetworkConfig {
                 device.contains("ranchu", ignoreCase = true) || device.contains("goldfish", ignoreCase = true)
     }
 
-    private const val LOCAL_IP = "192.168.18.224"
+    private const val LOCAL_IP = "192.168.50.5"
     private const val PORT = 5000
 
     // PRODUCCIÓN
     val baseRoot: String = "https://web-production-3c6a3.up.railway.app"
     // DESARROLLO
 //     val baseRoot: String = if (isEmulator()) "http://10.0.2.2:$PORT" else "http://$LOCAL_IP:$PORT"
-    
     val apiBase: String = "$baseRoot/api/"
 }
 

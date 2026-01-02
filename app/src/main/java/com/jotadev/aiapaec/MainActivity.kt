@@ -31,55 +31,54 @@ import com.jotadev.aiapaec.data.api.RetrofitClient
 import com.jotadev.aiapaec.data.session.SessionManager
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import android.widget.Toast
 
 @Suppress("DEPRECATION")
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // SplashScreen API: instala y anima la salida del splash
         val splash = installSplashScreen()
-        
-        // Mantener el Splash hasta determinar si el token es válido
-        var isCheckingToken = true
-        splash.setKeepOnScreenCondition { isCheckingToken }
-        
-        configureSplashExitAnimation(splash)
         super.onCreate(savedInstanceState)
         
         // Inicializar almacenamiento
         TokenStorage.init(applicationContext)
         UserStorage.init(applicationContext)
 
-        // Estado inicial de navegación
-        var startDestination by mutableStateOf(NavigationRoutes.LOGIN)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        setContent {
+            // Estado para controlar la carga inicial y el destino
+            var isLoading by remember { mutableStateOf(true) }
+            var startDestination by remember { mutableStateOf(NavigationRoutes.LOGIN) }
 
-        // Validar token al inicio
-        val token = TokenStorage.getToken()
-        if (!token.isNullOrBlank()) {
-            lifecycleScope.launch {
-                try {
-                    val response = RetrofitClient.apiService.verifyToken()
-                    if (response.isSuccessful && response.body() != null) {
-                        startDestination = NavigationRoutes.MAIN
-                    } else {
-                        // Token inválido o expirado
-                        TokenStorage.clear()
+            // Mantener el Splash visible mientras isLoading sea true
+            splash.setKeepOnScreenCondition { isLoading }
+            configureSplashExitAnimation(splash)
+
+            // Efecto de carga inicial
+            LaunchedEffect(Unit) {
+                val token = TokenStorage.getToken()
+                if (!token.isNullOrBlank()) {
+                    try {
+                        val response = RetrofitClient.apiService.verifyToken()
+                        if (response.isSuccessful && response.body() != null) {
+                            startDestination = NavigationRoutes.MAIN
+                        } else {
+                            TokenStorage.clear()
+                            startDestination = NavigationRoutes.LOGIN
+                        }
+                    } catch (e: Exception) {
+                        // Ante cualquier error, al login
                         startDestination = NavigationRoutes.LOGIN
                     }
-                } catch (e: Exception) {
-                    // Error de red u otro, asumir inválido por seguridad
+                } else {
                     startDestination = NavigationRoutes.LOGIN
-                } finally {
-                    isCheckingToken = false
                 }
+                // Al terminar la verificación, liberamos la carga
+                isLoading = false
             }
-        } else {
-            startDestination = NavigationRoutes.LOGIN
-            isCheckingToken = false
-        }
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent {
             AIAPAECTheme(dynamicColor = false) {
                 val primaryColor = MaterialTheme.colorScheme.primary
                 LaunchedEffect(primaryColor) {
@@ -96,12 +95,20 @@ class MainActivity : ComponentActivity() {
                 // Observador global de sesión
                 LaunchedEffect(Unit) {
                     SessionManager.logoutEvent.collectLatest {
-                        TokenStorage.clear()
-                        // UserStorage.clear() // Opcional: limpiar datos de usuario si se desea
-                        Toast.makeText(applicationContext, "Tu sesión ha expirado", Toast.LENGTH_LONG).show()
-                        navController.navigate(NavigationRoutes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                            launchSingleTop = true
+                        // Aseguramos que corra en el hilo principal
+                        withContext(Dispatchers.Main) {
+                            TokenStorage.clear()
+                            Toast.makeText(applicationContext, "Tu sesión ha expirado", Toast.LENGTH_LONG).show()
+                            
+                            // Navegación segura al Login
+                            try {
+                                navController.navigate(NavigationRoutes.LOGIN) {
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                         }
                     }
                 }
@@ -110,8 +117,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.primary
                 ) {
-                    // Solo renderizar navegación cuando terminemos de chequear el token
-                    if (!isCheckingToken) {
+                    // Solo mostramos el contenido cuando ya no está cargando
+                    if (!isLoading) {
                         AppNavigation(
                             navController = navController,
                             startDestination = startDestination
